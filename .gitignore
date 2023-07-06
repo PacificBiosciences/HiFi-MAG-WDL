@@ -1,0 +1,5 @@
+inputs.test_data*.json
+.wdltest*
+
+# Mac/OSX system file
+.DS_Store
