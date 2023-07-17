@@ -16,6 +16,7 @@ workflow completeness {
 
 	#TODO - use call or conditional?
 	#Checkpoint 1: Fork samples into two groups: those with long contigs (> min length), and those with no contigs.
+	## Write fasta seqs to individual fasta files if longer than length threshhold
 	call long_contigs_to_bins {
 		input:
 			sample = sample,
