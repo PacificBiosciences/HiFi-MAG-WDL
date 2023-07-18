@@ -82,7 +82,7 @@ task mag_summary {
 	}
 
 	runtime {
-		docker: "~{runtime_attributes.container_registry}/python@sha256:e4d921e252c3c19fe64097aa619c369c50cc862768d5fcb5e19d2877c55cfdd2"
+		docker: "~{runtime_attributes.container_registry}/python@sha256:f4bf8adfa4987cf61d037440ec6f7fc1cff80c33adbe620620579f1e1f9c08f1"
 		cpu: 2
 		memory: "4 GB"
 		disk: disk_size + " GB"
@@ -120,7 +120,7 @@ task mag_copy {
 	}
 
 	runtime {
-		docker: "~{runtime_attributes.container_registry}/python@sha256:e4d921e252c3c19fe64097aa619c369c50cc862768d5fcb5e19d2877c55cfdd2"
+		docker: "~{runtime_attributes.container_registry}/python@sha256:f4bf8adfa4987cf61d037440ec6f7fc1cff80c33adbe620620579f1e1f9c08f1"
 		cpu: 2
 		memory: "4 GB"
 		disk: disk_size + " GB"
@@ -167,7 +167,7 @@ task mag_plots {
 	}
 
 	runtime {
-		docker: "~{runtime_attributes.container_registry}/python@sha256:e4d921e252c3c19fe64097aa619c369c50cc862768d5fcb5e19d2877c55cfdd2"
+		docker: "~{runtime_attributes.container_registry}/python@sha256:f4bf8adfa4987cf61d037440ec6f7fc1cff80c33adbe620620579f1e1f9c08f1"
 		cpu: 2
 		memory: "4 GB"
 		disk: disk_size + " GB"

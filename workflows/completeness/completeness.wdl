@@ -5,7 +5,7 @@ import "../wdl-common/wdl/structs.wdl"
 workflow completeness {
 	input {
 		String sample
-		Array[File] contigs
+		File contig
 
 		#TODO - conditional for these values?
 		Int min_length = 500000
@@ -20,7 +20,7 @@ workflow completeness {
 	call long_contigs_to_bins {
 		input:
 			sample = sample,
-			contigs = contigs,
+			contig = contig,
 			min_length = min_length,
 			runtime_attributes = default_runtime_attributes
 	}
@@ -31,7 +31,7 @@ workflow completeness {
 
 	parameter_meta {
 		sample: {help: "Sample name"}
-		contigs: {help: "Contigs"} #TODO
+		contig: {help: "Contigs"} #TODO
 		min_length: {help: "Minimum size of a contig to consider for completeness scores; default value is set to 500kb. This value should not be increased"}
 		min_completeness: {help: "Minimum completeness score (from CheckM2) to mark a contig as complete and place it in a distinct bin; default value is set to 93%. This value should not be lower than 90%"}
 		key: {help: ""} #TODO
@@ -42,22 +42,23 @@ workflow completeness {
 task long_contigs_to_bins {
 	input {
 		String sample
-		Array[File] contigs
+		File contig
 
 		Int min_length
 
 		RuntimeAttributes runtime_attributes
 	}
 
-	Int disk_size = ceil(size(contigs, "GB") * 2 + 20)
+	Int disk_size = ceil(size(contig, "GB") * 2 + 20)
 
 	command <<<
 		set -euo pipefail
 
-		Fasta-Make-Long-Seq-Bins.py \
-			-i ~{sep=' ' contigs} \ #TODO - check if need to avoid using sep due to 'argument list too long' error
+		python /opt/scripts/Fasta-Make-Long-Seq-Bins.py \
+			-i ~{contig} \
 			-b "~{sample}.bin_key.txt" \
 			-l ~{min_length}
+			-o ./ #TODO
 	>>>
 
 	output {
@@ -65,7 +66,7 @@ task long_contigs_to_bins {
 	}
 
 	runtime {
-		docker: "~{runtime_attributes.container_registry}/python@sha256:e4d921e252c3c19fe64097aa619c369c50cc862768d5fcb5e19d2877c55cfdd2"
+		docker: "~{runtime_attributes.container_registry}/python@sha256:f4bf8adfa4987cf61d037440ec6f7fc1cff80c33adbe620620579f1e1f9c08f1"
 		cpu: 2
 		memory: "4 GB"
 		disk: disk_size + " GB"

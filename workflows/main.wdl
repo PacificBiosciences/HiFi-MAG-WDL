@@ -7,7 +7,7 @@ import "completeness/completeness.wdl" as Completeness
 workflow metagenomics {
 	input {
 		String sample
-		Array[File] contigs
+		File contig
 
 		Int min_length = 500000
 		#Int min_completeness = 93
@@ -36,7 +36,7 @@ workflow metagenomics {
 	call Completeness.completeness {
 		input:
 			sample = sample,
-			contigs = contigs,
+			contig = contig,
 			min_length = min_length,
 			default_runtime_attributes = default_runtime_attributes
 	}
@@ -48,7 +48,7 @@ workflow metagenomics {
 
 	parameter_meta {
 		sample: {help: "Sample name"}
-		contigs: {help: "Contigs"} #TODO
+		contig: {help: "Contigs"} #TODO
 		min_length: {help: "Minimum size of a contig to consider for completeness scores; default value is set to 500kb. This value should not be increased"}
 		min_completeness: {help: "Minimum completeness score (from CheckM2) to mark a contig as complete and place it in a distinct bin; default value is set to 93%. This value should not be lower than 90%"}
 		key: {help: ""} #TODO
