@@ -1,5 +1,7 @@
 version 1.0
 
+# Binning of incomplete contigs (contigs <500kb)
+
 import "../wdl-common/wdl/structs.wdl"
 
 workflow binning {

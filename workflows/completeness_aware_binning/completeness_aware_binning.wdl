@@ -2,7 +2,7 @@ version 1.0
 
 import "../wdl-common/wdl/structs.wdl"
 
-workflow completeness {
+workflow completeness_aware_binning {
 	input {
 		String sample
 		File contig
