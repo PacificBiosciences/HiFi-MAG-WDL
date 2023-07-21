@@ -104,13 +104,14 @@ task metabat2_analysis {
 			-v \
 			-i ~{incomplete_contigs} \
 			-a ~{filtered_depth} \
-			-o {params.prefix} \ #TODO - remove?
+			-o ~{sample} \
 			-t ~{threads} \
 			-m ~{min_contig_size}
 	>>>
 
 	output {
-		File complete = "~{sample}.completed.txt"
+		File read_1 = "~{sample}.1.fa"
+		File read_2 = "~{sample}.2.fa"
 	}
 
 	runtime {

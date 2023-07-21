@@ -6,8 +6,9 @@ workflow depth {
 	input {
 		String sample
 
-		File contigs
-		File reads
+		File contig
+		File reads_fasta
+		File passed
 
 		RuntimeAttributes default_runtime_attributes
 	}
@@ -15,8 +16,8 @@ workflow depth {
 	call minimap_to_bam {
 		input:
 			sample = sample,
-			contigs = contigs,
-			reads = reads,
+			contig = contig,
+			reads_fasta = reads_fasta,
 			runtime_attributes = default_runtime_attributes
 	}
 
@@ -30,7 +31,7 @@ workflow depth {
 	call convert_depth {
 		input:
 			sample = sample,
-			depth = bam_depth.depth,
+			depth_file = bam_depth.depth_file,
 			passed = passed,
 			runtime_attributes = default_runtime_attributes
 	}
@@ -38,14 +39,13 @@ workflow depth {
 	output {
 		File bam = minimap_to_bam.bam
 		File bam_index = minimap_to_bam.bam_index
-		File complete = minimap_to_bam.complete
 		File filtered_depth = convert_depth.filtered_depth
 	}
 
 	parameter_meta {
 		sample: {help: "Sample name"}
-		contigs: {help: "Contigs"} #TODO
-		reads: {help: "Fasta file containing sample reads"}
+		contig: {help: "Contigs"} #TODO
+		reads_fasta: {help: "Fasta file containing sample reads"}
 		default_runtime_attributes: {help: "Default RuntimeAttributes; spot if preemptible was set to true, otherwise on_demand"}
 	}
 }
@@ -54,14 +54,14 @@ task minimap_to_bam {
 	input {
 		String sample
 		
-		File reads
-		File contigs
+		File contig
+		File reads_fasta
 
 		RuntimeAttributes runtime_attributes
 	}
 
 	Int threads = 24
-	Int disk_size = ceil(size(reads, "GB") * 2 + size(contigs, "GB") + 20)
+	Int disk_size = ceil(size(contig, "GB") * 2 + size(reads_fasta, "GB") + 20)
 
 	command <<<
 		set -euo pipefail
@@ -81,8 +81,8 @@ task minimap_to_bam {
 			-z 400,50 \
 			--sam-hit-only \
 			-t ~{threads} \
-			~{contigs} \
-			~{reads} \
+			~{contig} \
+			~{reads_fasta} \
 		| samtools sort \
 			-@ ~{threads} \
 			-o "~{sample}.bam"
@@ -95,7 +95,6 @@ task minimap_to_bam {
 	output {
 		File bam = "~{sample}.bam"
 		File bam_index = "~{sample}.bam.bai"
-		File complete = "~{sample}.index.completed.txt"
 	}
 
 	runtime {
@@ -132,7 +131,7 @@ task bam_depth {
 	>>>
 
 	output {
-		File depth = "~{sample}.JGI.depth.txt"
+		File depth_file = "~{sample}.JGI.depth.txt"
 	}
 
 	runtime {
@@ -153,19 +152,19 @@ task convert_depth {
 	input {
 		String sample
 		
-		File depth
+		File depth_file
 		File passed
 
 		RuntimeAttributes runtime_attributes
 	}
  
-	Int disk_size = ceil(size(depth, "GB") * 2 + size(passed, "GB") + 20)
+	Int disk_size = ceil(size(depth_file, "GB") * 2 + size(passed, "GB") + 20)
 
 	command <<<
 		set -euo pipefail
 
-		Convert-JGI-Coverages.py \
-			-i ~{depth} \
+		python /opt/scripts/Convert-JGI-Coverages.py \
+			-i ~{depth_file} \
 			-p ~{passed} \
 			-o1 "~{sample}.JGI.filtered.depth.txt"
 	>>>
