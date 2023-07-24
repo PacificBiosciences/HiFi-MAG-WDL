@@ -98,10 +98,10 @@ workflow metagenomics {
 		# Completeness-aware binning output
 		File key = completeness_aware_binning.key
 		File incomplete_contigs = completeness_aware_binning.incomplete_contigs
-		File? report = completeness_aware_binning.report
-		File? passed_bins = completeness_aware_binning.passed_bins
-		File? scatterplot = completeness_aware_binning.scatterplot
-		File? histogram = completeness_aware_binning.histogram
+		#File? report = completeness_aware_binning.report
+		#File? passed_bins = completeness_aware_binning.passed_bins
+		#File? scatterplot = completeness_aware_binning.scatterplot
+		#File? histogram = completeness_aware_binning.histogram
 
 		# Coverage output
 		File sorted_bam = coverage.sorted_bam

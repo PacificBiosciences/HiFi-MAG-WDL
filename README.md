@@ -1,27 +1,26 @@
 # wdl-metagenomics
-WDL workflow for metagenomics
+Workflow for identifying high-quality MAGs (Metagenome-Assembled Genomes) from PacBio HiFi metagenomic assemblies written in [Workflow Description Language (WDL)](https://openwdl.org/).
 
-# TODO replace
-_repo description_
+- For the snakemake version of these workflows, see [here](https://github.com/PacificBiosciences/pb-metagenomics-tools).
+- Docker images used by these workflows are defined [here](https://github.com/PacificBiosciences/wdl-dockerfiles).
+- Common tasks that may be reused within or between workflows are defined [here](https://github.com/PacificBiosciences/wdl-common).
 
 # Workflow
 
 **Workflow entrypoint**: [workflows/main.wdl](workflows/main.wdl)
 
-# TODO replace
-_overview of workflow purpose_
+The metagenomics workflow combines contig assembly and PacBio's [HiFi-MAG-Pipeline](https://github.com/PacificBiosciences/pb-metagenomics-tools/tree/master/HiFi-MAG-Pipeline). This includes a completeness-aware binning step to identify complete contigs (>500kb and >93% complete) and incomplete contigs (<500kb and/or <93% complete). Completeness is assessed using [CheckM2](https://github.com/chklovski/CheckM2)). Coverage is calculated for binning steps. The long contigs that are <93% complete are pooled with incomplete contigs and this set goes through binning with [MetaBAT2](https://bitbucket.org/berkeleylab/metabat) and [SemiBin2](https://github.com/BigDataBiology/SemiBin). The two bin sets are compared and merged using [DAS Tool](https://github.com/cmks/DAS_Tool). The complete contigs and merged bin set are pooled together to assess bin quality. All bins/MAGs that passed filtering undergo taxonomic assignment and data summaries are produced.
 
-# TODO replace x 2
-![_workflow name_ workflow diagram](workflows/main.graphviz.svg "_workflow name_ workflow diagram")
+![Metagenomics workflow diagram](workflows/main.graphviz.svg "Metagenomics workflow diagram")
 
 ## Setup
 
 Some tasks and workflows are pulled in from other repositories. Ensure you have initialized submodules following cloning by running `git submodule update --init --recursive`.
 
+# TODO
 ## Resource requirements
 
-# TODO replace
-The workflow requires at minimum _cores_ cores and _ram_ GB of RAM. Ensure that the backend environment you're using has enough quota to run the workflow.
+The workflow requires at minimum _cores_ cores and 45 GB of RAM. Ensure that the backend environment you're using has enough quota to run the workflow.
 
 ## Reference datasets and associated workflow files
 
@@ -154,14 +153,19 @@ dnastack workbench runs submit \
 
 This section describes the inputs required for a run of the workflow.
 
-# TODO replace
-_brief linker text_
+# TODO - confirm
+The workflow can start with either a FASTQ or BAM file.
 
-# TODO replace
-## _inputs section_
+# General inputs
 
 | Type | Name | Description | Notes |
 | :- | :- | :- | :- |
+| String | sample_id | Sample name; used for naming files. | |
+| File? | bam | HiFi reads in BAM format to be converted into FASTQ format. | |
+| File? | fastq | HiFi reads in FASTQ format. | |
+| File | db | The CheckM2 DIAMOND reference database Uniref100/KO used to predict the completeness and contamination of MAGs. | |
+| Int | min_length | Minimum size of a contig to consider for completeness scores. The default value will be used [500000]. If modified, this value should not be increased. | |
+| Int | min_completeness | Minimum completeness score (from CheckM2) to mark a contig as complete and place it in a distinct bin. The default value will be used [93%]. If modified, this value should not be lower than 90%. | |
 
 ## Other inputs
 
@@ -174,17 +178,69 @@ _brief linker text_
 | String? | container_registry | Container registry where workflow images are hosted. If left blank, [PacBio's public Quay.io registry](https://quay.io/organization/pacbio) will be used. | |
 | Boolean | preemptible | If set to `true`, run tasks preemptibly where possible. On-demand VMs will be used only for tasks that run for >24 hours if the backend is set to GCP. If set to `false`, on-demand VMs will be used for every task. Ignored if backend is set to HPC. | \[true, false\] |
 
+# TODO - finish
 # Workflow outputs
 
-# TODO replace
-_brief linker text_
+## BAM to FASTQ
 
-# TODO replace
-## _outputs section_
+| Type | Name | Description | Notes |
+| :- | :- | :- | :- |
+| File? | converted_fastq| | |
+
+## Assembly
+
+| Type | Name | Description | Notes |
+| :- | :- | :- | :- |
+| File | primary_contig_graph| | |
+| File | primary_contig_fasta| | |
+| File | reads_fasta| | |
+
+## Completeness-aware binning
+
+| Type | Name | Description | Notes |
+| :- | :- | :- | :- |
+| File | key| | |
+| File | incomplete_contigs| | |
+| File? | report | | |
+| File? | passed_bins | | |
+| File? | scatterplot | | |
+| File? | histogram | | |
+
+## Coverage
+
+| Type | Name | Description | Notes |
+| :- | :- | :- | :- |
+| File | sorted_bam| | |
+| File | sorted_bam_index| | |
+| File | filtered_depth | | |
+
+## Binning
+
+| Type | Name | Description | Notes |
+| :- | :- | :- | :- |
+| Array[File] | metabat2_reconstructed_bins_fastas| | |
+| File | metabat2_bin_sets_tsv| | |
+| File | semibin2_bins_tsv | | |
+| Array[File] | semibin2_reconstructed_bins_fastas | | |
+| File | semibin2_bin_sets_tsv | | |
+| Array[File] | dastool_bins | | |
+
+## CheckM2
 
 | Type | Name | Description | Notes |
 | :- | :- | :- | :- |
 
+## GTDBTK
+
+| Type | Name | Description | Notes |
+| :- | :- | :- | :- |
+
+## MAG
+
+| Type | Name | Description | Notes |
+| :- | :- | :- | :- |
+
+# TODO - finish
 # Tool versions and Docker images
 
 Docker images definitions used by this workflow can be found in [the wdl-dockerfiles repository](https://github.com/PacificBiosciences/wdl-dockerfiles/tree/987efde4d614a292fbfe9f3cf146b63005ad6a8a). Images are hosted in PacBio's [quay.io](https://quay.io/organization/pacbio). Docker images used in the workflow are pegged to specific versions by referring to their digests rather than tags.
@@ -194,3 +250,10 @@ The Docker image used by a particular step of the workflow can be identified by 
 
 | Image | Major tool versions | Links |
 | :- | :- | :- |
+| python | python 3.7; custom scripts | [Dockerfile](https://github.com/PacificBiosciences/wdl-dockerfiles/tree/79e314df42ff4c68fa6df04972fa05a7f0fee459/docker/python/metagenomics) |
+| samtools | <ul><li>[samtools 1.10](https://github.com/samtools/samtools/releases/tag/1.10)</li><li>[minimap2 2.17](https://github.com/lh3/minimap2/releases/tag/v2.17)</li></ul> | [Dockerfile](https://github.com/PacificBiosciences/wdl-dockerfiles/tree/79e314df42ff4c68fa6df04972fa05a7f0fee459/docker/samtools/metagenomics) |
+| checkm2 | <ul><li>[checkm2 1.0.1](https://github.com/chklovski/CheckM2/releases/tag/1.0.1)</li></ul> | [Dockerfile](https://github.com/PacificBiosciences/wdl-dockerfiles/tree/79e314df42ff4c68fa6df04972fa05a7f0fee459/docker/checkm2) |
+| metabat | <ul><li>[metabat2 2.15](https://bitbucket.org/berkeleylab/metabat/downloads/?tab=tags)</li></ul> | [Dockerfile](https://github.com/PacificBiosciences/wdl-dockerfiles/tree/79e314df42ff4c68fa6df04972fa05a7f0fee459/docker/metabat) |
+| semibin | <ul><li>[semibin 1.5](https://github.com/BigDataBiology/SemiBin/releases/tag/v1.5.0)</li></ul> | [Dockerfile](https://github.com/PacificBiosciences/wdl-dockerfiles/tree/79e314df42ff4c68fa6df04972fa05a7f0fee459/docker/semibin) |
+| dastool | <ul><li>[dastool 1.1.6](https://github.com/cmks/DAS_Tool/releases/tag/1.1.6)</li></ul> | [Dockerfile](https://github.com/PacificBiosciences/wdl-dockerfiles/tree/79e314df42ff4c68fa6df04972fa05a7f0fee459/docker/dastool) |
+| gtdbtk | <ul><li>[gtdbtk 2.1.1](https://github.com/Ecogenomics/GTDBTk/releases/tag/2.1.1)</li><li>python 3.7</li></ul> | [Dockerfile](https://github.com/PacificBiosciences/wdl-dockerfiles/tree/79e314df42ff4c68fa6df04972fa05a7f0fee459/docker/gtdbtk) |

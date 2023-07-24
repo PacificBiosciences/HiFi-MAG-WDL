@@ -32,34 +32,34 @@ workflow completeness_aware_binning {
 			runtime_attributes = default_runtime_attributes
 	}
 
-	if (long_contigs_to_bins.bin_key_nonempty) {
-		call checkm2_contig_analysis {
-		input:
-			db = db,
-			long_bin_fastas = long_contigs_to_bins.long_bin_fastas,
-			runtime_attributes = default_runtime_attributes
-		}
+	#if (long_contigs_to_bins.bin_key_nonempty) {
+	#	call checkm2_contig_analysis {
+	#	input:
+	#		db = db,
+	#		long_bin_fastas = long_contigs_to_bins.long_bin_fastas,
+	#		runtime_attributes = default_runtime_attributes
+	#	}
 
-		call filter_complete_contigs {
-		input:
-			sample_id = sample_id,
-			contigs_fasta = contigs_fasta,
-			report = checkm2_contig_analysis.report,
-			key = long_contigs_to_bins.key,
-			min_length = min_length,
-			min_completeness = min_completeness,
-			runtime_attributes = default_runtime_attributes
-		}
-	}
+	#	call filter_complete_contigs {
+	#	input:
+	#		sample_id = sample_id,
+	#		contigs_fasta = contigs_fasta,
+	#		report = checkm2_contig_analysis.report,
+	#		key = long_contigs_to_bins.key,
+	#		min_length = min_length,
+	#		min_completeness = min_completeness,
+	#		runtime_attributes = default_runtime_attributes
+	#	}
+	#}
 
 	output {
 		File key = long_contigs_to_bins.key
 		File incomplete_contigs = make_incomplete_contigs.incomplete_contigs
 
-		File? report = checkm2_contig_analysis.report
-		File? passed_bins = filter_complete_contigs.passed_bins
-		File? scatterplot = filter_complete_contigs.scatterplot
-		File? histogram = filter_complete_contigs.histogram
+		#File? report = checkm2_contig_analysis.report
+		#File? passed_bins = filter_complete_contigs.passed_bins
+		#File? scatterplot = filter_complete_contigs.scatterplot
+		#File? histogram = filter_complete_contigs.histogram
 	}
 }
 
@@ -140,7 +140,7 @@ task make_incomplete_contigs {
 			-f "~{sample_id}.incomplete_contigs.fasta" \
 			-p ~{key} \
 			-d "${long_bin_fastas_dir}" \
-			-o ./ \ # TODO - this step is just copying the complete AKA long bin fastas to an output directory
+			-o ./ # TODO - this step is just copying the complete AKA long bin fastas to an output directory
 	>>>
 
 	output {

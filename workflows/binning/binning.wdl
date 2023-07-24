@@ -66,11 +66,11 @@ workflow binning {
 	}
 
 	output {
-		# Metabat2
+		# MetaBAT2
 		Array[File] metabat2_reconstructed_bins_fastas = metabat2_analysis.discovered_bins_fastas
 		File metabat2_bin_sets_tsv = dastool_input_semibin2.bin_sets_tsv
 
-		# Semibin2
+		# SemiBin2
 		File semibin2_bins_tsv = semibin2_analysis.bins_tsv
 		Array[File] semibin2_reconstructed_bins_fastas = semibin2_analysis.reconstructed_bins_fastas
 		File semibin2_bin_sets_tsv = dastool_input_semibin2.bin_sets_tsv
