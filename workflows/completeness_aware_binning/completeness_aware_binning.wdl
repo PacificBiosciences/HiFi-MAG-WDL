@@ -61,15 +61,6 @@ workflow completeness_aware_binning {
 		File? scatterplot = filter_complete_contigs.scatterplot
 		File? histogram = filter_complete_contigs.histogram
 	}
-
-	parameter_meta {
-		sample_id: {help: "Sample ID"}
-		contigs_fasta: {help: "Primary contigs in fasta format"}
-		min_length: {help: "Minimum size of a contig to consider for completeness scores; default value is set to 500kb. This value should not be increased"}
-		min_completeness: {help: "Minimum completeness score (from CheckM2) to mark a contig as complete and place it in a distinct bin; default value is set to 93%. This value should not be lower than 90%"}
-		key: {help: "A tab-delimited table with bin numbers and contig names"}
-		default_runtime_attributes: {help: "Default RuntimeAttributes; spot if preemptible was set to true, otherwise on_demand"}
-	}
 }
 
 task long_contigs_to_bins {

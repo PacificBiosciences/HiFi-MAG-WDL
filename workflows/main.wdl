@@ -121,9 +121,9 @@ workflow metagenomics {
 	parameter_meta {
 		sample_id: {help: "Sample ID"}
 		# BAM to FASTQ
-		bam: {help: "Sample BAM to convert to fastq format"}
+		bam: {help: "Sample BAM to convert to FASTQ format"}
 		# Assembly
-		fastq: {help: "Sample in fastq format"}
+		fastq: {help: "Sample in FASTQ format"}
 		# Completeness-aware binning
 		db: {help: "CheckM2 DIAMOND reference database Uniref100/KO"}
 		min_length: {help: "Minimum size of a contig to consider for completeness scores; default value is set to 500kb. This value should not be increased"}

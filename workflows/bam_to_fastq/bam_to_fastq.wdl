@@ -20,12 +20,6 @@ workflow bam_to_fastq {
 	output {
 		 File converted_fastq = convert_bam_to_fastq.converted_fastq
 	}
-
-	parameter_meta {
-		sample_id: {help: "Sample ID"}
-		bam: {help: "Sample BAM to convert to fastq format"}
-		default_runtime_attributes: {help: "Default RuntimeAttributes; spot if preemptible was set to true, otherwise on_demand"}
-	}
 }
 
 task convert_bam_to_fastq {

@@ -41,14 +41,6 @@ workflow coverage {
 		File sorted_bam_index = minimap_to_bam.sorted_bam_index
 		File filtered_depth = convert_depth.filtered_depth
 	}
-
-	parameter_meta {
-		sample_id: {help: "Sample ID"}
-		contigs_fasta: {help: "Primary contigs in fasta format"}
-		reads_fasta: {help: "Sample reads in fasta format"}
-		key: {help: "A tab-delimited table with bin numbers and contig names"}
-		default_runtime_attributes: {help: "Default RuntimeAttributes; spot if preemptible was set to true, otherwise on_demand"}
-	}
 }
 
 task minimap_to_bam {

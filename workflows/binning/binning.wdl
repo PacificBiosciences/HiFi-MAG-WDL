@@ -78,20 +78,6 @@ workflow binning {
 		# DAS Tool
 		Array[File] dastool_bins = dastool_analysis.dastool_bins
 	}
-
-	parameter_meta {
-		sample_id: {help: "Sample ID"}
-		incomplete_contigs_fasta: {help: "Incomplete contigs identified (<93% complete or <500kb) in fasta format"}
-		filtered_depth: {help: "A tab-delimited table of the average coverage depth and variance for the incomplete contigs"}
-		# Metabat2 params
-		min_contig_size: {help: "The minimum size of contig to be included in binning for Metabat2; default value is set to 30000"}
-		# Semibin2 params
-		model_flag: {help: "The trained model to be used in Semibin2; default value is set to 'global'"}
-		# DAS tool params
-		search_engine: {help: "The engine for single copy gene searching; default is set to 'diamond'"}
-		score_threshold: {help: "Score threshold until selection algorithm will keep selecting bins [0 to 1]; default value is set to 0.2 (20%)"}
-		default_runtime_attributes: {help: "Default RuntimeAttributes; spot if preemptible was set to true, otherwise on_demand"}
-	}
 }
 
 task metabat2_analysis {

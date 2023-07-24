@@ -22,12 +22,6 @@ workflow assembly {
 		File primary_contig_fasta = hifiasm_meta.primary_contig_fasta
 		File reads_fasta = hifiasm_meta.reads_fasta
 	}
-
-	parameter_meta {
-		sample_id: {help: "Sample ID"}
-		fastq: {help: "Sample in fastq format"}
-		default_runtime_attributes: {help: "Default RuntimeAttributes; spot if preemptible was set to true, otherwise on_demand"}
-	}
 }
 
 task hifiasm_meta {
