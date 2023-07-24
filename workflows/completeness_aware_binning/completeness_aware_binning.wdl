@@ -137,20 +137,19 @@ task make_incomplete_contigs {
 		RuntimeAttributes runtime_attributes
 	}
 
+	String long_bin_fastas_dir = sub(long_bin_fastas[0], "complete.1.fa", "")
 	Int disk_size = ceil(size(contig, "GB") * 2 + 20)
 
 	command <<<
 		set -euo pipefail
 
-		long_bin_fastas_dir=$(dirname ~{long_bin_fastas[0]})
-
 		# TODO - need to rename long bin fastas here
-		
+
 		python /opt/scripts/Make-Incomplete-Contigs.py \
 			-i ~{contig} \
 			-f "~{sample}.incomplete_contigs.fasta" \
 			-p ~{key} \
-			-d "${long_bin_fastas_dir}" \
+			-d ~{long_bin_fastas_dir} \
 			-o ./ \ # TODO - this step is just copying the complete AKA long bin fastas to an output directory
 	>>>
 
@@ -181,16 +180,15 @@ task checkm2_contig_analysis {
 		RuntimeAttributes runtime_attributes
 	}
 
+	String long_bin_fastas_dir = sub(long_bin_fastas[0], "complete.1.fa", "")
 	Int threads = 24
 	Int disk_size = ceil(size(db, "GB") * 2 + 20)
 
 	command <<<
 		set -euo pipefail
 
-		long_bin_fastas_dir=$(dirname ~{long_bin_fastas[0]})
-
 		checkm2 predict \
-			-i "$long_bin_fastas_dir" \
+			-i ~{long_bin_fastas_dir} \
 			-o ./ \ # TODO
 			-x fa \
 			-t ~{threads} \

@@ -110,8 +110,7 @@ task metabat2_analysis {
 	>>>
 
 	output {
-		File read_1 = "~{sample}.1.fa"
-		File read_2 = "~{sample}.2.fa"
+		Array[File] discovered_bins_fastas = glob("~{sample}.*.fa")
 	}
 
 	runtime {
@@ -157,12 +156,12 @@ task semibin2_analysis {
 			-t ~{threads} \
 			--tag-output \
 			semibin2 ~{model_flag} \
-			--verbose \
-			--tmpdir={params.tmp} #TODO
+			--verbose
 	>>>
 
 	output {
-		File bins = "bins_info.tsv"
+		File bins_tsv = "bins_info.tsv"
+		Array[File] reconstructed_bins_fastas = glob("output_bins/semibin2_*.fa")
 	}
 
 	runtime {
@@ -184,24 +183,25 @@ task dastool_input {
 		String sample
 		String binning_algorithm
 
-		# TODO
-		File 
+		Array[File] reconstructed_bins_fastas
 
 		RuntimeAttributes runtime_attributes
 	}
- 
+ 	
 	Int disk_size = ceil(size(depth, "GB") * 2 + size(passed, "GB") + 20)
 
 	command <<<
 		set -euo pipefail
 
+		reconstructed_bins_fastas_dir=$(dirname ~{reconstructed_bins_fastas[0]})
+
 		Fasta_to_Contig2Bin.sh \
-			-i {params.indir} \ #TODO
+			-i "${reconstructed_bins_fastas_dir}" \
 			-e fa 1> "~{sample}.~{binning_algorithm}.tsv"
 	>>>
 
 	output {
-		File bin_sets = "~{sample}.~{binning_algorithm}.tsv"
+		File bin_sets_tsv = "~{sample}.~{binning_algorithm}.tsv"
 	}
 
 	runtime {
@@ -223,8 +223,8 @@ task dastool_analysis {
 		String sample
 
 		File incomplete_contigs
-		File metabat
-		File semibin
+		File metabat_bin_sets_tsv
+		File semibin_bin_sets_tsv
 
 		String search_engine
 		Int score_threshold
@@ -239,10 +239,10 @@ task dastool_analysis {
 		set -euo pipefail
 
 		DAS_Tool \
-			-i ~{metabat},~{semibin} \
+			-i ~{metabat_bin_sets_tsv},~{semibin_bin_sets_tsv} \
 			-c ~{incomplete_contigs} \
 			-l metabat2,semibin2 \
-			-o {params.outlabel} \ #TODO
+			-o ~{sample} \
 			--search_engine ~{search_engine} \
 			--write_bins \
 			-t ~{threads} \
@@ -251,7 +251,7 @@ task dastool_analysis {
 	>>>
 
 	output {
-		File complete = "~{sample}.Complete.txt"
+		Array[File] dastool_bins = glob("~{sample}_DASTool_bins/*.fa")
 	}
 
 	runtime {
