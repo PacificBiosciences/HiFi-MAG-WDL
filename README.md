@@ -250,7 +250,7 @@ The Docker image used by a particular step of the workflow can be identified by 
 
 | Image | Major tool versions | Links |
 | :- | :- | :- |
-| python | python 3.7; custom scripts | [Dockerfile](https://github.com/PacificBiosciences/wdl-dockerfiles/tree/79e314df42ff4c68fa6df04972fa05a7f0fee459/docker/python/metagenomics) |
+| python | <ul><li>python 3.7; custom scripts</li></ul> | [Dockerfile](https://github.com/PacificBiosciences/wdl-dockerfiles/tree/79e314df42ff4c68fa6df04972fa05a7f0fee459/docker/python/metagenomics) |
 | samtools | <ul><li>[samtools 1.10](https://github.com/samtools/samtools/releases/tag/1.10)</li><li>[minimap2 2.17](https://github.com/lh3/minimap2/releases/tag/v2.17)</li></ul> | [Dockerfile](https://github.com/PacificBiosciences/wdl-dockerfiles/tree/79e314df42ff4c68fa6df04972fa05a7f0fee459/docker/samtools/metagenomics) |
 | checkm2 | <ul><li>[checkm2 1.0.1](https://github.com/chklovski/CheckM2/releases/tag/1.0.1)</li></ul> | [Dockerfile](https://github.com/PacificBiosciences/wdl-dockerfiles/tree/79e314df42ff4c68fa6df04972fa05a7f0fee459/docker/checkm2) |
 | metabat | <ul><li>[metabat2 2.15](https://bitbucket.org/berkeleylab/metabat/downloads/?tab=tags)</li></ul> | [Dockerfile](https://github.com/PacificBiosciences/wdl-dockerfiles/tree/79e314df42ff4c68fa6df04972fa05a7f0fee459/docker/metabat) |
