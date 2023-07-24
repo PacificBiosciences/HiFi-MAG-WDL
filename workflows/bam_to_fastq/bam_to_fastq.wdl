@@ -4,7 +4,7 @@ import "../wdl-common/wdl/structs.wdl"
 
 workflow bam_to_fastq {
 	input {
-		String sample
+		String sample_id
 		File bam
 
 		RuntimeAttributes default_runtime_attributes
@@ -12,7 +12,7 @@ workflow bam_to_fastq {
 
 	call convert_bam_to_fastq {
 		input:
-			sample = sample,
+			sample_id = sample_id,
 			bam = bam,
 			runtime_attributes = default_runtime_attributes
 	}
@@ -22,15 +22,15 @@ workflow bam_to_fastq {
 	}
 
 	parameter_meta {
-		sample: {help: "Sample name"}
-		bam: {help: "Sample BAM to convert"}
+		sample_id: {help: "Sample ID"}
+		bam: {help: "Sample BAM to convert to fastq format"}
 		default_runtime_attributes: {help: "Default RuntimeAttributes; spot if preemptible was set to true, otherwise on_demand"}
 	}
 }
 
 task convert_bam_to_fastq {
 	input {
-		String sample
+		String sample_id
 		File bam
 
 		RuntimeAttributes runtime_attributes
@@ -43,11 +43,11 @@ task convert_bam_to_fastq {
 
 		samtools fastq \
 			~{bam} \
-		| bgzip -c >"~{sample}.fastq.gz"
+		| bgzip -c >"~{sample_id}.fastq.gz"
 	>>>
 
 	output {
-		 File converted_fastq = "~{sample}.fastq.gz"
+		 File converted_fastq = "~{sample_id}.fastq.gz"
 	}
 
 	runtime {

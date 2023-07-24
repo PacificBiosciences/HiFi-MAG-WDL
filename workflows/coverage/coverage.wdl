@@ -2,66 +2,68 @@ version 1.0
 
 import "../wdl-common/wdl/structs.wdl"
 
-workflow depth {
+workflow coverage {
 	input {
-		String sample
+		String sample_id
 
-		File contig
+		File contigs_fasta
 		File reads_fasta
-		File passed
+		File key
 
 		RuntimeAttributes default_runtime_attributes
 	}
 
 	call minimap_to_bam {
 		input:
-			sample = sample,
-			contig = contig,
+			sample_id = sample_id,
+			contigs_fasta = contigs_fasta,
 			reads_fasta = reads_fasta,
 			runtime_attributes = default_runtime_attributes
 	}
 
 	call bam_depth {
 		input:
-			sample = sample,
-			bam = minimap_to_bam.bam,
+			sample_id = sample_id,
+			sorted_bam = minimap_to_bam.sorted_bam,
 			runtime_attributes = default_runtime_attributes
 	}
 
 	call convert_depth {
 		input:
-			sample = sample,
-			depth_file = bam_depth.depth_file,
-			passed = passed,
+			sample_id = sample_id,
+			depth = bam_depth.depth,
+			key = key,
 			runtime_attributes = default_runtime_attributes
 	}
 
 	output {
-		File bam = minimap_to_bam.bam
-		File bam_index = minimap_to_bam.bam_index
+		File sorted_bam = minimap_to_bam.sorted_bam
+		File sorted_bam_index = minimap_to_bam.sorted_bam_index
 		File filtered_depth = convert_depth.filtered_depth
 	}
 
 	parameter_meta {
-		sample: {help: "Sample name"}
-		contig: {help: "Contigs"} #TODO
-		reads_fasta: {help: "Fasta file containing sample reads"}
+		sample_id: {help: "Sample ID"}
+		contigs_fasta: {help: "Primary contigs in fasta format"}
+		reads_fasta: {help: "Sample reads in fasta format"}
+		key: {help: "A tab-delimited table with bin numbers and contig names"}
 		default_runtime_attributes: {help: "Default RuntimeAttributes; spot if preemptible was set to true, otherwise on_demand"}
 	}
 }
 
 task minimap_to_bam {
 	input {
-		String sample
+		String sample_id
 		
-		File contig
+		File contigs_fasta
 		File reads_fasta
 
 		RuntimeAttributes runtime_attributes
 	}
 
 	Int threads = 24
-	Int disk_size = ceil(size(contig, "GB") * 2 + size(reads_fasta, "GB") + 20)
+	Int mem_gb = threads * 2
+	Int disk_size = ceil(size(contigs_fasta, "GB") * 2 + size(reads_fasta, "GB") + 20)
 
 	command <<<
 		set -euo pipefail
@@ -81,26 +83,26 @@ task minimap_to_bam {
 			-z 400,50 \
 			--sam-hit-only \
 			-t ~{threads} \
-			~{contig} \
+			~{contigs_fasta} \
 			~{reads_fasta} \
 		| samtools sort \
 			-@ ~{threads} \
-			-o "~{sample}.bam"
+			-o "~{sample_id}.sorted.bam"
 
 		samtools index \
 			-@ ~{threads} \
-			"~{sample}.bam"
+			"~{sample_id}.sorted.bam"
 	>>>
 
 	output {
-		File bam = "~{sample}.bam"
-		File bam_index = "~{sample}.bam.bai"
+		File sorted_bam = "~{sample_id}.sorted.bam"
+		File sorted_bam_index = "~{sample_id}.sorted.bam.bai"
 	}
 
 	runtime {
 		docker: "~{runtime_attributes.container_registry}/samtools@sha256:d3f5cfb7be7a175fe0471152528e8175ad2b57c348bacc8b97be818f31241837"
 		cpu: threads
-		memory: "4 GB"
+		memory: mem_gb + " GB"
 		disk: disk_size + " GB"
 		disks: "local-disk " + disk_size + " HDD"
 		preemptible: runtime_attributes.preemptible_tries
@@ -113,25 +115,25 @@ task minimap_to_bam {
 
 task bam_depth {
 	input {
-		String sample
+		String sample_id
 		
-		File bam
+		File sorted_bam
 
 		RuntimeAttributes runtime_attributes
 	}
  
-	Int disk_size = ceil(size(bam, "GB") * 2 + 20)
+	Int disk_size = ceil(size(sorted_bam, "GB") * 2 + 20)
 
 	command <<<
 		set -euo pipefail
 
 		jgi_summarize_bam_contig_depths \
-			--outputDepth "~{sample}.JGI.depth.txt" \
-			~{bam}
+			--outputDepth "~{sample_id}.JGI.depth.txt" \
+			~{sorted_bam}
 	>>>
 
 	output {
-		File depth_file = "~{sample}.JGI.depth.txt"
+		File depth = "~{sample_id}.JGI.depth.txt"
 	}
 
 	runtime {
@@ -150,27 +152,27 @@ task bam_depth {
 
 task convert_depth {
 	input {
-		String sample
+		String sample_id
 		
-		File depth_file
-		File passed
+		File depth
+		File key
 
 		RuntimeAttributes runtime_attributes
 	}
  
-	Int disk_size = ceil(size(depth_file, "GB") * 2 + size(passed, "GB") + 20)
+	Int disk_size = ceil(size(depth, "GB") * 2 + size(key, "GB") + 20)
 
 	command <<<
 		set -euo pipefail
 
 		python /opt/scripts/Convert-JGI-Coverages.py \
-			-i ~{depth_file} \
-			-p ~{passed} \
-			-o1 "~{sample}.JGI.filtered.depth.txt"
+			-i ~{depth} \
+			-p ~{key} \
+			-o1 "~{sample_id}.JGI.filtered.depth.txt"
 	>>>
 
 	output {
-		File filtered_depth = "~{sample}.JGI.filtered.depth.txt"
+		File filtered_depth = "~{sample_id}.JGI.filtered.depth.txt"
 	}
 
 	runtime {
