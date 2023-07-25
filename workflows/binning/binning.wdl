@@ -9,14 +9,13 @@ workflow binning {
 		String sample_id
 
 		File incomplete_contigs_fasta
-		File filtered_depth
+		File filtered_contig_depth_txt
 		File sorted_bam
 
-		Int min_contig_size = 30000
-		String model_flag = "--environment=global"
-
-		String search_engine = "diamond"
-		Float score_threshold = 0.2
+		Int metabat2_min_contig_size
+		String semibin2_model_flag
+		String dastool_search_engine
+		Float dastool_score_threshold
 
 		RuntimeAttributes default_runtime_attributes
 	}
@@ -25,8 +24,8 @@ workflow binning {
 		input:
 			sample_id = sample_id,
 			incomplete_contigs_fasta = incomplete_contigs_fasta,
-			filtered_depth = filtered_depth,
-			min_contig_size = min_contig_size,
+			filtered_contig_depth_txt = filtered_contig_depth_txt,
+			metabat2_min_contig_size = metabat2_min_contig_size,
 			runtime_attributes = default_runtime_attributes
 	}
 
@@ -34,7 +33,7 @@ workflow binning {
 		input:
 			incomplete_contigs_fasta = incomplete_contigs_fasta,
 			sorted_bam = sorted_bam,
-			model_flag = model_flag,
+			semibin2_model_flag = semibin2_model_flag,
 			runtime_attributes = default_runtime_attributes
 	}
 
@@ -60,8 +59,8 @@ workflow binning {
 			incomplete_contigs_fasta = incomplete_contigs_fasta,
 			metabat2_bin_sets_tsv = dastool_input_metabat2.bin_sets_tsv,
 			semibin2_bin_sets_tsv = dastool_input_semibin2.bin_sets_tsv,
-			search_engine = search_engine,
-			score_threshold = score_threshold,
+			dastool_search_engine = dastool_search_engine,
+			dastool_score_threshold = dastool_score_threshold,
 			runtime_attributes = default_runtime_attributes
 	}
 
@@ -85,27 +84,29 @@ task metabat2_analysis {
 		String sample_id
 		
 		File incomplete_contigs_fasta
-		File filtered_depth
+		File filtered_contig_depth_txt
 
-		Int min_contig_size
+		Int metabat2_min_contig_size
 
 		RuntimeAttributes runtime_attributes
 	}
 
 	Int threads = 12
 	Int mem_gb = threads * 4
-	Int disk_size = ceil(size(incomplete_contigs_fasta, "GB") * 2 + size(filtered_depth, "GB") + 20)
+	Int disk_size = ceil(size(incomplete_contigs_fasta, "GB") * 2 + size(filtered_contig_depth_txt, "GB") + 20)
 
 	command <<<
 		set -euo pipefail
 
+		# TODO - get metabat version. It's in the --help message
+
 		metabat2 \
-			-v \
-			-i ~{incomplete_contigs_fasta} \
-			-a ~{filtered_depth} \
-			-o ~{sample_id} \
-			-t ~{threads} \
-			-m ~{min_contig_size}
+			--verbose \
+			--inFile ~{incomplete_contigs_fasta} \
+			--abdFile ~{filtered_contig_depth_txt} \
+			--outFile ~{sample_id} \
+			--numThreads ~{threads} \
+			--minContig ~{metabat2_min_contig_size}
 	>>>
 
 	output {
@@ -113,7 +114,7 @@ task metabat2_analysis {
 	}
 
 	runtime {
-		docker: "~{runtime_attributes.container_registry}/metabat@sha256:d68d401803c4e99d85a4c93e48eb223275171f08b49d3314ff245a2d68264651"
+		docker: "~{runtime_attributes.container_registry}/metabat:5e8307c"
 		cpu: threads
 		memory: mem_gb + " GB"
 		disk: disk_size + " GB"
@@ -131,7 +132,7 @@ task semibin2_analysis {
 		File incomplete_contigs_fasta
 		File sorted_bam
 
-		String model_flag
+		String semibin2_model_flag
 
 		RuntimeAttributes runtime_attributes
 	}
@@ -143,17 +144,19 @@ task semibin2_analysis {
 	command <<<
 		set -euo pipefail
 
+		SemiBin --version
+
 		SemiBin \
 			single_easy_bin \
-			-i ~{incomplete_contigs_fasta} \
-			-b ~{sorted_bam} \
-			-o ./ \
+			--input-fasta ~{incomplete_contigs_fasta} \
+			--input-bam ~{sorted_bam} \
+			--output ./ \
 			--self-supervised \
 			--sequencing-type=long_reads \
 			--compression=none \
-			-t ~{threads} \
+			--threads ~{threads} \
 			--tag-output \
-			semibin2 ~{model_flag} \
+			semibin2 ~{semibin2_model_flag} \
 			--verbose
 	>>>
 
@@ -163,7 +166,7 @@ task semibin2_analysis {
 	}
 
 	runtime {
-		docker: "~{runtime_attributes.container_registry}/semibin@sha256:ddea641ec796eb6259aa6e1298c64e49f70e49b2057c2d00a626aa525c9d8cb4"
+		docker: "~{runtime_attributes.container_registry}/semibin:5e8307c"
 		cpu: threads
 		memory: mem_gb + " GB"
 		disk: disk_size + " GB"
@@ -191,11 +194,13 @@ task dastool_input {
 	command <<<
 		set -euo pipefail
 
+		DAS_Tool --version
+
 		reconstructed_bins_fastas_dir=$(dirname ~{reconstructed_bins_fastas[0]})
 
 		Fasta_to_Contig2Bin.sh \
-			-i "${reconstructed_bins_fastas_dir}" \
-			-e fa 1> "~{sample_id}.~{binning_algorithm}.tsv"
+			--input_folder "${reconstructed_bins_fastas_dir}" \
+			--extension fa 1> "~{sample_id}.~{binning_algorithm}.tsv"
 	>>>
 
 	output {
@@ -203,7 +208,7 @@ task dastool_input {
 	}
 
 	runtime {
-		docker: "~{runtime_attributes.container_registry}/dastool@sha256:ff71f31b7603be06c738e12ed1a91d1e448d0b96a53e073188b1ef870dd8da1c"
+		docker: "~{runtime_attributes.container_registry}/dastool:5e8307c"
 		cpu: 2
 		memory: "4 GB"
 		disk: disk_size + " GB"
@@ -224,8 +229,8 @@ task dastool_analysis {
 		File metabat2_bin_sets_tsv
 		File semibin2_bin_sets_tsv
 
-		String search_engine
-		Float score_threshold
+		String dastool_search_engine
+		Float dastool_score_threshold
 
 		RuntimeAttributes runtime_attributes
 	}
@@ -237,15 +242,17 @@ task dastool_analysis {
 	command <<<
 		set -euo pipefail
 
+		DAS_Tool --version
+
 		DAS_Tool \
-			-i ~{metabat2_bin_sets_tsv},~{semibin2_bin_sets_tsv} \
-			-c ~{incomplete_contigs_fasta} \
-			-l metabat2,semibin2 \
-			-o ~{sample_id} \
-			--search_engine ~{search_engine} \
+			--bins ~{metabat2_bin_sets_tsv},~{semibin2_bin_sets_tsv} \
+			--contigs ~{incomplete_contigs_fasta} \
+			--labels metabat2,semibin2 \
+			--outputbasename ~{sample_id} \
+			--search_engine ~{dastool_search_engine} \
 			--write_bins \
-			-t ~{threads} \
-			--score_threshold ~{score_threshold} \
+			--threads ~{threads} \
+			--score_threshold ~{dastool_score_threshold} \
 			--debug
 	>>>
 
@@ -254,7 +261,7 @@ task dastool_analysis {
 	}
 
 	runtime {
-		docker: "~{runtime_attributes.container_registry}/dastool@sha256:ff71f31b7603be06c738e12ed1a91d1e448d0b96a53e073188b1ef870dd8da1c"
+		docker: "~{runtime_attributes.container_registry}/dastool:5e8307c"
 		cpu: threads
 		memory: mem_gb + " GB"
 		disk: disk_size + " GB"

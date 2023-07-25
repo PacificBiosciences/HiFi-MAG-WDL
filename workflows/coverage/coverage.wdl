@@ -8,7 +8,7 @@ workflow coverage {
 
 		File contigs_fasta
 		File reads_fasta
-		File key
+		File bins_contigs_key
 
 		RuntimeAttributes default_runtime_attributes
 	}
@@ -31,15 +31,15 @@ workflow coverage {
 	call convert_depth {
 		input:
 			sample_id = sample_id,
-			depth = bam_depth.depth,
-			key = key,
+			contig_depth_txt = bam_depth.contig_depth_txt,
+			bins_contigs_key = bins_contigs_key,
 			runtime_attributes = default_runtime_attributes
 	}
 
 	output {
 		File sorted_bam = minimap_to_bam.sorted_bam
 		File sorted_bam_index = minimap_to_bam.sorted_bam_index
-		File filtered_depth = convert_depth.filtered_depth
+		File filtered_contig_depth_txt = convert_depth.filtered_contig_depth_txt
 	}
 }
 
@@ -60,6 +60,9 @@ task minimap_to_bam {
 	command <<<
 		set -euo pipefail
 
+		minimap2 --version
+		samtools --version
+
 		minimap2 \
 			-a \
 			-k 19 \
@@ -74,15 +77,15 @@ task minimap_to_bam {
 			-E 4,1 \
 			-z 400,50 \
 			--sam-hit-only \
-			-t ~{threads} \
+			-t ~{threads / 2} \
 			~{contigs_fasta} \
 			~{reads_fasta} \
 		| samtools sort \
-			-@ ~{threads} \
+			-@ ~{threads / 2 - 1} \
 			-o "~{sample_id}.sorted.bam"
 
 		samtools index \
-			-@ ~{threads} \
+			-@ ~{threads - 1} \
 			"~{sample_id}.sorted.bam"
 	>>>
 
@@ -92,7 +95,7 @@ task minimap_to_bam {
 	}
 
 	runtime {
-		docker: "~{runtime_attributes.container_registry}/samtools@sha256:d3f5cfb7be7a175fe0471152528e8175ad2b57c348bacc8b97be818f31241837"
+		docker: "~{runtime_attributes.container_registry}/samtools:5e8307c"
 		cpu: threads
 		memory: mem_gb + " GB"
 		disk: disk_size + " GB"
@@ -119,17 +122,19 @@ task bam_depth {
 	command <<<
 		set -euo pipefail
 
+		# TODO - get metabat version. It's in the --help message
+
 		jgi_summarize_bam_contig_depths \
 			--outputDepth "~{sample_id}.JGI.depth.txt" \
 			~{sorted_bam}
 	>>>
 
 	output {
-		File depth = "~{sample_id}.JGI.depth.txt"
+		File contig_depth_txt = "~{sample_id}.JGI.depth.txt"
 	}
 
 	runtime {
-		docker: "~{runtime_attributes.container_registry}/metabat@sha256:d68d401803c4e99d85a4c93e48eb223275171f08b49d3314ff245a2d68264651"
+		docker: "~{runtime_attributes.container_registry}/metabat:5e8307c"
 		cpu: 2
 		memory: "4 GB"
 		disk: disk_size + " GB"
@@ -146,29 +151,29 @@ task convert_depth {
 	input {
 		String sample_id
 		
-		File depth
-		File key
+		File contig_depth_txt
+		File bins_contigs_key
 
 		RuntimeAttributes runtime_attributes
 	}
  
-	Int disk_size = ceil(size(depth, "GB") * 2 + size(key, "GB") + 20)
+	Int disk_size = ceil(size(contig_depth_txt, "GB") * 2 + size(bins_contigs_key, "GB") + 20)
 
 	command <<<
 		set -euo pipefail
 
 		python /opt/scripts/Convert-JGI-Coverages.py \
-			-i ~{depth} \
-			-p ~{key} \
-			-o1 "~{sample_id}.JGI.filtered.depth.txt"
+			--in_jgi ~{contig_depth_txt} \
+			--passed_bins ~{bins_contigs_key} \
+			--out_jgi "~{sample_id}.JGI.filtered.depth.txt"
 	>>>
 
 	output {
-		File filtered_depth = "~{sample_id}.JGI.filtered.depth.txt"
+		File filtered_contig_depth_txt = "~{sample_id}.JGI.filtered.depth.txt"
 	}
 
 	runtime {
-		docker: "~{runtime_attributes.container_registry}/python@sha256:f4bf8adfa4987cf61d037440ec6f7fc1cff80c33adbe620620579f1e1f9c08f1"
+		docker: "~{runtime_attributes.container_registry}/python:5e8307c"
 		cpu: 2
 		memory: "4 GB"
 		disk: disk_size + " GB"

@@ -6,11 +6,10 @@ workflow completeness_aware_binning {
 	input {
 		String sample_id
 		File contigs_fasta
-		File db
+		File checkm2_ref_db
 
-		#TODO - conditional for these values?
-		Int min_length = 500000
-		Int min_completeness = 93
+		Int min_contig_length
+		Int min_contig_completeness
 
 		RuntimeAttributes default_runtime_attributes
 	}
@@ -19,7 +18,7 @@ workflow completeness_aware_binning {
 		input:
 			sample_id = sample_id,
 			contigs_fasta = contigs_fasta,
-			min_length = min_length,
+			min_contig_length = min_contig_length,
 			runtime_attributes = default_runtime_attributes
 	}
 
@@ -27,39 +26,39 @@ workflow completeness_aware_binning {
 		input:
 			sample_id = sample_id,
 			contigs_fasta = contigs_fasta,
-			key = long_contigs_to_bins.key,
+			bins_contigs_key = long_contigs_to_bins.bins_contigs_key,
 			long_bin_fastas = long_contigs_to_bins.long_bin_fastas,
 			runtime_attributes = default_runtime_attributes
 	}
 
-	#if (long_contigs_to_bins.bin_key_nonempty) {
-	#	call checkm2_contig_analysis {
-	#	input:
-	#		db = db,
-	#		long_bin_fastas = long_contigs_to_bins.long_bin_fastas,
-	#		runtime_attributes = default_runtime_attributes
-	#	}
+	if (long_contigs_to_bins.bin_key_nonempty) {
+		call checkm2_contig_analysis {
+		input:
+			checkm2_ref_db = checkm2_ref_db,
+			long_bin_fastas = long_contigs_to_bins.long_bin_fastas,
+			runtime_attributes = default_runtime_attributes
+		}
 
-	#	call filter_complete_contigs {
-	#	input:
-	#		sample_id = sample_id,
-	#		contigs_fasta = contigs_fasta,
-	#		report = checkm2_contig_analysis.report,
-	#		key = long_contigs_to_bins.key,
-	#		min_length = min_length,
-	#		min_completeness = min_completeness,
-	#		runtime_attributes = default_runtime_attributes
-	#	}
-	#}
+		call filter_complete_contigs {
+		input:
+			sample_id = sample_id,
+			contigs_fasta = contigs_fasta,
+			report = checkm2_contig_analysis.report,
+			bins_contigs_key = long_contigs_to_bins.bins_contigs_key,
+			min_contig_length = min_contig_length,
+			min_contig_completeness = min_contig_completeness,
+			runtime_attributes = default_runtime_attributes
+		}
+	}
 
 	output {
-		File key = long_contigs_to_bins.key
+		File bins_contigs_key = long_contigs_to_bins.bins_contigs_key
 		File incomplete_contigs = make_incomplete_contigs.incomplete_contigs
 
-		#File? report = checkm2_contig_analysis.report
-		#File? passed_bins = filter_complete_contigs.passed_bins
-		#File? scatterplot = filter_complete_contigs.scatterplot
-		#File? histogram = filter_complete_contigs.histogram
+		File? report = checkm2_contig_analysis.report
+		File? passed_bins = filter_complete_contigs.passed_bins
+		File? scatterplot = filter_complete_contigs.scatterplot
+		File? histogram = filter_complete_contigs.histogram
 	}
 }
 
@@ -68,7 +67,7 @@ task long_contigs_to_bins {
 		String sample_id
 		File contigs_fasta
 
-		Int min_length
+		Int min_contig_length
 
 		RuntimeAttributes runtime_attributes
 	}
@@ -79,10 +78,10 @@ task long_contigs_to_bins {
 		set -euo pipefail
 
 		python /opt/scripts/Fasta-Make-Long-Seq-Bins.py \
-			-i ~{contigs_fasta} \
-			-b "~{sample_id}.bin_key.txt" \
-			-l ~{min_length} \
-			-o ./
+			--input_fasta ~{contigs_fasta} \
+			--bins_contigs "~{sample_id}.bin_key.txt" \
+			--length ~{min_contig_length} \
+			--outdir ./
 
 		# Check if any long contigs (>500kb) were identified
 		if [[ -s "~{sample_id}.bin_key.txt" ]]; then
@@ -93,13 +92,13 @@ task long_contigs_to_bins {
 	>>>
 
 	output {
-		File key = "~{sample_id}.bin_key.txt"
+		File bins_contigs_key = "~{sample_id}.bin_key.txt"
 		Boolean bin_key_nonempty = read_boolean("bin_key_nonempty.txt")
 		Array[File] long_bin_fastas = glob("complete.*.fa")
 	}
 
 	runtime {
-		docker: "~{runtime_attributes.container_registry}/python@sha256:f4bf8adfa4987cf61d037440ec6f7fc1cff80c33adbe620620579f1e1f9c08f1"
+		docker: "~{runtime_attributes.container_registry}/python:5e8307c"
 		cpu: 2
 		memory: "4 GB"
 		disk: disk_size + " GB"
@@ -117,7 +116,7 @@ task make_incomplete_contigs {
 		String sample_id
 		File contigs_fasta
 		
-		File key
+		File bins_contigs_key
 		Array[File] long_bin_fastas
 
 		RuntimeAttributes runtime_attributes
@@ -133,14 +132,14 @@ task make_incomplete_contigs {
 		# TODO - need to rename long bin fastas here
 		while IFS= read -r fasta; do
 			mv "$(echo "$fasta" | awk '{print $1}' | awk '{print "'"$long_bin_fastas_dir"'/"$1".fa"}')" "$(echo "$fasta" | awk '{print $2}' | awk '{print "'"$long_bin_fastas_dir"'/"$1".fa"}')"
-		done < ~{key}
+		done < ~{bins_contigs_key}
 
 		python /opt/scripts/Make-Incomplete-Contigs.py \
-			-i ~{contigs_fasta} \
-			-f "~{sample_id}.incomplete_contigs.fasta" \
-			-p ~{key} \
-			-d "${long_bin_fastas_dir}" \
-			-o ./ # TODO - this step is just copying the complete AKA long bin fastas to an output directory
+			--input_fasta ~{contigs_fasta} \
+			--output_fasta "~{sample_id}.incomplete_contigs.fasta" \
+			--passed_bins ~{bins_contigs_key} \
+			--fastadir "${long_bin_fastas_dir}" \
+			--outdir ./
 	>>>
 
 	output {
@@ -148,7 +147,7 @@ task make_incomplete_contigs {
 	}
 
 	runtime {
-		docker: "~{runtime_attributes.container_registry}/python@sha256:f4bf8adfa4987cf61d037440ec6f7fc1cff80c33adbe620620579f1e1f9c08f1"
+		docker: "~{runtime_attributes.container_registry}/python:5e8307c"
 		cpu: 2
 		memory: "4 GB"
 		disk: disk_size + " GB"
@@ -163,7 +162,7 @@ task make_incomplete_contigs {
 
 task checkm2_contig_analysis {
 	input {
-		File db
+		File checkm2_ref_db
 
 		Array[File] long_bin_fastas
 
@@ -172,20 +171,22 @@ task checkm2_contig_analysis {
 
 	Int threads = 24
 	Int mem_gb = threads * 4
-	Int disk_size = ceil(size(db, "GB") * 2 + 20)
+	Int disk_size = ceil(size(checkm2_ref_db, "GB") * 2 + 20)
 
 	command <<<
 		set -euo pipefail
 
+		checkm2 --version
+
 		long_bin_fastas_dir=$(dirname ~{long_bin_fastas[0]})
 
 		checkm2 predict \
-			-i "$long_bin_fastas_dir" \
-			-o ./ \
-			-x fa \
-			-t ~{threads} \
+			--input "$long_bin_fastas_dir" \
+			--output-directory ./ \
+			--extension fa \
+			--threads ~{threads} \
 			--force \
-			--database_path ~{db} \
+			--database_path ~{checkm2_ref_db} \
 			--remove_intermediates
 	>>>
 
@@ -194,7 +195,7 @@ task checkm2_contig_analysis {
 	}
 
 	runtime {
-		docker: "~{runtime_attributes.container_registry}/" #TODO
+		docker: "~{runtime_attributes.container_registry}/checkm2:5e8307c"
 		cpu: threads
 		memory: mem_gb + " GB"
 		disk: disk_size + " GB"
@@ -213,10 +214,10 @@ task filter_complete_contigs {
 		File contigs_fasta
 
 		File report
-		File key
+		File bins_contigs_key
 
-		Int min_length
-		Int min_completeness
+		Int min_contig_length
+		Int min_contig_completeness
 
 		RuntimeAttributes runtime_attributes
 	}
@@ -227,14 +228,14 @@ task filter_complete_contigs {
 		set -euo pipefail
 
 		python /opt/scripts/Filter-Complete-Contigs.py \
-			-i ~{contigs_fasta} \
-			-c ~{report} \
-			-b ~{key} \
-			-l ~{min_length} \
-			-m ~{min_completeness} \
-			-p "~{sample_id}.passed_bins.txt" \
-			-p1 "~{sample_id}.completeness_vs_size_scatter.pdf" \
-			-p2 "~{sample_id}.completeness_histo.pdf"
+			--input_fasta ~{contigs_fasta} \
+			--checkm ~{report} \
+			--bins_contigs ~{bins_contigs_key} \
+			--length ~{min_contig_length} \
+			--min_completeness ~{min_contig_completeness} \
+			--passed_bins "~{sample_id}.passed_bins.txt" \
+			--plot_scatter "~{sample_id}.completeness_vs_size_scatter.pdf" \
+			--plot_histo "~{sample_id}.completeness_histo.pdf"
 	>>>
 
 	output {
@@ -244,7 +245,7 @@ task filter_complete_contigs {
 	}
 
 	runtime {
-		docker: "~{runtime_attributes.container_registry}/python@sha256:f4bf8adfa4987cf61d037440ec6f7fc1cff80c33adbe620620579f1e1f9c08f1"
+		docker: "~{runtime_attributes.container_registry}/python:5e8307c"
 		cpu: 2
 		memory: "4 GB"
 		disk: disk_size + " GB"
