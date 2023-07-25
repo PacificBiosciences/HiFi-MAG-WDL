@@ -2,69 +2,66 @@ version 1.0
 
 import "../wdl-common/wdl/structs.wdl"
 
-workflow depth {
+workflow coverage {
 	input {
-		String sample
+		String sample_id
 
-		File contig
+		File contigs_fasta
 		File reads_fasta
-		File passed
+		File bins_contigs_key
 
 		RuntimeAttributes default_runtime_attributes
 	}
 
 	call minimap_to_bam {
 		input:
-			sample = sample,
-			contig = contig,
+			sample_id = sample_id,
+			contigs_fasta = contigs_fasta,
 			reads_fasta = reads_fasta,
 			runtime_attributes = default_runtime_attributes
 	}
 
 	call bam_depth {
 		input:
-			sample = sample,
-			bam = minimap_to_bam.bam,
+			sample_id = sample_id,
+			sorted_bam = minimap_to_bam.sorted_bam,
 			runtime_attributes = default_runtime_attributes
 	}
 
 	call convert_depth {
 		input:
-			sample = sample,
-			depth_file = bam_depth.depth_file,
-			passed = passed,
+			sample_id = sample_id,
+			contig_depth_txt = bam_depth.contig_depth_txt,
+			bins_contigs_key = bins_contigs_key,
 			runtime_attributes = default_runtime_attributes
 	}
 
 	output {
-		File bam = minimap_to_bam.bam
-		File bam_index = minimap_to_bam.bam_index
-		File filtered_depth = convert_depth.filtered_depth
-	}
-
-	parameter_meta {
-		sample: {help: "Sample name"}
-		contig: {help: "Contigs"} #TODO
-		reads_fasta: {help: "Fasta file containing sample reads"}
-		default_runtime_attributes: {help: "Default RuntimeAttributes; spot if preemptible was set to true, otherwise on_demand"}
+		File sorted_bam = minimap_to_bam.sorted_bam
+		File sorted_bam_index = minimap_to_bam.sorted_bam_index
+		File filtered_contig_depth_txt = convert_depth.filtered_contig_depth_txt
 	}
 }
 
 task minimap_to_bam {
 	input {
-		String sample
+		String sample_id
 		
-		File contig
+		File contigs_fasta
 		File reads_fasta
 
 		RuntimeAttributes runtime_attributes
 	}
 
 	Int threads = 24
-	Int disk_size = ceil(size(contig, "GB") * 2 + size(reads_fasta, "GB") + 20)
+	Int mem_gb = threads * 2
+	Int disk_size = ceil(size(contigs_fasta, "GB") * 2 + size(reads_fasta, "GB") + 20)
 
 	command <<<
 		set -euo pipefail
+
+		minimap2 --version
+		samtools --version
 
 		minimap2 \
 			-a \
@@ -80,27 +77,27 @@ task minimap_to_bam {
 			-E 4,1 \
 			-z 400,50 \
 			--sam-hit-only \
-			-t ~{threads} \
-			~{contig} \
+			-t ~{threads / 2} \
+			~{contigs_fasta} \
 			~{reads_fasta} \
 		| samtools sort \
-			-@ ~{threads} \
-			-o "~{sample}.bam"
+			-@ ~{threads / 2 - 1} \
+			-o "~{sample_id}.sorted.bam"
 
 		samtools index \
-			-@ ~{threads} \
-			"~{sample}.bam"
+			-@ ~{threads - 1} \
+			"~{sample_id}.sorted.bam"
 	>>>
 
 	output {
-		File bam = "~{sample}.bam"
-		File bam_index = "~{sample}.bam.bai"
+		File sorted_bam = "~{sample_id}.sorted.bam"
+		File sorted_bam_index = "~{sample_id}.sorted.bam.bai"
 	}
 
 	runtime {
-		docker: "~{runtime_attributes.container_registry}/samtools@sha256:d3f5cfb7be7a175fe0471152528e8175ad2b57c348bacc8b97be818f31241837"
+		docker: "~{runtime_attributes.container_registry}/samtools:5e8307c"
 		cpu: threads
-		memory: "4 GB"
+		memory: mem_gb + " GB"
 		disk: disk_size + " GB"
 		disks: "local-disk " + disk_size + " HDD"
 		preemptible: runtime_attributes.preemptible_tries
@@ -113,29 +110,31 @@ task minimap_to_bam {
 
 task bam_depth {
 	input {
-		String sample
+		String sample_id
 		
-		File bam
+		File sorted_bam
 
 		RuntimeAttributes runtime_attributes
 	}
  
-	Int disk_size = ceil(size(bam, "GB") * 2 + 20)
+	Int disk_size = ceil(size(sorted_bam, "GB") * 2 + 20)
 
 	command <<<
 		set -euo pipefail
 
+		# TODO - get metabat version. It's in the --help message
+
 		jgi_summarize_bam_contig_depths \
-			--outputDepth "~{sample}.JGI.depth.txt" \
-			~{bam}
+			--outputDepth "~{sample_id}.JGI.depth.txt" \
+			~{sorted_bam}
 	>>>
 
 	output {
-		File depth_file = "~{sample}.JGI.depth.txt"
+		File contig_depth_txt = "~{sample_id}.JGI.depth.txt"
 	}
 
 	runtime {
-		docker: "~{runtime_attributes.container_registry}/metabat@sha256:d68d401803c4e99d85a4c93e48eb223275171f08b49d3314ff245a2d68264651"
+		docker: "~{runtime_attributes.container_registry}/metabat:5e8307c"
 		cpu: 2
 		memory: "4 GB"
 		disk: disk_size + " GB"
@@ -150,31 +149,31 @@ task bam_depth {
 
 task convert_depth {
 	input {
-		String sample
+		String sample_id
 		
-		File depth_file
-		File passed
+		File contig_depth_txt
+		File bins_contigs_key
 
 		RuntimeAttributes runtime_attributes
 	}
  
-	Int disk_size = ceil(size(depth_file, "GB") * 2 + size(passed, "GB") + 20)
+	Int disk_size = ceil(size(contig_depth_txt, "GB") * 2 + size(bins_contigs_key, "GB") + 20)
 
 	command <<<
 		set -euo pipefail
 
 		python /opt/scripts/Convert-JGI-Coverages.py \
-			-i ~{depth_file} \
-			-p ~{passed} \
-			-o1 "~{sample}.JGI.filtered.depth.txt"
+			--in_jgi ~{contig_depth_txt} \
+			--passed_bins ~{bins_contigs_key} \
+			--out_jgi "~{sample_id}.JGI.filtered.depth.txt"
 	>>>
 
 	output {
-		File filtered_depth = "~{sample}.JGI.filtered.depth.txt"
+		File filtered_contig_depth_txt = "~{sample_id}.JGI.filtered.depth.txt"
 	}
 
 	runtime {
-		docker: "~{runtime_attributes.container_registry}/python@sha256:f4bf8adfa4987cf61d037440ec6f7fc1cff80c33adbe620620579f1e1f9c08f1"
+		docker: "~{runtime_attributes.container_registry}/python:5e8307c"
 		cpu: 2
 		memory: "4 GB"
 		disk: disk_size + " GB"
