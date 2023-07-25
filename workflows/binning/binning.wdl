@@ -13,7 +13,7 @@ workflow binning {
 		File sorted_bam
 
 		Int min_contig_size = 30000
-		String model_flag = 'model: "--environment=global"'
+		String model_flag = "--environment=global"
 
 		String search_engine = "diamond"
 		Float score_threshold = 0.2
