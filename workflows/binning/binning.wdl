@@ -146,11 +146,13 @@ task semibin2_analysis {
 
 		SemiBin --version
 
+		mkdir semibin2_out_dir
+
 		SemiBin \
 			single_easy_bin \
 			--input-fasta ~{incomplete_contigs_fasta} \
 			--input-bam ~{sorted_bam} \
-			--output ./ \
+			--output semibin2_out_dir \
 			--self-supervised \
 			--sequencing-type=long_reads \
 			--compression=none \
@@ -161,8 +163,8 @@ task semibin2_analysis {
 	>>>
 
 	output {
-		File bins_tsv = "bins_info.tsv"
-		Array[File] reconstructed_bins_fastas = glob("output_bins/semibin2_*.fa")
+		File bins_tsv = "semibin2_out_dir/bins_info.tsv"
+		Array[File] reconstructed_bins_fastas = glob("semibin2_out_dir/output_bins/semibin2_*.fa")
 	}
 
 	runtime {

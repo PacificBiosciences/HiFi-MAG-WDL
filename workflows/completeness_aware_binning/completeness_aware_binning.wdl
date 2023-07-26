@@ -26,7 +26,7 @@ workflow completeness_aware_binning {
 		input:
 			sample_id = sample_id,
 			contigs_fasta = contigs_fasta,
-			bins_contigs_key = long_contigs_to_bins.bins_contigs_key,
+			bins_contigs_key_txt = long_contigs_to_bins.bins_contigs_key_txt,
 			long_bin_fastas = long_contigs_to_bins.long_bin_fastas,
 			runtime_attributes = default_runtime_attributes
 	}
@@ -43,8 +43,8 @@ workflow completeness_aware_binning {
 		input:
 			sample_id = sample_id,
 			contigs_fasta = contigs_fasta,
-			report = checkm2_contig_analysis.report,
-			bins_contigs_key = long_contigs_to_bins.bins_contigs_key,
+			contig_quality_report_tsv = checkm2_contig_analysis.contig_quality_report_tsv,
+			bins_contigs_key_txt = long_contigs_to_bins.bins_contigs_key_txt,
 			min_contig_length = min_contig_length,
 			min_contig_completeness = min_contig_completeness,
 			runtime_attributes = default_runtime_attributes
@@ -52,13 +52,13 @@ workflow completeness_aware_binning {
 	}
 
 	output {
-		File bins_contigs_key = long_contigs_to_bins.bins_contigs_key
+		File bins_contigs_key_txt = long_contigs_to_bins.bins_contigs_key_txt
 		File incomplete_contigs = make_incomplete_contigs.incomplete_contigs
 
-		File? report = checkm2_contig_analysis.report
-		File? passed_bins = filter_complete_contigs.passed_bins
-		File? scatterplot = filter_complete_contigs.scatterplot
-		File? histogram = filter_complete_contigs.histogram
+		File? contig_quality_report_tsv = checkm2_contig_analysis.contig_quality_report_tsv
+		File? passed_bins_txt = filter_complete_contigs.passed_bins_txt
+		File? scatterplot_pdf = filter_complete_contigs.scatterplot_pdf
+		File? histogram_pdf = filter_complete_contigs.histogram_pdf
 	}
 }
 
@@ -77,11 +77,13 @@ task long_contigs_to_bins {
 	command <<<
 		set -euo pipefail
 
+		mkdir long_bin_fastas_out_dir
+
 		python /opt/scripts/Fasta-Make-Long-Seq-Bins.py \
 			--input_fasta ~{contigs_fasta} \
 			--bins_contigs "~{sample_id}.bin_key.txt" \
 			--length ~{min_contig_length} \
-			--outdir ./
+			--outdir long_bin_fastas_out_dir
 
 		# Check if any long contigs (>500kb) were identified
 		if [[ -s "~{sample_id}.bin_key.txt" ]]; then
@@ -92,9 +94,9 @@ task long_contigs_to_bins {
 	>>>
 
 	output {
-		File bins_contigs_key = "~{sample_id}.bin_key.txt"
+		File bins_contigs_key_txt = "~{sample_id}.bin_key.txt"
 		Boolean bin_key_nonempty = read_boolean("bin_key_nonempty.txt")
-		Array[File] long_bin_fastas = glob("complete.*.fa")
+		Array[File] long_bin_fastas = glob("long_bin_fastas_out_dir/complete.*.fa")
 	}
 
 	runtime {
@@ -116,7 +118,7 @@ task make_incomplete_contigs {
 		String sample_id
 		File contigs_fasta
 		
-		File bins_contigs_key
+		File bins_contigs_key_txt
 		Array[File] long_bin_fastas
 
 		RuntimeAttributes runtime_attributes
@@ -129,17 +131,19 @@ task make_incomplete_contigs {
 
 		long_bin_fastas_dir=$(dirname ~{long_bin_fastas[0]})
 
+		mkdir long_bin_fastas_copy_out_dir
+
 		# TODO - need to rename long bin fastas here
 		while IFS= read -r fasta; do
 			mv "$(echo "$fasta" | awk '{print $1}' | awk '{print "'"$long_bin_fastas_dir"'/"$1".fa"}')" "$(echo "$fasta" | awk '{print $2}' | awk '{print "'"$long_bin_fastas_dir"'/"$1".fa"}')"
-		done < ~{bins_contigs_key}
+		done < ~{bins_contigs_key_txt}
 
 		python /opt/scripts/Make-Incomplete-Contigs.py \
 			--input_fasta ~{contigs_fasta} \
 			--output_fasta "~{sample_id}.incomplete_contigs.fasta" \
-			--passed_bins ~{bins_contigs_key} \
+			--passed_bins ~{bins_contigs_key_txt} \
 			--fastadir "${long_bin_fastas_dir}" \
-			--outdir ./
+			--outdir long_bin_fastas_copy_out_dir
 	>>>
 
 	output {
@@ -180,18 +184,21 @@ task checkm2_contig_analysis {
 
 		long_bin_fastas_dir=$(dirname ~{long_bin_fastas[0]})
 
+		mkdir checkm2_out_dir
+		mkdir tmp_dir
+
 		checkm2 predict \
 			--input "$long_bin_fastas_dir" \
-			--output-directory ./ \
+			--output-directory checkm2_out_dir \
 			--extension fa \
 			--threads ~{threads} \
-			--force \
 			--database_path ~{checkm2_ref_db} \
-			--remove_intermediates
+			--remove_intermediates \
+			--tmpdir tmp_dir
 	>>>
 
 	output {
-		File report = "quality_report.tsv"
+		File contig_quality_report_tsv = "checkm2_out_dir/quality_report.tsv"
 	}
 
 	runtime {
@@ -213,8 +220,8 @@ task filter_complete_contigs {
 		String sample_id
 		File contigs_fasta
 
-		File report
-		File bins_contigs_key
+		File contig_quality_report_tsv
+		File bins_contigs_key_txt
 
 		Int min_contig_length
 		Int min_contig_completeness
@@ -229,8 +236,8 @@ task filter_complete_contigs {
 
 		python /opt/scripts/Filter-Complete-Contigs.py \
 			--input_fasta ~{contigs_fasta} \
-			--checkm ~{report} \
-			--bins_contigs ~{bins_contigs_key} \
+			--checkm ~{contig_quality_report_tsv} \
+			--bins_contigs ~{bins_contigs_key_txt} \
 			--length ~{min_contig_length} \
 			--min_completeness ~{min_contig_completeness} \
 			--passed_bins "~{sample_id}.passed_bins.txt" \
@@ -239,9 +246,9 @@ task filter_complete_contigs {
 	>>>
 
 	output {
-		File passed_bins = "~{sample_id}.passed_bins.txt"
-		File scatterplot = "~{sample_id}.completeness_vs_size_scatter.pdf"
-		File histogram = "~{sample_id}.completeness_histo.pdf"
+		File passed_bins_txt = "~{sample_id}.passed_bins.txt"
+		File scatterplot_pdf = "~{sample_id}.completeness_vs_size_scatter.pdf"
+		File histogram_pdf = "~{sample_id}.completeness_histo.pdf"
 	}
 
 	runtime {

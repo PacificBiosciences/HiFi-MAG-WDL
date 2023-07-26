@@ -5,7 +5,9 @@ import "wdl-common/wdl/workflows/backend_configuration/backend_configuration.wdl
 import "completeness_aware_binning/completeness_aware_binning.wdl" as CompletenessAwareBinning
 import "coverage/coverage.wdl" as Coverage
 import "binning/binning.wdl" as Binning
-
+import "checkm2/checkm2.wdl" as CheckM2
+import "gtdbtk/gtdbtk.wdl" as GTDBTk
+import "mag/mag.wdl" as MAG
 
 workflow metagenomics {
 	input {
@@ -23,6 +25,13 @@ workflow metagenomics {
 		String semibin2_model_flag = "--environment=global"
 		String dastool_search_engine = "diamond"
 		Float dastool_score_threshold = 0.2
+
+		Int min_mag_completeness = 70
+		Int max_mag_contamination = 10
+		Int max_contigs = 20
+
+		# GTDB-Tk reference data
+		String gtdbtk_data_path
 
 		# Backend configuration
 		String backend
@@ -78,7 +87,7 @@ workflow metagenomics {
 			sample_id = sample_id,
 			contigs_fasta = hifiasm_meta.primary_contig_fasta,
 			reads_fasta = hifiasm_meta.reads_fasta,
-			bins_contigs_key = completeness_aware_binning.bins_contigs_key,
+			bins_contigs_key_txt = completeness_aware_binning.bins_contigs_key_txt,
 			default_runtime_attributes = default_runtime_attributes
 	}
 
@@ -95,22 +104,53 @@ workflow metagenomics {
 			default_runtime_attributes = default_runtime_attributes
 	}
 
-	output {
-		# BAM to FASTQ output
-		File? converted_fastq = bam_to_fastq.converted_fastq
+	call CheckM2.checkm2 {
+		input:
+			sample_id = sample_id,
+			checkm2_ref_db = checkm2_ref_db,
+			filtered_contig_depth_txt = coverage.filtered_contig_depth_txt,
+			derep_bins = binning.dastool_bins,
+			min_mag_completeness = min_mag_completeness,
+			max_mag_contamination = max_mag_contamination,
+			max_contigs = max_contigs,
+			default_runtime_attributes = default_runtime_attributes
+	}
 
-		# Assembly output
-		File primary_contig_graph = hifiasm_meta.primary_contig_graph
+	if (checkm2.passed_bin_count_nonempty) {
+		call GTDBTk.gtdbtk {
+			input:
+				sample_id = sample_id,
+				gtdb_batch_txt = checkm2.gtdb_batch_txt,
+				gtdbtk_data_path = gtdbtk_data_path,
+				default_runtime_attributes = default_runtime_attributes
+		}
+
+		call MAG.mag {
+			input:
+				sample_id = sample_id,
+				gtdbk_summary_txt = gtdbtk.gtdbk_summary_txt,
+				filtered_quality_report_tsv = checkm2.filtered_quality_report_tsv,
+				derep_bins = binning.dastool_bins,
+				min_mag_completeness = min_mag_completeness,
+				max_mag_contamination = max_mag_contamination,
+				default_runtime_attributes = default_runtime_attributes
+		}
+	}
+
+	output {
+		# Preprocessing
+		File? converted_fastq = bam_to_fastq.converted_fastq
+		File primary_contig_gfa = hifiasm_meta.primary_contig_gfa
 		File primary_contig_fasta = hifiasm_meta.primary_contig_fasta
 		File reads_fasta = hifiasm_meta.reads_fasta
 
 		# Completeness-aware binning output
-		File bins_contigs_key = completeness_aware_binning.bins_contigs_key
+		File bins_contigs_key_txt = completeness_aware_binning.bins_contigs_key_txt
 		File incomplete_contigs = completeness_aware_binning.incomplete_contigs
-		File? report = completeness_aware_binning.report
-		File? passed_bins = completeness_aware_binning.passed_bins
-		File? scatterplot = completeness_aware_binning.scatterplot
-		File? histogram = completeness_aware_binning.histogram
+		File? contig_quality_report_tsv = completeness_aware_binning.contig_quality_report_tsv
+		File? passed_bins_txt = completeness_aware_binning.passed_bins_txt
+		File? scatterplot_pdf = completeness_aware_binning.scatterplot_pdf
+		File? histogram_pdf = completeness_aware_binning.histogram_pdf
 
 		# Coverage output
 		File sorted_bam = coverage.sorted_bam
@@ -124,13 +164,28 @@ workflow metagenomics {
 		Array[File] semibin2_reconstructed_bins_fastas = binning.semibin2_reconstructed_bins_fastas
 		File semibin2_bin_sets_tsv = binning.semibin2_bin_sets_tsv
 		Array[File] dastool_bins = binning.dastool_bins
+
+		# CheckM2 output
+		File bin_quality_report_tsv = checkm2.bin_quality_report_tsv
+		File gtdb_batch_txt = checkm2.gtdb_batch_txt
+		File passed_bin_count_txt = checkm2.passed_bin_count_txt
+		File filtered_quality_report_tsv = checkm2.filtered_quality_report_tsv
+
+		# GTDB-Tk output
+
+		File gtdbk_summary_txt = gtdbtk.gtdbk_summary_txt
+
+		# MAG summary and plot output
+		File mag_summary_txt = mag.mag_summary_txt
+		Array[File] filtered_mags_fastas = mag.filtered_mags_fastas
+		File dastool_bins_plot_pdf = mag.dastool_bins_plot_pdf
+		File contigs_quality_plot_pdf = mag.contigs_quality_plot_pdf
+		File genome_size_depths_plot_df = mag.genome_size_depths_plot_df
 	}
 
 	parameter_meta {
 		sample_id: {help: "Sample ID"}
-		# BAM to FASTQ
 		bam: {help: "Optional sample BAM to convert to FASTQ format; one of [bam, fastq] must be provided as input"}
-		# Assembly
 		fastq: {help: "Optional sample in FASTQ format; one of [bam, fastq] must be provided as input"}
 		# Completeness-aware binning
 		checkm2_ref_db: {help: "CheckM2 DIAMOND reference database Uniref100/KO"}
@@ -141,6 +196,10 @@ workflow metagenomics {
 		semibin2_model_flag: {help: "The trained model to be used in SemiBin2; default value is set to 'global'"}
 		dastool_search_engine: {help: "The engine for single copy gene searching used in DAS Tool; default is set to 'diamond'"}
 		dastool_score_threshold: {help: "Score threshold until selection algorithm will keep selecting bins [0 to 1] used in DAS Tool; default value is set to 0.2 (20%)"}
+		# Quality filters for MAGs
+		min_mag_completeness: {help: "Minimum completeness score for a genome bin; default value is set to 70%"}
+		max_mag_contamination: {help: "Maximum contamination threshold for a genome bin; default value is set to 10%"}
+		max_contigs: {help: "The maximum number of contigs allowed in a genome bin; default value is set to 20"}
 		# Backend configuration
 		backend: {help: "Backend where the workflow will be executed ['GCP', 'Azure', 'AWS']"}
 		zones: {help: "Zones where compute will take place; required if backend is set to 'AWS' or 'GCP'"}
@@ -215,7 +274,7 @@ task hifiasm_meta {
 	>>>
 
 	output {
-		File primary_contig_graph = "~{sample_id}.p_ctg.gfa"
+		File primary_contig_gfa = "~{sample_id}.p_ctg.gfa"
 		File primary_contig_fasta = "~{sample_id}.p_ctg.fa"
 		File reads_fasta = "~{sample_id}.rescue.fa"
 	}

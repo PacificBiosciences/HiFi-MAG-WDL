@@ -8,7 +8,7 @@ workflow coverage {
 
 		File contigs_fasta
 		File reads_fasta
-		File bins_contigs_key
+		File bins_contigs_key_txt
 
 		RuntimeAttributes default_runtime_attributes
 	}
@@ -32,7 +32,7 @@ workflow coverage {
 		input:
 			sample_id = sample_id,
 			contig_depth_txt = bam_depth.contig_depth_txt,
-			bins_contigs_key = bins_contigs_key,
+			bins_contigs_key_txt = bins_contigs_key_txt,
 			runtime_attributes = default_runtime_attributes
 	}
 
@@ -152,19 +152,19 @@ task convert_depth {
 		String sample_id
 		
 		File contig_depth_txt
-		File bins_contigs_key
+		File bins_contigs_key_txt
 
 		RuntimeAttributes runtime_attributes
 	}
  
-	Int disk_size = ceil(size(contig_depth_txt, "GB") * 2 + size(bins_contigs_key, "GB") + 20)
+	Int disk_size = ceil(size(contig_depth_txt, "GB") * 2 + size(bins_contigs_key_txt, "GB") + 20)
 
 	command <<<
 		set -euo pipefail
 
 		python /opt/scripts/Convert-JGI-Coverages.py \
 			--in_jgi ~{contig_depth_txt} \
-			--passed_bins ~{bins_contigs_key} \
+			--passed_bins ~{bins_contigs_key_txt} \
 			--out_jgi "~{sample_id}.JGI.filtered.depth.txt"
 	>>>
 
