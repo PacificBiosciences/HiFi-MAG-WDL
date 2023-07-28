@@ -113,7 +113,6 @@ task mag_copy {
 	>>>
 
 	output {
-		# TODO
 		Array[File] filtered_mags_fastas = glob("filtered_mags_out_dir/*.fa")
 	}
 

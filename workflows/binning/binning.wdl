@@ -98,7 +98,7 @@ task metabat2_analysis {
 	command <<<
 		set -euo pipefail
 
-		# TODO - get metabat version. It's in the --help message
+		metabat --help |& grep "version"
 
 		metabat2 \
 			--verbose \

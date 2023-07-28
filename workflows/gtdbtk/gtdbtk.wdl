@@ -7,7 +7,8 @@ workflow gtdbtk {
 		String sample_id
 
 		File gtdb_batch_txt
-		String gtdbtk_data_path
+		File gtdbtk_data_tar_gz
+		Array[File] derep_bins
 
 		RuntimeAttributes default_runtime_attributes
 	}
@@ -16,19 +17,22 @@ workflow gtdbtk {
 		input:
 			sample_id = sample_id,
 			gtdb_batch_txt = gtdb_batch_txt,
-			gtdbtk_data_path = gtdbtk_data_path,
+			gtdbtk_data_tar_gz = gtdbtk_data_tar_gz,
+			derep_bins= derep_bins,
 			runtime_attributes = default_runtime_attributes
 	}
 
 	call gtdbtk_cleanup {
 		input:
 			sample_id = sample_id,
-			classify = gtdbtk_analysis.classify,
+			gtdbtk_classify_tar_gz = gtdbtk_analysis.gtdbtk_classify_tar_gz,
 			runtime_attributes = default_runtime_attributes
 	}
 
 	output {
-		Array[File] all = gtdbtk_analysis.all
+		File gtdbtk_align_tar_gz = gtdbtk_analysis.gtdbtk_align_tar_gz
+		File gtdbtk_classify_tar_gz = gtdbtk_analysis.gtdbtk_classify_tar_gz
+		File gtdbtk_identify_tar_gz = gtdbtk_analysis.gtdbtk_identify_tar_gz
 		File gtdbk_summary_txt = gtdbtk_cleanup.gtdbk_summary_txt
 	}
 }
@@ -38,39 +42,49 @@ task gtdbtk_analysis {
 		String sample_id
 		
 		File gtdb_batch_txt
-		String gtdbtk_data_path
+		File gtdbtk_data_tar_gz
+		Array[File] derep_bins
 
 		RuntimeAttributes runtime_attributes
 	}
 
 	Int threads = 48
 	Int mem_gb = threads * 2
-	Int disk_size = ceil(size(gtdb_batch_txt, "GB") * 2 + 60)
+	Int disk_size = ceil(size(gtdbtk_data_tar_gz, "GB") * 2 + size(derep_bins, "GB") + 20)
 
 	command <<<
 		set -euo pipefail
 
-		gtdbtk --version
+		# Manually make batch file due to path issues; tab-separated txt file identifying bins that passed filtering
+		derep_bins_dir=$(dirname ~{derep_bins[0]})
+		path_to_replace=$(dirname "$(head -1 ~{gtdb_batch_txt} | awk '{print $1}')")
+		sed "s;$path_to_replace;$derep_bins_dir;" ~{gtdb_batch_txt} > "~{sample_id}.GTDBTk_batch_file_mod.txt"
 
 		mkdir gtdbtk_out_dir
+		mkdir tmp_dir
+
+		tar -xvzf ~{gtdbtk_data_tar_gz}
 
 		# Must set $GTDBTK_DATA_PATH variable to use gtdbtk command
-		GTDBTK_DATA_PATH=~{gtdbtk_data_path}
+		GTDBTK_DATA_PATH="$(pwd)/release207_v2" gtdbtk --version
 
-		gtdbtk classify_wf \
-			--batchfile ~{gtdb_batch_txt} \
+		GTDBTK_DATA_PATH="$(pwd)/release207_v2" gtdbtk classify_wf \
+			--batchfile "~{sample_id}.GTDBTk_batch_file_mod.txt" \
 			--out_dir gtdbtk_out_dir \
-			-x fa \
+			--extension fa \
 			--prefix ~{sample_id} \
-			--cpus ~{threads}
+			--cpus ~{threads} \
+			--tmpdir tmp_dir
+
+		tar -C gtdbtk_out_dir -czf "~{sample_id}.align.tar.gz" align
+		tar -C gtdbtk_out_dir -czf "~{sample_id}.classify.tar.gz" classify
+		tar -C gtdbtk_out_dir -czf "~{sample_id}.identify.tar.gz" identify
 	>>>
 
 	output {
-		# TODO
-		#Array[File] align = glob("gtdbtk_out_dir/")
-		#Array[File] classify = glob("gtdbtk_out_dir/")
-		#Array[File] identify = glob("gtdbtk_out_dir/")
-		Array[File] all = glob("gtdbtk_out_dir/*")
+		File gtdbtk_align_tar_gz = "~{sample_id}.align.tar.gz"
+		File gtdbtk_classify_tar_gz = "~{sample_id}.classify.tar.gz"
+		File gtdbtk_identify_tar_gz = "~{sample_id}.identify.tar.gz"
 	}
 
 	runtime {
@@ -91,20 +105,20 @@ task gtdbtk_cleanup {
 	input {
 		String sample_id
 		
-		Array[File] classify
+		File gtdbtk_classify_tar_gz
 
 		RuntimeAttributes runtime_attributes
 	}
 
-	Int disk_size = ceil(size(classify, "GB") * 2 + 20)
+	Int disk_size = ceil(size(gtdbtk_classify_tar_gz, "GB") * 2 + 20)
 
 	command <<<
 		set -euo pipefail
 
-		classify_dir=$(dirname ~{classify[0]})
+		tar -xvzf ~{gtdbtk_classify_tar_gz}
 
 		python /opt/scripts/GTDBTk-Organize.py \
-			--input_dir "$classify_dir" \
+			--input_dir classify \
 			--outfile "~{sample_id}.GTDBTk_Summary.txt"
 	>>>
 

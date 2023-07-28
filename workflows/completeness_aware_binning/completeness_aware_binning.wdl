@@ -53,7 +53,8 @@ workflow completeness_aware_binning {
 
 	output {
 		File bins_contigs_key_txt = long_contigs_to_bins.bins_contigs_key_txt
-		File incomplete_contigs = make_incomplete_contigs.incomplete_contigs
+		Array[File] long_bin_fastas = long_contigs_to_bins.long_bin_fastas
+		File incomplete_contigs_fasta = make_incomplete_contigs.incomplete_contigs_fasta
 
 		File? contig_quality_report_tsv = checkm2_contig_analysis.contig_quality_report_tsv
 		File? passed_bins_txt = filter_complete_contigs.passed_bins_txt
@@ -96,7 +97,7 @@ task long_contigs_to_bins {
 	output {
 		File bins_contigs_key_txt = "~{sample_id}.bin_key.txt"
 		Boolean bin_key_nonempty = read_boolean("bin_key_nonempty.txt")
-		Array[File] long_bin_fastas = glob("long_bin_fastas_out_dir/complete.*.fa")
+		Array[File] long_bin_fastas = glob("long_bin_fastas_out_dir/*.fa")
 	}
 
 	runtime {
@@ -133,7 +134,7 @@ task make_incomplete_contigs {
 
 		mkdir long_bin_fastas_copy_out_dir
 
-		# TODO - need to rename long bin fastas here
+		# Rename long bin fastas from "complete.x.fa" to "${contig}.fa" in order to use script
 		while IFS= read -r fasta; do
 			mv "$(echo "$fasta" | awk '{print $1}' | awk '{print "'"$long_bin_fastas_dir"'/"$1".fa"}')" "$(echo "$fasta" | awk '{print $2}' | awk '{print "'"$long_bin_fastas_dir"'/"$1".fa"}')"
 		done < ~{bins_contigs_key_txt}
@@ -147,7 +148,7 @@ task make_incomplete_contigs {
 	>>>
 
 	output {
-		File incomplete_contigs = "~{sample_id}.incomplete_contigs.fasta"
+		File incomplete_contigs_fasta = "~{sample_id}.incomplete_contigs.fasta"
 	}
 
 	runtime {

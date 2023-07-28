@@ -31,7 +31,7 @@ workflow metagenomics {
 		Int max_contigs = 20
 
 		# GTDB-Tk reference data
-		String gtdbtk_data_path
+		File gtdbtk_data_tar_gz
 
 		# Backend configuration
 		String backend
@@ -86,7 +86,7 @@ workflow metagenomics {
 		input:
 			sample_id = sample_id,
 			contigs_fasta = hifiasm_meta.primary_contig_fasta,
-			reads_fasta = hifiasm_meta.reads_fasta,
+			hifi_reads_fasta = hifiasm_meta.hifi_reads_fasta,
 			bins_contigs_key_txt = completeness_aware_binning.bins_contigs_key_txt,
 			default_runtime_attributes = default_runtime_attributes
 	}
@@ -94,7 +94,7 @@ workflow metagenomics {
 	call Binning.binning {
 		input:
 			sample_id = sample_id,
-			incomplete_contigs_fasta = completeness_aware_binning.incomplete_contigs,
+			incomplete_contigs_fasta = completeness_aware_binning.incomplete_contigs_fasta,
 			filtered_contig_depth_txt = coverage.filtered_contig_depth_txt,
 			sorted_bam = coverage.sorted_bam,
 			metabat2_min_contig_size = metabat2_min_contig_size,
@@ -109,7 +109,7 @@ workflow metagenomics {
 			sample_id = sample_id,
 			checkm2_ref_db = checkm2_ref_db,
 			filtered_contig_depth_txt = coverage.filtered_contig_depth_txt,
-			derep_bins = binning.dastool_bins,
+			derep_bins = flatten([completeness_aware_binning.long_bin_fastas, binning.dastool_bins]),
 			min_mag_completeness = min_mag_completeness,
 			max_mag_contamination = max_mag_contamination,
 			max_contigs = max_contigs,
@@ -121,7 +121,8 @@ workflow metagenomics {
 			input:
 				sample_id = sample_id,
 				gtdb_batch_txt = checkm2.gtdb_batch_txt,
-				gtdbtk_data_path = gtdbtk_data_path,
+				gtdbtk_data_tar_gz = gtdbtk_data_tar_gz,
+				derep_bins = flatten([completeness_aware_binning.long_bin_fastas, binning.dastool_bins]),
 				default_runtime_attributes = default_runtime_attributes
 		}
 
@@ -130,7 +131,7 @@ workflow metagenomics {
 				sample_id = sample_id,
 				gtdbk_summary_txt = gtdbtk.gtdbk_summary_txt,
 				filtered_quality_report_tsv = checkm2.filtered_quality_report_tsv,
-				derep_bins = binning.dastool_bins,
+				derep_bins = flatten([completeness_aware_binning.long_bin_fastas, binning.dastool_bins]),
 				min_mag_completeness = min_mag_completeness,
 				max_mag_contamination = max_mag_contamination,
 				default_runtime_attributes = default_runtime_attributes
@@ -142,11 +143,12 @@ workflow metagenomics {
 		File? converted_fastq = bam_to_fastq.converted_fastq
 		File primary_contig_gfa = hifiasm_meta.primary_contig_gfa
 		File primary_contig_fasta = hifiasm_meta.primary_contig_fasta
-		File reads_fasta = hifiasm_meta.reads_fasta
+		File hifi_reads_fasta = hifiasm_meta.hifi_reads_fasta
 
 		# Completeness-aware binning output
 		File bins_contigs_key_txt = completeness_aware_binning.bins_contigs_key_txt
-		File incomplete_contigs = completeness_aware_binning.incomplete_contigs
+		Array[File] long_bin_fastas = completeness_aware_binning.long_bin_fastas
+		File incomplete_contigs_fasta = completeness_aware_binning.incomplete_contigs_fasta
 		File? contig_quality_report_tsv = completeness_aware_binning.contig_quality_report_tsv
 		File? passed_bins_txt = completeness_aware_binning.passed_bins_txt
 		File? scatterplot_pdf = completeness_aware_binning.scatterplot_pdf
@@ -172,21 +174,24 @@ workflow metagenomics {
 		File filtered_quality_report_tsv = checkm2.filtered_quality_report_tsv
 
 		# GTDB-Tk output
-
-		File gtdbk_summary_txt = gtdbtk.gtdbk_summary_txt
+		File? gtdbtk_align_tar_gz = gtdbtk.gtdbtk_align_tar_gz
+		File? gtdbtk_classify_tar_gz = gtdbtk.gtdbtk_classify_tar_gz
+		File? gtdbtk_identify_tar_gz = gtdbtk.gtdbtk_identify_tar_gz
+		File? gtdbk_summary_txt = gtdbtk.gtdbk_summary_txt
 
 		# MAG summary and plot output
-		File mag_summary_txt = mag.mag_summary_txt
-		Array[File] filtered_mags_fastas = mag.filtered_mags_fastas
-		File dastool_bins_plot_pdf = mag.dastool_bins_plot_pdf
-		File contigs_quality_plot_pdf = mag.contigs_quality_plot_pdf
-		File genome_size_depths_plot_df = mag.genome_size_depths_plot_df
+		File? mag_summary_txt = mag.mag_summary_txt
+		Array[File]? filtered_mags_fastas = mag.filtered_mags_fastas
+		File? dastool_bins_plot_pdf = mag.dastool_bins_plot_pdf
+		File? contigs_quality_plot_pdf = mag.contigs_quality_plot_pdf
+		File? genome_size_depths_plot_df = mag.genome_size_depths_plot_df
 	}
 
 	parameter_meta {
 		sample_id: {help: "Sample ID"}
-		bam: {help: "Optional sample BAM to convert to FASTQ format; one of [bam, fastq] must be provided as input"}
+		bam: {help: "Optional sample BAM; one of [bam, fastq] must be provided as input"}
 		fastq: {help: "Optional sample in FASTQ format; one of [bam, fastq] must be provided as input"}
+		run_bam_to_fastq: {help: "Optional step to convert sample BAM to FASTQ format if BAM is provided"}
 		# Completeness-aware binning
 		checkm2_ref_db: {help: "CheckM2 DIAMOND reference database Uniref100/KO"}
 		min_contig_length: {help: "Minimum size of a contig to consider for completeness scores; default value is set to 500kb. This value should not be increased"}
@@ -200,6 +205,8 @@ workflow metagenomics {
 		min_mag_completeness: {help: "Minimum completeness score for a genome bin; default value is set to 70%"}
 		max_mag_contamination: {help: "Maximum contamination threshold for a genome bin; default value is set to 10%"}
 		max_contigs: {help: "The maximum number of contigs allowed in a genome bin; default value is set to 20"}
+		# GTDBT-k
+		gtdbtk_data_tar_gz: {help: "A TAR GZ file of GTDB-Tk (Genome Database Taxonomy toolkit) reference data, release207_v2 used for assigning taxonomic classifications to bacterial and archaeal genomes"}
 		# Backend configuration
 		backend: {help: "Backend where the workflow will be executed ['GCP', 'Azure', 'AWS']"}
 		zones: {help: "Zones where compute will take place; required if backend is set to 'AWS' or 'GCP'"}
@@ -271,12 +278,14 @@ task hifiasm_meta {
 			~{fastq}
 
 		awk '/^S/{print ">"$2;print $3}' "~{sample_id}.p_ctg.gfa" > "~{sample_id}.p_ctg.fa"
+
+		gzip -d <~{fastq} | sed -n '1~4s/^@/>/p;2~4p' > "~{sample_id}.fa"
 	>>>
 
 	output {
 		File primary_contig_gfa = "~{sample_id}.p_ctg.gfa"
 		File primary_contig_fasta = "~{sample_id}.p_ctg.fa"
-		File reads_fasta = "~{sample_id}.rescue.fa"
+		File hifi_reads_fasta = "~{sample_id}.fa"
 	}
 
 	runtime {
