@@ -240,7 +240,7 @@ task bam_to_fastq {
 	>>>
 
 	output {
-		 File converted_fastq = "~{sample_id}.fastq.gz"
+		File converted_fastq = "~{sample_id}.fastq.gz"
 	}
 
 	runtime {
