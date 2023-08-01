@@ -55,11 +55,6 @@ task gtdbtk_analysis {
 	command <<<
 		set -euo pipefail
 
-		# Manually make batch file due to path issues; tab-separated txt file identifying bins that passed filtering
-		derep_bins_dir=$(dirname ~{derep_bins[0]})
-		path_to_replace=$(dirname "$(head -1 ~{gtdb_batch_txt} | awk '{print $1}')")
-		sed "s;$path_to_replace;$derep_bins_dir;" ~{gtdb_batch_txt} > "~{sample_id}.GTDBTk_batch_file_mod.txt"
-
 		mkdir gtdbtk_out_dir
 		mkdir tmp_dir
 
@@ -69,7 +64,7 @@ task gtdbtk_analysis {
 		GTDBTK_DATA_PATH="$(pwd)/release207_v2" gtdbtk --version
 
 		GTDBTK_DATA_PATH="$(pwd)/release207_v2" gtdbtk classify_wf \
-			--batchfile "~{sample_id}.GTDBTk_batch_file_mod.txt" \
+			--batchfile ~{gtdb_batch_txt} \
 			--out_dir gtdbtk_out_dir \
 			--extension fa \
 			--prefix ~{sample_id} \

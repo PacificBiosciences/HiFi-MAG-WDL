@@ -224,6 +224,7 @@ The workflow can start with either a FASTQ or BAM file.
 
 | Type | Name | Description | Notes |
 | :- | :- | :- | :- |
+| Array[File] | derep_bins | | |
 | File | bin_quality_report_tsv | | |
 | File | gtdb_batch_txt | | |
 | File | passed_bin_count_txt | | |

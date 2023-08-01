@@ -109,7 +109,8 @@ workflow metagenomics {
 			sample_id = sample_id,
 			checkm2_ref_db = checkm2_ref_db,
 			filtered_contig_depth_txt = coverage.filtered_contig_depth_txt,
-			derep_bins = flatten([completeness_aware_binning.long_bin_fastas, binning.dastool_bins]),
+			long_bin_fastas = completeness_aware_binning.long_bin_fastas,
+			dastool_bins = binning.dastool_bins,
 			min_mag_completeness = min_mag_completeness,
 			max_mag_contamination = max_mag_contamination,
 			max_contigs = max_contigs,
@@ -122,7 +123,7 @@ workflow metagenomics {
 				sample_id = sample_id,
 				gtdb_batch_txt = checkm2.gtdb_batch_txt,
 				gtdbtk_data_tar_gz = gtdbtk_data_tar_gz,
-				derep_bins = flatten([completeness_aware_binning.long_bin_fastas, binning.dastool_bins]),
+				derep_bins = checkm2.derep_bins,
 				default_runtime_attributes = default_runtime_attributes
 		}
 
@@ -131,7 +132,7 @@ workflow metagenomics {
 				sample_id = sample_id,
 				gtdbk_summary_txt = gtdbtk.gtdbk_summary_txt,
 				filtered_quality_report_tsv = checkm2.filtered_quality_report_tsv,
-				derep_bins = flatten([completeness_aware_binning.long_bin_fastas, binning.dastool_bins]),
+				derep_bins = checkm2.derep_bins,
 				min_mag_completeness = min_mag_completeness,
 				max_mag_contamination = max_mag_contamination,
 				default_runtime_attributes = default_runtime_attributes
@@ -168,6 +169,7 @@ workflow metagenomics {
 		Array[File] dastool_bins = binning.dastool_bins
 
 		# CheckM2 output
+		Array[File] derep_bins = checkm2.derep_bins
 		File bin_quality_report_tsv = checkm2.bin_quality_report_tsv
 		File gtdb_batch_txt = checkm2.gtdb_batch_txt
 		File passed_bin_count_txt = checkm2.passed_bin_count_txt

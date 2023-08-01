@@ -8,7 +8,8 @@ workflow checkm2 {
 
 		File checkm2_ref_db
 		File filtered_contig_depth_txt
-		Array[File] derep_bins
+		Array[File] long_bin_fastas
+		Array[File] dastool_bins
 
 		Int min_mag_completeness
 		Int max_mag_contamination
@@ -20,7 +21,8 @@ workflow checkm2 {
 	call checkm2_bin_analysis {
 		input:
 			checkm2_ref_db = checkm2_ref_db,
-			derep_bins = derep_bins,
+			long_bin_fastas = long_bin_fastas,
+			dastool_bins = dastool_bins,
 			runtime_attributes = default_runtime_attributes
 	}
 
@@ -29,7 +31,7 @@ workflow checkm2 {
 			sample_id = sample_id,
 			bin_quality_report_tsv = checkm2_bin_analysis.bin_quality_report_tsv,
 			filtered_contig_depth_txt = filtered_contig_depth_txt,
-			derep_bins = derep_bins,
+			derep_bins = checkm2_bin_analysis.derep_bins,
 			min_mag_completeness = min_mag_completeness,
 			max_mag_contamination = max_mag_contamination,
 			max_contigs = max_contigs,
@@ -37,6 +39,7 @@ workflow checkm2 {
 	}
 
 	output {
+		Array[File] derep_bins = checkm2_bin_analysis.derep_bins
 		File bin_quality_report_tsv = checkm2_bin_analysis.bin_quality_report_tsv
 		File gtdb_batch_txt = assess_checkm2_bins.gtdb_batch_txt
 		File passed_bin_count_txt = assess_checkm2_bins.passed_bin_count_txt
@@ -48,27 +51,35 @@ workflow checkm2 {
 task checkm2_bin_analysis {
 	input {
 		File checkm2_ref_db
-		Array[File] derep_bins
+		Array[File] long_bin_fastas
+		Array[File] dastool_bins
 
 		RuntimeAttributes runtime_attributes
 	}
 
 	Int threads = 24
 	Int mem_gb = threads * 4
-	Int disk_size = ceil(size(checkm2_ref_db, "GB") * 2 + size(derep_bins, "GB") + 20)
+	Int disk_size = ceil(size(checkm2_ref_db, "GB") * 2 + size(long_bin_fastas, "GB") + size(dastool_bins, "GB") + 20)
 
 	command <<<
 		set -euo pipefail
 
 		checkm2 --version
 
-		derep_bins_dir=$(dirname ~{derep_bins[0]})
-
+		mkdir derep_bins_dir
 		mkdir checkm2_out_dir
 		mkdir tmp_dir
 
+		while read -r fasta || [[ -n "$fasta" ]]; do
+			ln -s "${fasta}" "$(pwd)"/derep_bins_dir/
+		done < ~{write_lines(long_bin_fastas)}
+
+		while read -r fasta || [[ -n "$fasta" ]]; do
+			ln -s "${fasta}" "$(pwd)"/derep_bins_dir/
+		done < ~{write_lines(dastool_bins)}
+
 		checkm2 predict \
-			--input "$derep_bins_dir" \
+			--input derep_bins_dir \
 			--output-directory checkm2_out_dir \
 			--extension fa \
 			--threads ~{threads} \
@@ -78,6 +89,7 @@ task checkm2_bin_analysis {
 	>>>
 
 	output {
+		Array[File] derep_bins = glob("derep_bins_dir/*.fa")
 		File bin_quality_report_tsv = "checkm2_out_dir/quality_report.tsv"
 	}
 
@@ -110,7 +122,7 @@ task assess_checkm2_bins {
 		RuntimeAttributes runtime_attributes
 	}
 
-	Int disk_size = ceil(size(bin_quality_report_tsv, "GB") * 2 + size(filtered_contig_depth_txt, "GB") + 20)
+	Int disk_size = ceil(size(derep_bins, "GB") * 2 + 20)
 
 	command <<<
 		set -euo pipefail
