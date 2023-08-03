@@ -27,7 +27,7 @@ workflow completeness_aware_binning {
 			sample_id = sample_id,
 			contigs_fasta = contigs_fasta,
 			bins_contigs_key_txt = long_contigs_to_bins.bins_contigs_key_txt,
-			long_bin_fastas = long_contigs_to_bins.long_bin_fastas,
+			renamed_long_bin_fastas = long_contigs_to_bins.renamed_long_bin_fastas,
 			runtime_attributes = default_runtime_attributes
 	}
 
@@ -92,12 +92,22 @@ task long_contigs_to_bins {
 		else
 			echo "false" > bin_key_nonempty.txt
 		fi
+
+		# Rename long bin fastas from "complete.x.fa" to "${contig}.fa" in order to use Make-Incomplete-Contigs.py script in next task
+		mkdir long_bin_fastas_renamed_out_dir
+
+		while IFS= read -r bins_contigs_line || [[ -n "${bins_contigs_line}" ]]; do
+			original_fasta="long_bin_fastas_out_dir/$(echo "${bins_contigs_line}" | cut -f 1).fa"
+			renamed_fasta="long_bin_fastas_renamed_out_dir/$(echo "${bins_contigs_line}" | cut -f 2).fa"
+			mv "${original_fasta}" "${renamed_fasta}"
+		done < ~{sample_id}.bin_key.txt
 	>>>
 
 	output {
 		File bins_contigs_key_txt = "~{sample_id}.bin_key.txt"
 		Boolean bin_key_nonempty = read_boolean("bin_key_nonempty.txt")
 		Array[File] long_bin_fastas = glob("long_bin_fastas_out_dir/*.fa")
+		Array[File] renamed_long_bin_fastas = glob("long_bin_fastas_renamed_out_dir/*.fa")
 	}
 
 	runtime {
@@ -120,30 +130,25 @@ task make_incomplete_contigs {
 		File contigs_fasta
 		
 		File bins_contigs_key_txt
-		Array[File] long_bin_fastas
+		Array[File] renamed_long_bin_fastas
 
 		RuntimeAttributes runtime_attributes
 	}
 
-	Int disk_size = ceil(size(contigs_fasta, "GB") * 2 + 20)
+	Int disk_size = ceil((size(contigs_fasta, "GB") + (size(renamed_long_bin_fastas[0], "GB") * length(renamed_long_bin_fastas))) * 2 + 20)
 
 	command <<<
 		set -euo pipefail
 
-		long_bin_fastas_dir=$(dirname ~{long_bin_fastas[0]})
+		renamed_long_bin_fastas_dir=$(dirname ~{renamed_long_bin_fastas[0]})
 
 		mkdir long_bin_fastas_copy_out_dir
-
-		# Rename long bin fastas from "complete.x.fa" to "${contig}.fa" in order to use script
-		while IFS= read -r fasta; do
-			mv "$(echo "$fasta" | awk '{print $1}' | awk '{print "'"$long_bin_fastas_dir"'/"$1".fa"}')" "$(echo "$fasta" | awk '{print $2}' | awk '{print "'"$long_bin_fastas_dir"'/"$1".fa"}')"
-		done < ~{bins_contigs_key_txt}
 
 		python /opt/scripts/Make-Incomplete-Contigs.py \
 			--input_fasta ~{contigs_fasta} \
 			--output_fasta "~{sample_id}.incomplete_contigs.fasta" \
 			--passed_bins ~{bins_contigs_key_txt} \
-			--fastadir "${long_bin_fastas_dir}" \
+			--fastadir "${renamed_long_bin_fastas_dir}" \
 			--outdir long_bin_fastas_copy_out_dir
 	>>>
 
@@ -176,7 +181,7 @@ task checkm2_contig_analysis {
 
 	Int threads = 24
 	Int mem_gb = threads * 4
-	Int disk_size = ceil(size(checkm2_ref_db, "GB") * 2 + 20)
+	Int disk_size = ceil((size(checkm2_ref_db, "GB") + (size(long_bin_fastas[0], "GB") * length(long_bin_fastas))) * 2 + 20)
 
 	command <<<
 		set -euo pipefail

@@ -60,7 +60,7 @@ task mag_summary {
 		RuntimeAttributes runtime_attributes
 	}
 
-	Int disk_size = ceil(size(gtdbk_summary_txt, "GB") * 2 + size(filtered_quality_report_tsv, "GB") + 20)
+	Int disk_size = ceil((size(gtdbk_summary_txt, "GB") + size(filtered_quality_report_tsv, "GB")) * 2 + 20)
 
 	command <<<
 		set -euo pipefail
@@ -97,7 +97,7 @@ task mag_copy {
 		RuntimeAttributes runtime_attributes
 	}
  
-	Int disk_size = ceil(size(mag_summary_txt, "GB") * 2 + 20)
+	Int disk_size = ceil((size(mag_summary_txt, "GB") + (size(derep_bins[0], "GB") * length(derep_bins))) * 2 + 20)
 
 	command <<<
 		set -euo pipefail
@@ -143,7 +143,7 @@ task mag_plots {
 		RuntimeAttributes runtime_attributes
 	}
  
-	Int disk_size = ceil(size(filtered_quality_report_tsv, "GB") * 2 + size(mag_summary_txt, "GB") + 20)
+	Int disk_size = ceil((size(filtered_quality_report_tsv, "GB") + size(mag_summary_txt, "GB")) * 2 + 20)
 
 	command <<<
 		set -euo pipefail

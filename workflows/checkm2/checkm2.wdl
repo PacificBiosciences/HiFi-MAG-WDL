@@ -59,7 +59,7 @@ task checkm2_bin_analysis {
 
 	Int threads = 24
 	Int mem_gb = threads * 4
-	Int disk_size = ceil(size(checkm2_ref_db, "GB") * 2 + size(long_bin_fastas, "GB") + size(dastool_bins, "GB") + 20)
+	Int disk_size = ceil((size(checkm2_ref_db, "GB") + (size(long_bin_fastas[0], "GB") * length(long_bin_fastas)) + (size(dastool_bins[0], "GB") * length(dastool_bins))) * 2 + 20)
 
 	command <<<
 		set -euo pipefail
@@ -122,7 +122,7 @@ task assess_checkm2_bins {
 		RuntimeAttributes runtime_attributes
 	}
 
-	Int disk_size = ceil(size(derep_bins, "GB") * 2 + 20)
+	Int disk_size = ceil(size(derep_bins[0], "GB") * length(derep_bins) * 2 + 20)
 
 	command <<<
 		set -euo pipefail

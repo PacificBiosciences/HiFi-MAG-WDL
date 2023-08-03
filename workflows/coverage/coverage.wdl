@@ -38,8 +38,7 @@ workflow coverage {
 	}
 
 	output {
-		File sorted_bam = minimap_to_bam.sorted_bam
-		File sorted_bam_index = minimap_to_bam.sorted_bam_index
+		IndexData sorted_bam = {"data": minimap_to_bam.sorted_bam, "data_index": minimap_to_bam.sorted_bam_index}
 		File filtered_contig_depth_txt = convert_jgi_bamdepth.filtered_contig_depth_txt
 	}
 }
@@ -56,7 +55,7 @@ task minimap_to_bam {
 
 	Int threads = 24
 	Int mem_gb = threads * 2
-	Int disk_size = ceil(size(contigs_fasta, "GB") * 2 + size(hifi_reads_fasta, "GB") + 20)
+	Int disk_size = ceil((size(contigs_fasta, "GB") + size(hifi_reads_fasta, "GB")) * 2 + 20)
 
 	command <<<
 		set -euo pipefail
@@ -159,7 +158,7 @@ task convert_jgi_bamdepth {
 		RuntimeAttributes runtime_attributes
 	}
  
-	Int disk_size = ceil(size(contig_depth_txt, "GB") * 2 + size(bins_contigs_key_txt, "GB") + 20)
+	Int disk_size = ceil((size(contig_depth_txt, "GB") + size(bins_contigs_key_txt, "GB")) * 2 + 20)
 
 	command <<<
 		set -euo pipefail

@@ -50,7 +50,7 @@ task gtdbtk_analysis {
 
 	Int threads = 48
 	Int mem_gb = threads * 2
-	Int disk_size = ceil(size(gtdbtk_data_tar_gz, "GB") * 2 + size(derep_bins, "GB") + 20)
+	Int disk_size = ceil((size(gtdbtk_data_tar_gz, "GB") + (size(derep_bins[0], "GB") * length(derep_bins))) * 2 + 20)
 
 	command <<<
 		set -euo pipefail
@@ -58,12 +58,14 @@ task gtdbtk_analysis {
 		mkdir gtdbtk_out_dir
 		mkdir tmp_dir
 
-		tar -xvzf ~{gtdbtk_data_tar_gz}
+		tar -xzvf ~{gtdbtk_data_tar_gz}
 
 		# Must set $GTDBTK_DATA_PATH variable to use gtdbtk command
-		GTDBTK_DATA_PATH="$(pwd)/release207_v2" gtdbtk --version
+		export GTDBTK_DATA_PATH="$(pwd)/release207_v2"
 
-		GTDBTK_DATA_PATH="$(pwd)/release207_v2" gtdbtk classify_wf \
+		gtdbtk --version
+
+		gtdbtk classify_wf \
 			--batchfile ~{gtdb_batch_txt} \
 			--out_dir gtdbtk_out_dir \
 			--extension fa \
@@ -71,9 +73,9 @@ task gtdbtk_analysis {
 			--cpus ~{threads} \
 			--tmpdir tmp_dir
 
-		tar -C gtdbtk_out_dir -czf "~{sample_id}.align.tar.gz" align
-		tar -C gtdbtk_out_dir -czf "~{sample_id}.classify.tar.gz" classify
-		tar -C gtdbtk_out_dir -czf "~{sample_id}.identify.tar.gz" identify
+		tar -C gtdbtk_out_dir -czvf "~{sample_id}.align.tar.gz" align
+		tar -C gtdbtk_out_dir -czvf "~{sample_id}.classify.tar.gz" classify
+		tar -C gtdbtk_out_dir -czvf "~{sample_id}.identify.tar.gz" identify
 	>>>
 
 	output {
@@ -110,7 +112,7 @@ task gtdbtk_cleanup {
 	command <<<
 		set -euo pipefail
 
-		tar -xvzf ~{gtdbtk_classify_tar_gz}
+		tar -xzvf ~{gtdbtk_classify_tar_gz}
 
 		python /opt/scripts/GTDBTk-Organize.py \
 			--input_dir classify \

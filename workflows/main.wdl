@@ -96,7 +96,7 @@ workflow metagenomics {
 			sample_id = sample_id,
 			incomplete_contigs_fasta = completeness_aware_binning.incomplete_contigs_fasta,
 			filtered_contig_depth_txt = coverage.filtered_contig_depth_txt,
-			sorted_bam = coverage.sorted_bam,
+			sorted_bam = coverage.sorted_bam.data,
 			metabat2_min_contig_size = metabat2_min_contig_size,
 			semibin2_model_flag = semibin2_model_flag,
 			dastool_search_engine = dastool_search_engine,
@@ -156,8 +156,7 @@ workflow metagenomics {
 		File? histogram_pdf = completeness_aware_binning.histogram_pdf
 
 		# Coverage output
-		File sorted_bam = coverage.sorted_bam
-		File sorted_bam_index = coverage.sorted_bam_index
+		IndexData sorted_bam = coverage.sorted_bam
 		File filtered_contig_depth_txt = coverage.filtered_contig_depth_txt
 
 		# Binning output

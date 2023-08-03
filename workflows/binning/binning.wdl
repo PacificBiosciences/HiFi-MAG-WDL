@@ -93,7 +93,7 @@ task metabat2_analysis {
 
 	Int threads = 12
 	Int mem_gb = threads * 4
-	Int disk_size = ceil(size(incomplete_contigs_fasta, "GB") * 2 + size(filtered_contig_depth_txt, "GB") + 20)
+	Int disk_size = ceil(size(incomplete_contigs_fasta, "GB") * 2 + 20)
 
 	command <<<
 		set -euo pipefail
@@ -139,7 +139,7 @@ task semibin2_analysis {
  
  	Int threads = 48
  	Int mem_gb = threads * 4
-	Int disk_size = ceil(size(incomplete_contigs_fasta, "GB") * 2 + size(sorted_bam, "GB") + 20)
+	Int disk_size = ceil((size(incomplete_contigs_fasta, "GB") + size(sorted_bam, "GB")) * 2 + 20)
 
 	command <<<
 		set -euo pipefail
@@ -191,7 +191,7 @@ task dastool_input {
 		RuntimeAttributes runtime_attributes
 	}
  	
-	Int disk_size = ceil(size(reconstructed_bins_fastas, "GB") * 2 + 20)
+	Int disk_size = ceil(size(reconstructed_bins_fastas[0], "GB") * length(reconstructed_bins_fastas) * 2 + 20)
 
 	command <<<
 		set -euo pipefail
