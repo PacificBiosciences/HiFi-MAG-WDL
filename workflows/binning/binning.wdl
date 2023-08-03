@@ -31,6 +31,7 @@ workflow binning {
 
 	call semibin2_analysis {
 		input:
+			sample_id = sample_id,
 			incomplete_contigs_fasta = incomplete_contigs_fasta,
 			sorted_bam = sorted_bam,
 			semibin2_model_flag = semibin2_model_flag,
@@ -93,12 +94,12 @@ task metabat2_analysis {
 
 	Int threads = 12
 	Int mem_gb = threads * 4
-	Int disk_size = ceil(size(incomplete_contigs_fasta, "GB") * 2 + size(filtered_contig_depth_txt, "GB") + 20)
+	Int disk_size = ceil(size(incomplete_contigs_fasta, "GB") * 2 + 20)
 
 	command <<<
 		set -euo pipefail
 
-		# TODO - get metabat version. It's in the --help message
+		metabat --help |& grep "version"
 
 		metabat2 \
 			--verbose \
@@ -129,6 +130,7 @@ task metabat2_analysis {
 
 task semibin2_analysis {
 	input {
+		String sample_id
 		File incomplete_contigs_fasta
 		File sorted_bam
 
@@ -139,18 +141,20 @@ task semibin2_analysis {
  
  	Int threads = 48
  	Int mem_gb = threads * 4
-	Int disk_size = ceil(size(incomplete_contigs_fasta, "GB") * 2 + size(sorted_bam, "GB") + 20)
+	Int disk_size = ceil((size(incomplete_contigs_fasta, "GB") + size(sorted_bam, "GB")) * 2 + 20)
 
 	command <<<
 		set -euo pipefail
 
 		SemiBin --version
 
+		mkdir semibin2_out_dir
+
 		SemiBin \
 			single_easy_bin \
 			--input-fasta ~{incomplete_contigs_fasta} \
 			--input-bam ~{sorted_bam} \
-			--output ./ \
+			--output semibin2_out_dir \
 			--self-supervised \
 			--sequencing-type=long_reads \
 			--compression=none \
@@ -158,11 +162,13 @@ task semibin2_analysis {
 			--tag-output \
 			semibin2 ~{semibin2_model_flag} \
 			--verbose
+
+		mv semibin2_out_dir/bins_info.tsv semibin2_out_dir/"~{sample_id}.bins_info.tsv"
 	>>>
 
 	output {
-		File bins_tsv = "bins_info.tsv"
-		Array[File] reconstructed_bins_fastas = glob("output_bins/semibin2_*.fa")
+		File bins_tsv = "semibin2_out_dir/~{sample_id}.bins_info.tsv"
+		Array[File] reconstructed_bins_fastas = glob("semibin2_out_dir/output_bins/semibin2_*.fa")
 	}
 
 	runtime {
@@ -189,7 +195,7 @@ task dastool_input {
 		RuntimeAttributes runtime_attributes
 	}
  	
-	Int disk_size = ceil(size(reconstructed_bins_fastas, "GB") * 2 + 20)
+	Int disk_size = ceil(size(reconstructed_bins_fastas[0], "GB") * length(reconstructed_bins_fastas) * 2 + 20)
 
 	command <<<
 		set -euo pipefail

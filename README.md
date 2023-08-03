@@ -17,10 +17,10 @@ The metagenomics workflow combines contig assembly and PacBio's [HiFi-MAG-Pipeli
 
 Some tasks and workflows are pulled in from other repositories. Ensure you have initialized submodules following cloning by running `git submodule update --init --recursive`.
 
-# TODO
+# TODO - confirm
 ## Resource requirements
 
-The workflow requires at minimum _cores_ cores and 45 GB of RAM. Ensure that the backend environment you're using has enough quota to run the workflow.
+The workflow requires at minimum _cores_ cores, 45-150 GB of RAM, and >250GB temporary disk space. Ensure that the backend environment you're using has enough quota to run the workflow.
 
 ## Reference datasets and associated workflow files
 
@@ -178,48 +178,43 @@ The workflow can start with either a FASTQ or BAM file.
 | String? | container_registry | Container registry where workflow images are hosted. If left blank, [PacBio's public Quay.io registry](https://quay.io/organization/pacbio) will be used. | |
 | Boolean | preemptible | If set to `true`, run tasks preemptibly where possible. On-demand VMs will be used only for tasks that run for >24 hours if the backend is set to GCP. If set to `false`, on-demand VMs will be used for every task. Ignored if backend is set to HPC. | \[true, false\] |
 
-# TODO - finish
 # Workflow outputs
 
-## BAM to FASTQ
+## General outputs
 
 | Type | Name | Description | Notes |
 | :- | :- | :- | :- |
-| File? | converted_fastq| | |
-
-## Assembly
-
-| Type | Name | Description | Notes |
-| :- | :- | :- | :- |
-| File | primary_contig_graph| | |
-| File | primary_contig_fasta| | |
-| File | reads_fasta| | |
+| File? | converted_fastq | | |
+| File | primary_contig_graph | | |
+| File | primary_contig_fasta | | |
+| File | hifi_reads_fasta | | |
 
 ## Completeness-aware binning
 
 | Type | Name | Description | Notes |
 | :- | :- | :- | :- |
-| File | key| | |
-| File | incomplete_contigs| | |
-| File? | report | | |
-| File? | passed_bins | | |
-| File? | scatterplot | | |
-| File? | histogram | | |
+| File | bins_contigs_key_txt | | |
+| File | incomplete_contigs | | |
+| Array[File] | long_bin_fastas | | |
+| File? | contig_quality_report_tsv | | |
+| File? | passed_bins_txt | | |
+| File? | scatterplot_pdf | | |
+| File? | histogram_pdf | | |
 
 ## Coverage
 
 | Type | Name | Description | Notes |
 | :- | :- | :- | :- |
-| File | sorted_bam| | |
-| File | sorted_bam_index| | |
-| File | filtered_depth | | |
+| File | sorted_bam | | |
+| File | sorted_bam_index | | |
+| File | filtered_contig_depth_txt | | |
 
 ## Binning
 
 | Type | Name | Description | Notes |
 | :- | :- | :- | :- |
-| Array[File] | metabat2_reconstructed_bins_fastas| | |
-| File | metabat2_bin_sets_tsv| | |
+| Array[File] | metabat2_reconstructed_bins_fastas | | |
+| File | metabat2_bin_sets_tsv | | |
 | File | semibin2_bins_tsv | | |
 | Array[File] | semibin2_reconstructed_bins_fastas | | |
 | File | semibin2_bin_sets_tsv | | |
@@ -229,16 +224,30 @@ The workflow can start with either a FASTQ or BAM file.
 
 | Type | Name | Description | Notes |
 | :- | :- | :- | :- |
+| Array[File] | derep_bins | | |
+| File | bin_quality_report_tsv | | |
+| File | gtdb_batch_txt | | |
+| File | passed_bin_count_txt | | |
+| File | filtered_quality_report_tsv | | |
 
 ## GTDBTK
 
 | Type | Name | Description | Notes |
 | :- | :- | :- | :- |
+| File? | gtdbtk_align_tar_gz | | |
+| File? | gtdbtk_classify_tar_gz | | |
+| File? | gtdbtk_identify_tar_gz | | |
+| File? | gtdbk_summary_txt | | |
 
 ## MAG
 
 | Type | Name | Description | Notes |
 | :- | :- | :- | :- |
+| File? | mag_summary_txt | | |
+| Array[File]? | filtered_mags_fastas | | |
+| File? | dastool_bins_plot_pdf | | |
+| File? | contigs_quality_plot_pdf | | |
+| File? | genome_size_depths_plot_df | | |
 
 # TODO - finish
 # Tool versions and Docker images

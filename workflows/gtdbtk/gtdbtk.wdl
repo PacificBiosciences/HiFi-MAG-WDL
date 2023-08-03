@@ -4,85 +4,91 @@ import "../wdl-common/wdl/structs.wdl"
 
 workflow gtdbtk {
 	input {
-		String sample
+		String sample_id
 
-		File gtdb
-		File target
-		File gtdbtk_data
+		File gtdb_batch_txt
+		File gtdbtk_data_tar_gz
+		Array[File] derep_bins
 
 		RuntimeAttributes default_runtime_attributes
 	}
 
-	# Checkpoint 2: Fork 2 - Bins passed filters; GTDBTkAnalysis -> GTDBTkCleanup -> MAGSummary -> MAGCopy -> MAGPlots
 	call gtdbtk_analysis {
 		input:
-			sample = sample,
-			gtdb = gtdb,
-			gtdbtk_data = gtdbtk_data,
-			target = target, #TODO - remove?
+			sample_id = sample_id,
+			gtdb_batch_txt = gtdb_batch_txt,
+			gtdbtk_data_tar_gz = gtdbtk_data_tar_gz,
+			derep_bins= derep_bins,
 			runtime_attributes = default_runtime_attributes
 	}
 
-	## Grab all summary files from GTDB-Tk and merge
 	call gtdbtk_cleanup {
 		input:
-			sample = sample,
-			dir_classify = dir_classify,
-			complete = gtdbtk_analysis.complete,
+			sample_id = sample_id,
+			gtdbtk_classify_tar_gz = gtdbtk_analysis.gtdbtk_classify_tar_gz,
 			runtime_attributes = default_runtime_attributes
 	}
 
 	output {
-		File 
-	}
-
-	parameter_meta {
-		sample: {help: "Sample name"}
-		gtdb: {help: "File describing genomes - tab separated in 2 or 3 columns (FASTA file, genome ID, translation table [optional])"
-		gtdbtk_data: {help: "The path to the GTDB-Tk database (Genome Database Taxonomy Toolkit)"}
-		default_runtime_attributes: {help: "Default RuntimeAttributes; spot if preemptible was set to true, otherwise on_demand"}
+		File gtdbtk_align_tar_gz = gtdbtk_analysis.gtdbtk_align_tar_gz
+		File gtdbtk_classify_tar_gz = gtdbtk_analysis.gtdbtk_classify_tar_gz
+		File gtdbtk_identify_tar_gz = gtdbtk_analysis.gtdbtk_identify_tar_gz
+		File gtdbk_summary_txt = gtdbtk_cleanup.gtdbk_summary_txt
 	}
 }
 
 task gtdbtk_analysis {
 	input {
-		String sample
+		String sample_id
 		
-		File gtdb
-		File target
-		File gtdbtk_data
+		File gtdb_batch_txt
+		File gtdbtk_data_tar_gz
+		Array[File] derep_bins
 
 		RuntimeAttributes runtime_attributes
 	}
 
 	Int threads = 48
-	Int disk_size = ceil(size(gtdb, "GB") * 2 + size(target, "GB") + size(gtdbtk_data, "GB") + 20)
+	Int mem_gb = threads * 2
+	Int disk_size = ceil((size(gtdbtk_data_tar_gz, "GB") + (size(derep_bins[0], "GB") * length(derep_bins))) * 2 + 20)
 
 	command <<<
 		set -euo pipefail
 
-		GTDBTK_DATA_PATH=~{gtdbtk_data}
+		mkdir gtdbtk_out_dir
+		mkdir tmp_dir
+
+		tar -xzvf ~{gtdbtk_data_tar_gz}
+
+		# Must set $GTDBTK_DATA_PATH variable to use gtdbtk command
+		GTDBTK_DATA_PATH="$(pwd)/release207_v2"
+		export GTDBTK_DATA_PATH
+
+		gtdbtk --version
 
 		gtdbtk classify_wf \
-			--batchfile ~{gtdb} \
-			--out_dir ./ \ #TODO
-			-x fa \
-			--prefix ~{sample} \
-			--cpus ~{threads}
+			--batchfile ~{gtdb_batch_txt} \
+			--out_dir gtdbtk_out_dir \
+			--extension fa \
+			--prefix ~{sample_id} \
+			--cpus ~{threads} \
+			--tmpdir tmp_dir
+
+		tar -C gtdbtk_out_dir -czvf "~{sample_id}.align.tar.gz" align
+		tar -C gtdbtk_out_dir -czvf "~{sample_id}.classify.tar.gz" classify
+		tar -C gtdbtk_out_dir -czvf "~{sample_id}.identify.tar.gz" identify
 	>>>
 
 	output {
-		# TODO
-		Array[File] align
-		Array[File] classify
-		Array[File] identify
-		File complete = "~{sample}.Complete.txt"
+		File gtdbtk_align_tar_gz = "~{sample_id}.align.tar.gz"
+		File gtdbtk_classify_tar_gz = "~{sample_id}.classify.tar.gz"
+		File gtdbtk_identify_tar_gz = "~{sample_id}.identify.tar.gz"
 	}
 
 	runtime {
-		docker: "~{runtime_attributes.container_registry}/gtdbtk@sha256:5c92b776841612e07f1c2375a3e950effcf47c0c79d4e2377ade06cafa717fa7"
+		docker: "~{runtime_attributes.container_registry}/gtdbtk:5e8307c"
 		cpu: threads
-		memory: "4 GB"
+		memory: mem_gb + " GB"
 		disk: disk_size + " GB"
 		disks: "local-disk " + disk_size + " HDD"
 		preemptible: runtime_attributes.preemptible_tries
@@ -95,31 +101,32 @@ task gtdbtk_analysis {
 
 task gtdbtk_cleanup {
 	input {
-		String sample
+		String sample_id
 		
-		File complete
+		File gtdbtk_classify_tar_gz
 
 		RuntimeAttributes runtime_attributes
 	}
 
-	# TODO - combine with task above to avoid reading in ~{classify} twice?
-	String dir_classify = dirname(classify) 
-	Int disk_size = ceil(size(complete, "GB") * 2 + 20)
+	Int disk_size = ceil(size(gtdbtk_classify_tar_gz, "GB") * 2 + 20)
 
 	command <<<
 		set -euo pipefail
 
-		GTDBTk-Organize.py \
-			-i ~{dir_classify} \
-			-o "~{sample}.GTDBTk_Summary.txt"
+		classify_dir=$(tar -tzf ~{gtdbtk_classify_tar_gz} | head -1 | cut -d '/' -f 1)
+		tar -xzvf ~{gtdbtk_classify_tar_gz}
+
+		python /opt/scripts/GTDBTk-Organize.py \
+			--input_dir "${classify_dir}" \
+			--outfile "~{sample_id}.GTDBTk_Summary.txt"
 	>>>
 
 	output {
-		File gtdbk = "~{sample}.GTDBTk_Summary.txt"
+		File gtdbk_summary_txt = "~{sample_id}.GTDBTk_Summary.txt"
 	}
 
 	runtime {
-		docker: "~{runtime_attributes.container_registry}/python@sha256:f4bf8adfa4987cf61d037440ec6f7fc1cff80c33adbe620620579f1e1f9c08f1"
+		docker: "~{runtime_attributes.container_registry}/python:5e8307c"
 		cpu: 2
 		memory: "4 GB"
 		disk: disk_size + " GB"

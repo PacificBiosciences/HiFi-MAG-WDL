@@ -7,8 +7,8 @@ workflow coverage {
 		String sample_id
 
 		File contigs_fasta
-		File reads_fasta
-		File bins_contigs_key
+		File hifi_reads_fasta
+		File bins_contigs_key_txt
 
 		RuntimeAttributes default_runtime_attributes
 	}
@@ -17,29 +17,29 @@ workflow coverage {
 		input:
 			sample_id = sample_id,
 			contigs_fasta = contigs_fasta,
-			reads_fasta = reads_fasta,
+			hifi_reads_fasta = hifi_reads_fasta,
 			runtime_attributes = default_runtime_attributes
 	}
 
-	call bam_depth {
+	call jgi_bam_depth {
 		input:
 			sample_id = sample_id,
 			sorted_bam = minimap_to_bam.sorted_bam,
+			sorted_bam_index = minimap_to_bam.sorted_bam_index,
 			runtime_attributes = default_runtime_attributes
 	}
 
-	call convert_depth {
+	call convert_jgi_bamdepth {
 		input:
 			sample_id = sample_id,
-			contig_depth_txt = bam_depth.contig_depth_txt,
-			bins_contigs_key = bins_contigs_key,
+			contig_depth_txt = jgi_bam_depth.contig_depth_txt,
+			bins_contigs_key_txt = bins_contigs_key_txt,
 			runtime_attributes = default_runtime_attributes
 	}
 
 	output {
-		File sorted_bam = minimap_to_bam.sorted_bam
-		File sorted_bam_index = minimap_to_bam.sorted_bam_index
-		File filtered_contig_depth_txt = convert_depth.filtered_contig_depth_txt
+		IndexData sorted_bam = {"data": minimap_to_bam.sorted_bam, "data_index": minimap_to_bam.sorted_bam_index}
+		File filtered_contig_depth_txt = convert_jgi_bamdepth.filtered_contig_depth_txt
 	}
 }
 
@@ -48,14 +48,14 @@ task minimap_to_bam {
 		String sample_id
 		
 		File contigs_fasta
-		File reads_fasta
+		File hifi_reads_fasta
 
 		RuntimeAttributes runtime_attributes
 	}
 
 	Int threads = 24
 	Int mem_gb = threads * 2
-	Int disk_size = ceil(size(contigs_fasta, "GB") * 2 + size(reads_fasta, "GB") + 20)
+	Int disk_size = ceil((size(contigs_fasta, "GB") + size(hifi_reads_fasta, "GB")) * 2 + 20)
 
 	command <<<
 		set -euo pipefail
@@ -79,7 +79,7 @@ task minimap_to_bam {
 			--sam-hit-only \
 			-t ~{threads / 2} \
 			~{contigs_fasta} \
-			~{reads_fasta} \
+			~{hifi_reads_fasta} \
 		| samtools sort \
 			-@ ~{threads / 2 - 1} \
 			-o "~{sample_id}.sorted.bam"
@@ -108,11 +108,12 @@ task minimap_to_bam {
 	}
 }
 
-task bam_depth {
+task jgi_bam_depth {
 	input {
 		String sample_id
 		
 		File sorted_bam
+		File sorted_bam_index
 
 		RuntimeAttributes runtime_attributes
 	}
@@ -122,7 +123,7 @@ task bam_depth {
 	command <<<
 		set -euo pipefail
 
-		# TODO - get metabat version. It's in the --help message
+		metabat --help |& grep "version"
 
 		jgi_summarize_bam_contig_depths \
 			--outputDepth "~{sample_id}.JGI.depth.txt" \
@@ -147,24 +148,24 @@ task bam_depth {
 	}
 }
 
-task convert_depth {
+task convert_jgi_bamdepth {
 	input {
 		String sample_id
 		
 		File contig_depth_txt
-		File bins_contigs_key
+		File bins_contigs_key_txt
 
 		RuntimeAttributes runtime_attributes
 	}
  
-	Int disk_size = ceil(size(contig_depth_txt, "GB") * 2 + size(bins_contigs_key, "GB") + 20)
+	Int disk_size = ceil((size(contig_depth_txt, "GB") + size(bins_contigs_key_txt, "GB")) * 2 + 20)
 
 	command <<<
 		set -euo pipefail
 
 		python /opt/scripts/Convert-JGI-Coverages.py \
 			--in_jgi ~{contig_depth_txt} \
-			--passed_bins ~{bins_contigs_key} \
+			--passed_bins ~{bins_contigs_key_txt} \
 			--out_jgi "~{sample_id}.JGI.filtered.depth.txt"
 	>>>
 
