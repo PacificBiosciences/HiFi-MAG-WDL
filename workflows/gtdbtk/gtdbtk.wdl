@@ -122,7 +122,7 @@ task gtdbtk_cleanup {
 	>>>
 
 	output {
-		File gtdbk_summary_txt = "~{sample_id}.GTDBTk_Summary.txt"
+		File gtdbtk_summary_txt = "~{sample_id}.GTDBTk_Summary.txt"
 	}
 
 	runtime {

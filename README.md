@@ -237,7 +237,7 @@ The workflow can start with either a FASTQ or BAM file.
 | File? | gtdbtk_align_tar_gz | | |
 | File? | gtdbtk_classify_tar_gz | | |
 | File? | gtdbtk_identify_tar_gz | | |
-| File? | gtdbk_summary_txt | | |
+| File? | gtdbtk_summary_txt | | |
 
 ## MAG
 
