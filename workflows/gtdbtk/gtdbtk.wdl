@@ -33,7 +33,7 @@ workflow gtdbtk {
 		File gtdbtk_align_tar_gz = gtdbtk_analysis.gtdbtk_align_tar_gz
 		File gtdbtk_classify_tar_gz = gtdbtk_analysis.gtdbtk_classify_tar_gz
 		File gtdbtk_identify_tar_gz = gtdbtk_analysis.gtdbtk_identify_tar_gz
-		File gtdbk_summary_txt = gtdbtk_cleanup.gtdbk_summary_txt
+		File gtdbtk_summary_txt = gtdbtk_cleanup.gtdbtk_summary_txt
 	}
 }
 

@@ -130,7 +130,7 @@ workflow metagenomics {
 		call MAG.mag {
 			input:
 				sample_id = sample_id,
-				gtdbk_summary_txt = gtdbtk.gtdbk_summary_txt,
+				gtdbtk_summary_txt = gtdbtk.gtdbtk_summary_txt,
 				filtered_quality_report_tsv = checkm2.filtered_quality_report_tsv,
 				derep_bins = checkm2.derep_bins,
 				min_mag_completeness = min_mag_completeness,
@@ -178,7 +178,7 @@ workflow metagenomics {
 		File? gtdbtk_align_tar_gz = gtdbtk.gtdbtk_align_tar_gz
 		File? gtdbtk_classify_tar_gz = gtdbtk.gtdbtk_classify_tar_gz
 		File? gtdbtk_identify_tar_gz = gtdbtk.gtdbtk_identify_tar_gz
-		File? gtdbk_summary_txt = gtdbtk.gtdbk_summary_txt
+		File? gtdbtk_summary_txt = gtdbtk.gtdbtk_summary_txt
 
 		# MAG summary and plot output
 		File? mag_summary_txt = mag.mag_summary_txt

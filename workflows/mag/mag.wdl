@@ -6,7 +6,7 @@ workflow mag {
 	input {
 		String sample_id
 
-		File gtdbk_summary_txt
+		File gtdbtk_summary_txt
 		File filtered_quality_report_tsv
 		Array[File] derep_bins
 
@@ -19,7 +19,7 @@ workflow mag {
 	call mag_summary {
 		input:
 			sample_id = sample_id,
-			gtdbk_summary_txt = gtdbk_summary_txt,
+			gtdbtk_summary_txt = gtdbtk_summary_txt,
 			filtered_quality_report_tsv = filtered_quality_report_tsv,
 			runtime_attributes = default_runtime_attributes
 	}
@@ -54,19 +54,19 @@ task mag_summary {
 	input {
 		String sample_id
 
-		File gtdbk_summary_txt
+		File gtdbtk_summary_txt
 		File filtered_quality_report_tsv
 
 		RuntimeAttributes runtime_attributes
 	}
 
-	Int disk_size = ceil((size(gtdbk_summary_txt, "GB") + size(filtered_quality_report_tsv, "GB")) * 2 + 20)
+	Int disk_size = ceil((size(gtdbtk_summary_txt, "GB") + size(filtered_quality_report_tsv, "GB")) * 2 + 20)
 
 	command <<<
 		set -euo pipefail
 
 		python /opt/scripts/MAG-Summary.py \
-			--gtdb_summary ~{gtdbk_summary_txt} \
+			--gtdb_summary ~{gtdbtk_summary_txt} \
 			--checmk2_summary ~{filtered_quality_report_tsv} \
 			--outfile "~{sample_id}.HiFi_MAG.summary.txt"
 	>>>
