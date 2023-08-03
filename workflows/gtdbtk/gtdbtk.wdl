@@ -61,7 +61,8 @@ task gtdbtk_analysis {
 		tar -xzvf ~{gtdbtk_data_tar_gz}
 
 		# Must set $GTDBTK_DATA_PATH variable to use gtdbtk command
-		export GTDBTK_DATA_PATH="$(pwd)/release207_v2"
+		GTDBTK_DATA_PATH="$(pwd)/release207_v2"
+		export GTDBTK_DATA_PATH
 
 		gtdbtk --version
 
@@ -112,10 +113,11 @@ task gtdbtk_cleanup {
 	command <<<
 		set -euo pipefail
 
+		classify_dir=$(tar -tzf ~{gtdbtk_classify_tar_gz} | head -1 | cut -d '/' -f 1)
 		tar -xzvf ~{gtdbtk_classify_tar_gz}
 
 		python /opt/scripts/GTDBTk-Organize.py \
-			--input_dir classify \
+			--input_dir "${classify_dir}" \
 			--outfile "~{sample_id}.GTDBTk_Summary.txt"
 	>>>
 

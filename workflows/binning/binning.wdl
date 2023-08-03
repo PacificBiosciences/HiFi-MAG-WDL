@@ -31,6 +31,7 @@ workflow binning {
 
 	call semibin2_analysis {
 		input:
+			sample_id = sample_id,
 			incomplete_contigs_fasta = incomplete_contigs_fasta,
 			sorted_bam = sorted_bam,
 			semibin2_model_flag = semibin2_model_flag,
@@ -129,6 +130,7 @@ task metabat2_analysis {
 
 task semibin2_analysis {
 	input {
+		String sample_id
 		File incomplete_contigs_fasta
 		File sorted_bam
 
@@ -160,10 +162,12 @@ task semibin2_analysis {
 			--tag-output \
 			semibin2 ~{semibin2_model_flag} \
 			--verbose
+
+		mv semibin2_out_dir/bins_info.tsv semibin2_out_dir/"~{sample_id}.bins_info.tsv"
 	>>>
 
 	output {
-		File bins_tsv = "semibin2_out_dir/bins_info.tsv"
+		File bins_tsv = "semibin2_out_dir/~{sample_id}.bins_info.tsv"
 		Array[File] reconstructed_bins_fastas = glob("semibin2_out_dir/output_bins/semibin2_*.fa")
 	}
 

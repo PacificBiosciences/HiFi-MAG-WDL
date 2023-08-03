@@ -108,7 +108,7 @@ task mag_copy {
 
 		python /opt/scripts/Copy-Final-MAGs.py \
 			--mag_summary ~{mag_summary_txt} \
-			--magdir "$derep_bins_dir" \
+			--magdir "${derep_bins_dir}" \
 			--outdir filtered_mags_out_dir
 	>>>
 

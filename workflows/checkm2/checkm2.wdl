@@ -20,6 +20,7 @@ workflow checkm2 {
 
 	call checkm2_bin_analysis {
 		input:
+			sample_id = sample_id,
 			checkm2_ref_db = checkm2_ref_db,
 			long_bin_fastas = long_bin_fastas,
 			dastool_bins = dastool_bins,
@@ -50,6 +51,7 @@ workflow checkm2 {
 
 task checkm2_bin_analysis {
 	input {
+		String sample_id
 		File checkm2_ref_db
 		Array[File] long_bin_fastas
 		Array[File] dastool_bins
@@ -70,11 +72,11 @@ task checkm2_bin_analysis {
 		mkdir checkm2_out_dir
 		mkdir tmp_dir
 
-		while read -r fasta || [[ -n "$fasta" ]]; do
+		while read -r fasta || [[ -n "${fasta}" ]]; do
 			ln -s "${fasta}" "$(pwd)"/derep_bins_dir/
 		done < ~{write_lines(long_bin_fastas)}
 
-		while read -r fasta || [[ -n "$fasta" ]]; do
+		while read -r fasta || [[ -n "${fasta}" ]]; do
 			ln -s "${fasta}" "$(pwd)"/derep_bins_dir/
 		done < ~{write_lines(dastool_bins)}
 
@@ -86,11 +88,13 @@ task checkm2_bin_analysis {
 			--database_path ~{checkm2_ref_db} \
 			--remove_intermediates \
 			--tmpdir tmp_dir
+
+		mv checkm2_out_dir/quality_report.tsv checkm2_out_dir/"~{sample_id}.bin.quality_report.tsv"
 	>>>
 
 	output {
 		Array[File] derep_bins = glob("derep_bins_dir/*.fa")
-		File bin_quality_report_tsv = "checkm2_out_dir/quality_report.tsv"
+		File bin_quality_report_tsv = "checkm2_out_dir/~{sample_id}.bin.quality_report.tsv"
 	}
 
 	runtime {
@@ -131,7 +135,7 @@ task assess_checkm2_bins {
 
 		python /opt/scripts/Filter-Checkm2-Bins.py \
 			--input_tsv ~{bin_quality_report_tsv} \
-			--bin_dir "$derep_bins_dir" \
+			--bin_dir "${derep_bins_dir}" \
 			--depth_file ~{filtered_contig_depth_txt} \
 			--min_completeness ~{min_mag_completeness} \
 			--max_contamination ~{max_mag_contamination} \

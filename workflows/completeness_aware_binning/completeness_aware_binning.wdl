@@ -34,6 +34,7 @@ workflow completeness_aware_binning {
 	if (long_contigs_to_bins.bin_key_nonempty) {
 		call checkm2_contig_analysis {
 		input:
+			sample_id = sample_id,
 			checkm2_ref_db = checkm2_ref_db,
 			long_bin_fastas = long_contigs_to_bins.long_bin_fastas,
 			runtime_attributes = default_runtime_attributes
@@ -172,6 +173,7 @@ task make_incomplete_contigs {
 
 task checkm2_contig_analysis {
 	input {
+		String sample_id
 		File checkm2_ref_db
 
 		Array[File] long_bin_fastas
@@ -194,17 +196,19 @@ task checkm2_contig_analysis {
 		mkdir tmp_dir
 
 		checkm2 predict \
-			--input "$long_bin_fastas_dir" \
+			--input "${long_bin_fastas_dir}" \
 			--output-directory checkm2_out_dir \
 			--extension fa \
 			--threads ~{threads} \
 			--database_path ~{checkm2_ref_db} \
 			--remove_intermediates \
 			--tmpdir tmp_dir
+
+		mv checkm2_out_dir/quality_report.tsv checkm2_out_dir/"~{sample_id}.contig.quality_report.tsv"
 	>>>
 
 	output {
-		File contig_quality_report_tsv = "checkm2_out_dir/quality_report.tsv"
+		File contig_quality_report_tsv = "checkm2_out_dir/~{sample_id}.contig.quality_report.tsv"
 	}
 
 	runtime {
