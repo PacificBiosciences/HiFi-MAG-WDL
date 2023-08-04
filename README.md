@@ -161,8 +161,7 @@ The workflow can start with either a FASTQ or BAM file.
 | Type | Name | Description | Notes |
 | :- | :- | :- | :- |
 | String | sample_id | Sample name; used for naming files. | |
-| File? | bam | HiFi reads in BAM format to be converted into FASTQ format. | |
-| File? | fastq | HiFi reads in FASTQ format. | |
+| File | hifi_reads | HiFi reads in BAM or FASTQ format. If BAM, the reads will first be converted to a FASTQ. | |
 | File | db | The CheckM2 DIAMOND reference database Uniref100/KO used to predict the completeness and contamination of MAGs. | |
 | Int | min_length | Minimum size of a contig to consider for completeness scores. The default value will be used [500000]. If modified, this value should not be increased. | |
 | Int | min_completeness | Minimum completeness score (from CheckM2) to mark a contig as complete and place it in a distinct bin. The default value will be used [93%]. If modified, this value should not be lower than 90%. | |

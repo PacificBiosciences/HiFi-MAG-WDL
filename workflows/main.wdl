@@ -12,8 +12,7 @@ import "mag/mag.wdl" as MAG
 workflow metagenomics {
 	input {
 		String sample_id
-		File? bam
-		File? fastq
+		File hifi_reads
 
 		# Complete-aware binning
 		File checkm2_ref_db
@@ -54,11 +53,13 @@ workflow metagenomics {
 
 	RuntimeAttributes default_runtime_attributes = if preemptible then backend_configuration.spot_runtime_attributes else backend_configuration.on_demand_runtime_attributes
 
-	if (defined(bam)) {
+	# Detect the input format of the hifi_reads; if BAM, first convert to FASTQ
+	String hifi_reads_extension = sub(basename(hifi_reads), basename(hifi_reads, ".bam"), "")
+
+	if (hifi_reads_extension == ".bam") {
 		call bam_to_fastq {
 			input:
-				sample_id = sample_id,
-				bam = select_first([bam]),
+				bam = hifi_reads,
 				runtime_attributes = default_runtime_attributes
 		}
 	}
@@ -66,7 +67,7 @@ workflow metagenomics {
 	call assemble_metagenomes {
 		input:
 			sample_id = sample_id,
-			fastq = select_first([bam_to_fastq.converted_fastq, fastq]),
+			fastq = select_first([bam_to_fastq.fastq, hifi_reads]),
 			runtime_attributes = default_runtime_attributes
 	}
 
@@ -84,7 +85,7 @@ workflow metagenomics {
 		input:
 			sample_id = sample_id,
 			contigs_fasta_gz = assemble_metagenomes.primary_contig_fasta_gz,
-			hifi_reads_fastq = select_first([bam_to_fastq.converted_fastq, fastq]),
+			hifi_reads_fastq = select_first([bam_to_fastq.fastq, hifi_reads]),
 			bins_contigs_key_txt = completeness_aware_binning.bins_contigs_key_txt,
 			default_runtime_attributes = default_runtime_attributes
 	}
@@ -139,7 +140,7 @@ workflow metagenomics {
 
 	output {
 		# Preprocessing
-		File? converted_fastq = bam_to_fastq.converted_fastq
+		File? fastq = bam_to_fastq.fastq
 		File primary_contig_gfa = assemble_metagenomes.primary_contig_gfa
 		File primary_contig_fasta_gz = assemble_metagenomes.primary_contig_fasta_gz
 
@@ -187,8 +188,7 @@ workflow metagenomics {
 
 	parameter_meta {
 		sample_id: {help: "Sample ID"}
-		bam: {help: "Optional sample BAM; one of [bam, fastq] must be provided as input"}
-		fastq: {help: "Optional sample in FASTQ format; one of [bam, fastq] must be provided as input"}
+		hifi_reads: {help: "HiFi reads in BAM or FASTQ format"}
 
 		# Completeness-aware binning
 		checkm2_ref_db: {help: "CheckM2 DIAMOND reference database Uniref100/KO"}
@@ -221,12 +221,13 @@ workflow metagenomics {
 
 task bam_to_fastq {
 	input {
-		String sample_id
 		File bam
 
 		RuntimeAttributes runtime_attributes
 	}
 
+	String bam_basename = basename(bam, ".bam")
+	Int threads = 2
 	Int disk_size = ceil(size(bam, "GB") * 2 + 20)
 
 	command <<<
@@ -235,17 +236,20 @@ task bam_to_fastq {
 		samtools --version
 
 		samtools fastq \
+			-@ ~{threads - 1} \
 			~{bam} \
-		| bgzip -c > "~{sample_id}.fastq.gz"
+		| bgzip \
+			--stdout \
+		> "~{bam_basename}.fastq.gz"
 	>>>
 
 	output {
-		File converted_fastq = "~{sample_id}.fastq.gz"
+		File fastq = "~{bam_basename}.fastq.gz"
 	}
 
 	runtime {
 		docker: "~{runtime_attributes.container_registry}/samtools:5e8307c"
-		cpu: 2
+		cpu: threads
 		memory: "4 GB"
 		disk: disk_size + " GB"
 		disks: "local-disk " + disk_size + " HDD"
