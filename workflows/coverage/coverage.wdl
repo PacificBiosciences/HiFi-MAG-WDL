@@ -6,26 +6,26 @@ workflow coverage {
 	input {
 		String sample_id
 
-		File contigs_fasta
-		File hifi_reads_fasta
+		File contigs_fasta_gz
+		File hifi_reads_fastq
 		File bins_contigs_key_txt
 
 		RuntimeAttributes default_runtime_attributes
 	}
 
-	call minimap_to_bam {
+	call align_hifiasm {
 		input:
 			sample_id = sample_id,
-			contigs_fasta = contigs_fasta,
-			hifi_reads_fasta = hifi_reads_fasta,
+			contigs_fasta_gz = contigs_fasta_gz,
+			hifi_reads_fastq = hifi_reads_fastq,
 			runtime_attributes = default_runtime_attributes
 	}
 
 	call jgi_bam_depth {
 		input:
 			sample_id = sample_id,
-			sorted_bam = minimap_to_bam.sorted_bam,
-			sorted_bam_index = minimap_to_bam.sorted_bam_index,
+			aligned_sorted_bam = align_hifiasm.aligned_sorted_bam,
+			aligned_sorted_bam_index = align_hifiasm.aligned_sorted_bam_index,
 			runtime_attributes = default_runtime_attributes
 	}
 
@@ -38,24 +38,27 @@ workflow coverage {
 	}
 
 	output {
-		IndexData sorted_bam = {"data": minimap_to_bam.sorted_bam, "data_index": minimap_to_bam.sorted_bam_index}
+		IndexData aligned_sorted_bam = {
+			"data": align_hifiasm.aligned_sorted_bam,
+			"data_index": align_hifiasm.aligned_sorted_bam_index
+		}
 		File filtered_contig_depth_txt = convert_jgi_bamdepth.filtered_contig_depth_txt
 	}
 }
 
-task minimap_to_bam {
+task align_hifiasm {
 	input {
 		String sample_id
 
-		File contigs_fasta
-		File hifi_reads_fasta
+		File contigs_fasta_gz
+		File hifi_reads_fastq
 
 		RuntimeAttributes runtime_attributes
 	}
 
 	Int threads = 24
 	Int mem_gb = threads * 2
-	Int disk_size = ceil((size(contigs_fasta, "GB") + size(hifi_reads_fasta, "GB")) * 2 + 20)
+	Int disk_size = ceil((size(contigs_fasta_gz, "GB") + size(hifi_reads_fastq, "GB")) * 2 + 20)
 
 	command <<<
 		set -euo pipefail
@@ -78,20 +81,20 @@ task minimap_to_bam {
 			-z 400,50 \
 			--sam-hit-only \
 			-t ~{threads / 2} \
-			~{contigs_fasta} \
-			~{hifi_reads_fasta} \
+			~{contigs_fasta_gz} \
+			~{hifi_reads_fastq} \
 		| samtools sort \
 			-@ ~{threads / 2 - 1} \
-			-o "~{sample_id}.sorted.bam"
+			-o "~{sample_id}.aligned.sorted.bam"
 
 		samtools index \
 			-@ ~{threads - 1} \
-			"~{sample_id}.sorted.bam"
+			"~{sample_id}.aligned.sorted.bam"
 	>>>
 
 	output {
-		File sorted_bam = "~{sample_id}.sorted.bam"
-		File sorted_bam_index = "~{sample_id}.sorted.bam.bai"
+		File aligned_sorted_bam = "~{sample_id}.aligned.sorted.bam"
+		File aligned_sorted_bam_index = "~{sample_id}.aligned.sorted.bam.bai"
 	}
 
 	runtime {
@@ -112,13 +115,13 @@ task jgi_bam_depth {
 	input {
 		String sample_id
 
-		File sorted_bam
-		File sorted_bam_index
+		File aligned_sorted_bam
+		File aligned_sorted_bam_index
 
 		RuntimeAttributes runtime_attributes
 	}
 
-	Int disk_size = ceil(size(sorted_bam, "GB") * 2 + 20)
+	Int disk_size = ceil(size(aligned_sorted_bam, "GB") * 2 + 20)
 
 	command <<<
 		set -euo pipefail
@@ -127,7 +130,7 @@ task jgi_bam_depth {
 
 		jgi_summarize_bam_contig_depths \
 			--outputDepth "~{sample_id}.JGI.depth.txt" \
-			~{sorted_bam}
+			~{aligned_sorted_bam}
 	>>>
 
 	output {

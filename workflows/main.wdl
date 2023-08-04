@@ -63,7 +63,7 @@ workflow metagenomics {
 		}
 	}
 
-	call hifiasm_meta {
+	call assemble_metagenomes {
 		input:
 			sample_id = sample_id,
 			fastq = select_first([bam_to_fastq.converted_fastq, fastq]),
@@ -73,7 +73,7 @@ workflow metagenomics {
 	call CompletenessAwareBinning.completeness_aware_binning {
 		input:
 			sample_id = sample_id,
-			contigs_fasta = hifiasm_meta.primary_contig_fasta,
+			contigs_fasta = assemble_metagenomes.primary_contig_fasta,
 			min_contig_length = min_contig_length,
 			min_contig_completeness = min_contig_completeness,
 			checkm2_ref_db = checkm2_ref_db,
@@ -83,8 +83,8 @@ workflow metagenomics {
 	call Coverage.coverage {
 		input:
 			sample_id = sample_id,
-			contigs_fasta = hifiasm_meta.primary_contig_fasta,
-			hifi_reads_fasta = hifiasm_meta.hifi_reads_fasta,
+			contigs_fasta_gz = assemble_metagenomes.primary_contig_fasta_gz,
+			hifi_reads_fastq = select_first([bam_to_fastq.converted_fastq, fastq]),
 			bins_contigs_key_txt = completeness_aware_binning.bins_contigs_key_txt,
 			default_runtime_attributes = default_runtime_attributes
 	}
@@ -94,7 +94,7 @@ workflow metagenomics {
 			sample_id = sample_id,
 			incomplete_contigs_fasta = completeness_aware_binning.incomplete_contigs_fasta,
 			filtered_contig_depth_txt = coverage.filtered_contig_depth_txt,
-			sorted_bam = coverage.sorted_bam.data,
+			aligned_sorted_bam = coverage.aligned_sorted_bam.data,
 			metabat2_min_contig_size = metabat2_min_contig_size,
 			semibin2_model = semibin2_model,
 			dastool_search_engine = dastool_search_engine,
@@ -140,9 +140,8 @@ workflow metagenomics {
 	output {
 		# Preprocessing
 		File? converted_fastq = bam_to_fastq.converted_fastq
-		File primary_contig_gfa = hifiasm_meta.primary_contig_gfa
-		File primary_contig_fasta = hifiasm_meta.primary_contig_fasta
-		File hifi_reads_fasta = hifiasm_meta.hifi_reads_fasta
+		File primary_contig_gfa = assemble_metagenomes.primary_contig_gfa
+		File primary_contig_fasta_gz = assemble_metagenomes.primary_contig_fasta_gz
 
 		# Completeness-aware binning output
 		File bins_contigs_key_txt = completeness_aware_binning.bins_contigs_key_txt
@@ -154,7 +153,7 @@ workflow metagenomics {
 		File? histogram_pdf = completeness_aware_binning.histogram_pdf
 
 		# Coverage output
-		IndexData sorted_bam = coverage.sorted_bam
+		IndexData aligned_sorted_bam = coverage.aligned_sorted_bam
 		File filtered_contig_depth_txt = coverage.filtered_contig_depth_txt
 
 		# Binning output
@@ -199,7 +198,7 @@ workflow metagenomics {
 		# Binning
 		metabat2_min_contig_size: {help: "The minimum size of contig to be included in binning for MetaBAT2; default value is set to 30000"}
 		semibin2_model: {help: "The trained model to be used in SemiBin2. If set to an empty string, a new model will be trained from your data. ('', 'human_gut', 'human_oral', 'dog_gut', 'cat_gut', 'mouse_gut', 'pig_gut', 'chicken_caecum', 'ocean', 'soil', 'built_environment', 'wastewater',  'global') ['global']"}
-		dastool_search_engine: {help: "The engine for single copy gene searching used in DAS Tool; default is set to 'diamond'"}
+		dastool_search_engine: {help: "The engine for single copy gene searching used in DAS Tool. ('blast', 'diamond', 'usearch') ['diamond']"}
 		dastool_score_threshold: {help: "Score threshold until selection algorithm will keep selecting bins [0 to 1] used in DAS Tool; default value is set to 0.2 (20%)"}
 
 		# Quality filters for MAGs
@@ -258,7 +257,7 @@ task bam_to_fastq {
 	}
 }
 
-task hifiasm_meta {
+task assemble_metagenomes {
 	input {
 		String sample_id
 		File fastq
@@ -274,25 +273,32 @@ task hifiasm_meta {
 		set -euo pipefail
 
 		hifiasm_meta --version
+		gfatools version
 
 		hifiasm_meta \
 			-t ~{threads} \
-			-o ~{sample_id} \
+			-o ~{sample_id}.asm \
 			~{fastq}
 
-		awk '/^S/{print ">"$2;print $3}' "~{sample_id}.p_ctg.gfa" > "~{sample_id}.p_ctg.fa"
+		gfatools gfa2fa \
+			~{sample_id}.asm.p_ctg.gfa \
+		> ~{sample_id}.asm.p_ctg.fa
 
-		gzip -d <~{fastq} | sed -n '1~4s/^@/>/p;2~4p' > "~{sample_id}.fa"
+		bgzip \
+			--threads ~{threads} \
+			--stdout \
+			~{sample_id}.asm.p_ctg.fa \
+		> ~{sample_id}.asm.p_ctg.fa.gz
 	>>>
 
 	output {
-		File primary_contig_gfa = "~{sample_id}.p_ctg.gfa"
-		File primary_contig_fasta = "~{sample_id}.p_ctg.fa"
-		File hifi_reads_fasta = "~{sample_id}.fa"
+		File primary_contig_gfa = "~{sample_id}.asm.p_ctg.gfa"
+		File primary_contig_fasta = "~{sample_id}.asm.p_ctg.fa"
+		File primary_contig_fasta_gz = "~{sample_id}.asm.p_ctg.fa.gz"
 	}
 
 	runtime {
-		docker: "~{runtime_attributes.container_registry}/hifiasm-meta:0.3"
+		docker: "~{runtime_attributes.container_registry}/hifiasm-meta:0.3.1"
 		cpu: threads
 		memory: mem_gb + " GB"
 		disk: disk_size + " GB"

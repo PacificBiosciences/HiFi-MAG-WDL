@@ -10,7 +10,7 @@ workflow binning {
 
 		File incomplete_contigs_fasta
 		File filtered_contig_depth_txt
-		File sorted_bam
+		File aligned_sorted_bam
 
 		Int metabat2_min_contig_size
 		String semibin2_model
@@ -33,7 +33,7 @@ workflow binning {
 		input:
 			sample_id = sample_id,
 			incomplete_contigs_fasta = incomplete_contigs_fasta,
-			sorted_bam = sorted_bam,
+			aligned_sorted_bam = aligned_sorted_bam,
 			semibin2_model = semibin2_model,
 			runtime_attributes = default_runtime_attributes
 	}
@@ -132,7 +132,7 @@ task semibin2_analysis {
 	input {
 		String sample_id
 		File incomplete_contigs_fasta
-		File sorted_bam
+		File aligned_sorted_bam
 
 		String semibin2_model
 
@@ -141,7 +141,7 @@ task semibin2_analysis {
 
 	Int threads = 48
 	Int mem_gb = threads * 4
-	Int disk_size = ceil((size(incomplete_contigs_fasta, "GB") + size(sorted_bam, "GB")) * 2 + 20)
+	Int disk_size = ceil((size(incomplete_contigs_fasta, "GB") + size(aligned_sorted_bam, "GB")) * 2 + 20)
 
 	# If the model is set to the empty string, a new model will be built
 	String semibin2_model_flag = if (semibin2_model == "") then "" else "--environment=~{semibin2_model}"
@@ -157,7 +157,7 @@ task semibin2_analysis {
 			single_easy_bin \
 			semibin2 \
 			--input-fasta ~{incomplete_contigs_fasta} \
-			--input-bam ~{sorted_bam} \
+			--input-bam ~{aligned_sorted_bam} \
 			--output semibin2_out_dir \
 			--self-supervised \
 			--sequencing-type=long_reads \
