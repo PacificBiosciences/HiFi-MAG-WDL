@@ -46,7 +46,7 @@ workflow coverage {
 task minimap_to_bam {
 	input {
 		String sample_id
-		
+
 		File contigs_fasta
 		File hifi_reads_fasta
 
@@ -111,13 +111,13 @@ task minimap_to_bam {
 task jgi_bam_depth {
 	input {
 		String sample_id
-		
+
 		File sorted_bam
 		File sorted_bam_index
 
 		RuntimeAttributes runtime_attributes
 	}
- 
+
 	Int disk_size = ceil(size(sorted_bam, "GB") * 2 + 20)
 
 	command <<<
@@ -151,13 +151,13 @@ task jgi_bam_depth {
 task convert_jgi_bamdepth {
 	input {
 		String sample_id
-		
+
 		File contig_depth_txt
 		File bins_contigs_key_txt
 
 		RuntimeAttributes runtime_attributes
 	}
- 
+
 	Int disk_size = ceil((size(contig_depth_txt, "GB") + size(bins_contigs_key_txt, "GB")) * 2 + 20)
 
 	command <<<

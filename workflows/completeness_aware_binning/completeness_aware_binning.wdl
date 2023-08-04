@@ -129,7 +129,7 @@ task make_incomplete_contigs {
 	input {
 		String sample_id
 		File contigs_fasta
-		
+
 		File bins_contigs_key_txt
 		Array[File] renamed_long_bin_fastas
 

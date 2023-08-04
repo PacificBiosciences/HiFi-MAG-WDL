@@ -40,7 +40,7 @@ workflow gtdbtk {
 task gtdbtk_analysis {
 	input {
 		String sample_id
-		
+
 		File gtdb_batch_txt
 		File gtdbtk_data_tar_gz
 		Array[File] derep_bins
@@ -102,7 +102,7 @@ task gtdbtk_analysis {
 task gtdbtk_cleanup {
 	input {
 		String sample_id
-		
+
 		File gtdbtk_classify_tar_gz
 
 		RuntimeAttributes runtime_attributes

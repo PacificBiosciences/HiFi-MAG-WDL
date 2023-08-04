@@ -1,0 +1,22 @@
+{
+  "metagenomics.sample_id": "String",
+  "metagenomics.bam": "File? (optional)",
+  "metagenomics.fastq": "File? (optional)",
+  "metagenomics.checkm2_ref_db": "File",
+  "metagenomics.min_contig_length": "Int (optional, default = 500000)",
+  "metagenomics.min_contig_completeness": "Int (optional, default = 93)",
+  "metagenomics.metabat2_min_contig_size": "Int (optional, default = 30000)",
+  "metagenomics.semibin2_model": "String (optional, default = \"global\")",
+  "metagenomics.dastool_search_engine": "String (optional, default = \"diamond\")",
+  "metagenomics.dastool_score_threshold": "Float (optional, default = 0.2)",
+  "metagenomics.min_mag_completeness": "Int (optional, default = 70)",
+  "metagenomics.max_mag_contamination": "Int (optional, default = 10)",
+  "metagenomics.max_contigs": "Int (optional, default = 20)",
+  "metagenomics.gtdbtk_data_tar_gz": "File",
+  "metagenomics.backend": "String",
+  "metagenomics.zones": "String? (optional)",
+  "metagenomics.aws_spot_queue_arn": "String? (optional)",
+  "metagenomics.aws_on_demand_queue_arn": "String? (optional)",
+  "metagenomics.container_registry": "String? (optional)",
+  "metagenomics.preemptible": "Boolean"
+}

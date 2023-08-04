@@ -96,7 +96,7 @@ task mag_copy {
 
 		RuntimeAttributes runtime_attributes
 	}
- 
+
 	Int disk_size = ceil((size(mag_summary_txt, "GB") + (size(derep_bins[0], "GB") * length(derep_bins))) * 2 + 20)
 
 	command <<<
@@ -142,7 +142,7 @@ task mag_plots {
 
 		RuntimeAttributes runtime_attributes
 	}
- 
+
 	Int disk_size = ceil((size(filtered_quality_report_tsv, "GB") + size(mag_summary_txt, "GB")) * 2 + 20)
 
 	command <<<

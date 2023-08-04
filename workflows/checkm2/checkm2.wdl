@@ -114,7 +114,7 @@ task checkm2_bin_analysis {
 task assess_checkm2_bins {
 	input {
 		String sample_id
-		
+
 		File bin_quality_report_tsv
 		File filtered_contig_depth_txt
 		Array[File] derep_bins

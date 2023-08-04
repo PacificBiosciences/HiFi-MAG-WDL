@@ -22,7 +22,7 @@ workflow metagenomics {
 
 		# Binning
 		Int metabat2_min_contig_size = 30000
-		String semibin2_model_flag = "--environment=global"
+		String semibin2_model = "global"
 		String dastool_search_engine = "diamond"
 		Float dastool_score_threshold = 0.2
 
@@ -54,9 +54,7 @@ workflow metagenomics {
 
 	RuntimeAttributes default_runtime_attributes = if preemptible then backend_configuration.spot_runtime_attributes else backend_configuration.on_demand_runtime_attributes
 
-	Boolean run_bam_to_fastq = if (defined(bam)) then true else false
-
-	if (run_bam_to_fastq) {
+	if (defined(bam)) {
 		call bam_to_fastq {
 			input:
 				sample_id = sample_id,
@@ -98,7 +96,7 @@ workflow metagenomics {
 			filtered_contig_depth_txt = coverage.filtered_contig_depth_txt,
 			sorted_bam = coverage.sorted_bam.data,
 			metabat2_min_contig_size = metabat2_min_contig_size,
-			semibin2_model_flag = semibin2_model_flag,
+			semibin2_model = semibin2_model,
 			dastool_search_engine = dastool_search_engine,
 			dastool_score_threshold = dastool_score_threshold,
 			default_runtime_attributes = default_runtime_attributes
@@ -192,22 +190,26 @@ workflow metagenomics {
 		sample_id: {help: "Sample ID"}
 		bam: {help: "Optional sample BAM; one of [bam, fastq] must be provided as input"}
 		fastq: {help: "Optional sample in FASTQ format; one of [bam, fastq] must be provided as input"}
-		run_bam_to_fastq: {help: "Optional step to convert sample BAM to FASTQ format if BAM is provided"}
+
 		# Completeness-aware binning
 		checkm2_ref_db: {help: "CheckM2 DIAMOND reference database Uniref100/KO"}
 		min_contig_length: {help: "Minimum size of a contig to consider for completeness scores; default value is set to 500kb. This value should not be increased"}
 		min_contig_completeness: {help: "Minimum completeness score (from CheckM2) to mark a contig as complete and place it in a distinct bin; default value is set to 93%. This value should not be lower than 90%"}
+
 		# Binning
 		metabat2_min_contig_size: {help: "The minimum size of contig to be included in binning for MetaBAT2; default value is set to 30000"}
-		semibin2_model_flag: {help: "The trained model to be used in SemiBin2; default value is set to 'global'"}
+		semibin2_model: {help: "The trained model to be used in SemiBin2. If set to an empty string, a new model will be trained from your data. ('', 'human_gut', 'human_oral', 'dog_gut', 'cat_gut', 'mouse_gut', 'pig_gut', 'chicken_caecum', 'ocean', 'soil', 'built_environment', 'wastewater',  'global') ['global']"}
 		dastool_search_engine: {help: "The engine for single copy gene searching used in DAS Tool; default is set to 'diamond'"}
 		dastool_score_threshold: {help: "Score threshold until selection algorithm will keep selecting bins [0 to 1] used in DAS Tool; default value is set to 0.2 (20%)"}
+
 		# Quality filters for MAGs
 		min_mag_completeness: {help: "Minimum completeness score for a genome bin; default value is set to 70%"}
 		max_mag_contamination: {help: "Maximum contamination threshold for a genome bin; default value is set to 10%"}
 		max_contigs: {help: "The maximum number of contigs allowed in a genome bin; default value is set to 20"}
+
 		# GTDBT-k
 		gtdbtk_data_tar_gz: {help: "A TAR GZ file of GTDB-Tk (Genome Database Taxonomy toolkit) reference data, release207_v2 used for assigning taxonomic classifications to bacterial and archaeal genomes"}
+
 		# Backend configuration
 		backend: {help: "Backend where the workflow will be executed ['GCP', 'Azure', 'AWS']"}
 		zones: {help: "Zones where compute will take place; required if backend is set to 'AWS' or 'GCP'"}

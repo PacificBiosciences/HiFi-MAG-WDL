@@ -13,7 +13,7 @@ workflow binning {
 		File sorted_bam
 
 		Int metabat2_min_contig_size
-		String semibin2_model_flag
+		String semibin2_model
 		String dastool_search_engine
 		Float dastool_score_threshold
 
@@ -34,7 +34,7 @@ workflow binning {
 			sample_id = sample_id,
 			incomplete_contigs_fasta = incomplete_contigs_fasta,
 			sorted_bam = sorted_bam,
-			semibin2_model_flag = semibin2_model_flag,
+			semibin2_model = semibin2_model,
 			runtime_attributes = default_runtime_attributes
 	}
 
@@ -83,7 +83,7 @@ workflow binning {
 task metabat2_analysis {
 	input {
 		String sample_id
-		
+
 		File incomplete_contigs_fasta
 		File filtered_contig_depth_txt
 
@@ -134,14 +134,17 @@ task semibin2_analysis {
 		File incomplete_contigs_fasta
 		File sorted_bam
 
-		String semibin2_model_flag
+		String semibin2_model
 
 		RuntimeAttributes runtime_attributes
 	}
- 
- 	Int threads = 48
- 	Int mem_gb = threads * 4
+
+	Int threads = 48
+	Int mem_gb = threads * 4
 	Int disk_size = ceil((size(incomplete_contigs_fasta, "GB") + size(sorted_bam, "GB")) * 2 + 20)
+
+	# If the model is set to the empty string, a new model will be built
+	String semibin2_model_flag = if (semibin2_model == "") then "" else "--environment=~{semibin2_model}"
 
 	command <<<
 		set -euo pipefail
@@ -152,6 +155,7 @@ task semibin2_analysis {
 
 		SemiBin \
 			single_easy_bin \
+			semibin2 \
 			--input-fasta ~{incomplete_contigs_fasta} \
 			--input-bam ~{sorted_bam} \
 			--output semibin2_out_dir \
@@ -160,7 +164,7 @@ task semibin2_analysis {
 			--compression=none \
 			--threads ~{threads} \
 			--tag-output \
-			semibin2 ~{semibin2_model_flag} \
+			~{semibin2_model_flag} \
 			--verbose
 
 		mv semibin2_out_dir/bins_info.tsv semibin2_out_dir/"~{sample_id}.bins_info.tsv"
@@ -194,7 +198,7 @@ task dastool_input {
 
 		RuntimeAttributes runtime_attributes
 	}
- 	
+
 	Int disk_size = ceil(size(reconstructed_bins_fastas[0], "GB") * length(reconstructed_bins_fastas) * 2 + 20)
 
 	command <<<
@@ -240,9 +244,9 @@ task dastool_analysis {
 
 		RuntimeAttributes runtime_attributes
 	}
- 	
- 	Int threads = 24
- 	Int mem_gb = threads * 4
+
+	Int threads = 24
+	Int mem_gb = threads * 4
 	Int disk_size = ceil(size(incomplete_contigs_fasta, "GB") * 2 + 20)
 
 	command <<<
