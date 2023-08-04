@@ -6,8 +6,7 @@ import "completeness_aware_binning/completeness_aware_binning.wdl" as Completene
 import "coverage/coverage.wdl" as Coverage
 import "binning/binning.wdl" as Binning
 import "checkm2/checkm2.wdl" as CheckM2
-import "gtdbtk/gtdbtk.wdl" as GTDBTk
-import "mag/mag.wdl" as MAG
+import "assign_summarize_taxonomy/assign_summarize_taxonomy.wdl" as AssignSummarizeTaxonomy
 
 workflow metagenomics {
 	input {
@@ -117,21 +116,13 @@ workflow metagenomics {
 	}
 
 	if (checkm2.passed_bin_count_nonempty) {
-		call GTDBTk.gtdbtk {
+		call AssignSummarizeTaxonomy.assign_summarize_taxonomy {
 			input:
 				sample_id = sample_id,
 				gtdb_batch_txt = checkm2.gtdb_batch_txt,
 				gtdbtk_data_tar_gz = gtdbtk_data_tar_gz,
 				derep_bins = checkm2.derep_bins,
-				default_runtime_attributes = default_runtime_attributes
-		}
-
-		call MAG.mag {
-			input:
-				sample_id = sample_id,
-				gtdbtk_summary_txt = gtdbtk.gtdbtk_summary_txt,
 				filtered_quality_report_tsv = checkm2.filtered_quality_report_tsv,
-				derep_bins = checkm2.derep_bins,
 				min_mag_completeness = min_mag_completeness,
 				max_mag_contamination = max_mag_contamination,
 				default_runtime_attributes = default_runtime_attributes
@@ -173,17 +164,15 @@ workflow metagenomics {
 		File filtered_quality_report_tsv = checkm2.filtered_quality_report_tsv
 
 		# GTDB-Tk output
-		File? gtdbtk_align_tar_gz = gtdbtk.gtdbtk_align_tar_gz
-		File? gtdbtk_classify_tar_gz = gtdbtk.gtdbtk_classify_tar_gz
-		File? gtdbtk_identify_tar_gz = gtdbtk.gtdbtk_identify_tar_gz
-		File? gtdbtk_summary_txt = gtdbtk.gtdbtk_summary_txt
+		File? gtdbtk_summary_txt = assign_summarize_taxonomy.gtdbtk_summary_txt
+		File? gtdbk_output_tar_gz = assign_summarize_taxonomy.gtdbk_output_tar_gz
 
 		# MAG summary and plot output
-		File? mag_summary_txt = mag.mag_summary_txt
-		Array[File]? filtered_mags_fastas = mag.filtered_mags_fastas
-		File? dastool_bins_plot_pdf = mag.dastool_bins_plot_pdf
-		File? contigs_quality_plot_pdf = mag.contigs_quality_plot_pdf
-		File? genome_size_depths_plot_df = mag.genome_size_depths_plot_df
+		File? mag_summary_txt = assign_summarize_taxonomy.mag_summary_txt
+		Array[File]? filtered_mags_fastas = assign_summarize_taxonomy.filtered_mags_fastas
+		File? dastool_bins_plot_pdf = assign_summarize_taxonomy.dastool_bins_plot_pdf
+		File? contigs_quality_plot_pdf = assign_summarize_taxonomy.contigs_quality_plot_pdf
+		File? genome_size_depths_plot_df = assign_summarize_taxonomy.genome_size_depths_plot_df
 	}
 
 	parameter_meta {

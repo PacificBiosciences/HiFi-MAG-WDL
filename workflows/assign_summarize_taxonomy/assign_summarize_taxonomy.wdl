@@ -2,24 +2,36 @@ version 1.0
 
 import "../wdl-common/wdl/structs.wdl"
 
-workflow mag {
+workflow assign_summarize_taxonomy {
 	input {
 		String sample_id
 
-		File gtdbtk_summary_txt
-		File filtered_quality_report_tsv
+		File gtdb_batch_txt
+		File gtdbtk_data_tar_gz
 		Array[File] derep_bins
+
+		File filtered_quality_report_tsv
 
 		Int min_mag_completeness
 		Int max_mag_contamination
 
+
 		RuntimeAttributes default_runtime_attributes
+	}
+
+	call assign_taxonomy {
+		input:
+			sample_id = sample_id,
+			gtdb_batch_txt = gtdb_batch_txt,
+			gtdbtk_data_tar_gz = gtdbtk_data_tar_gz,
+			derep_bins= derep_bins,
+			runtime_attributes = default_runtime_attributes
 	}
 
 	call mag_summary {
 		input:
 			sample_id = sample_id,
-			gtdbtk_summary_txt = gtdbtk_summary_txt,
+			gtdbtk_summary_txt = assign_taxonomy.gtdbtk_summary_txt,
 			filtered_quality_report_tsv = filtered_quality_report_tsv,
 			runtime_attributes = default_runtime_attributes
 	}
@@ -42,11 +54,75 @@ workflow mag {
 	}
 
 	output {
+		File gtdbtk_summary_txt = assign_taxonomy.gtdbtk_summary_txt
+		File gtdbk_output_tar_gz = assign_taxonomy.gtdbk_output_tar_gz
 		File mag_summary_txt = mag_summary.mag_summary_txt
 		Array[File] filtered_mags_fastas = mag_copy.filtered_mags_fastas
 		File dastool_bins_plot_pdf = mag_plots.dastool_bins_plot_pdf
 		File contigs_quality_plot_pdf = mag_plots.contigs_quality_plot_pdf
 		File genome_size_depths_plot_df = mag_plots.genome_size_depths_plot_df
+	}
+}
+
+task assign_taxonomy {
+	input {
+		String sample_id
+
+		File gtdb_batch_txt
+		File gtdbtk_data_tar_gz
+		Array[File] derep_bins
+
+		RuntimeAttributes runtime_attributes
+	}
+
+	Int threads = 48
+	Int mem_gb = threads * 2
+	Int disk_size = ceil((size(gtdbtk_data_tar_gz, "GB") + (size(derep_bins[0], "GB") * length(derep_bins))) * 2 + 20)
+
+	command <<<
+		set -euo pipefail
+
+		gtdbtk --version
+
+		# Must set $GTDBTK_DATA_PATH variable to use gtdbtk command
+		GTDBTK_DATA_PATH="$(pwd)/$(tar -tzf ~{gtdbtk_data_tar_gz} | head -1 | cut -d '/' -f 1)"
+		export GTDBTK_DATA_PATH
+
+		tar -xzvf ~{gtdbtk_data_tar_gz}
+
+		mkdir ~{sample_id}_gtdbtk tmp_dir
+
+		gtdbtk classify_wf \
+			--batchfile ~{gtdb_batch_txt} \
+			--out_dir ~{sample_id}_gtdbtk \
+			--extension fa \
+			--prefix ~{sample_id} \
+			--cpus ~{threads} \
+			--tmpdir tmp_dir
+
+		python /opt/scripts/GTDBTk-Organize.py \
+			--input_dir ~{sample_id}_gtdbtk/classify \
+			--outfile "~{sample_id}.GTDBTk_Summary.txt"
+
+		tar -zcvf "~{sample_id}_gtdbtk.tar.gz" ~{sample_id}_gtdbtk
+	>>>
+
+	output {
+		File gtdbtk_summary_txt = "~{sample_id}.GTDBTk_Summary.txt"
+		File gtdbk_output_tar_gz = "~{sample_id}_gtdbtk.tar.gz"
+	}
+
+	runtime {
+		docker: "~{runtime_attributes.container_registry}/gtdbtk:2.1.1"
+		cpu: threads
+		memory: mem_gb + " GB"
+		disk: disk_size + " GB"
+		disks: "local-disk " + disk_size + " HDD"
+		preemptible: runtime_attributes.preemptible_tries
+		maxRetries: runtime_attributes.max_retries
+		awsBatchRetryAttempts: runtime_attributes.max_retries
+		queueArn: runtime_attributes.queue_arn
+		zones: runtime_attributes.zones
 	}
 }
 
