@@ -265,8 +265,8 @@ task hifiasm_meta {
 	}
 
 	Int threads = 32
-	Int mem_gb = threads * 2
-	Int disk_size = ceil(size(fastq, "GB") * 2 + 20)
+	Int mem_gb = threads * 4
+	Int disk_size = ceil(size(fastq, "GB") * 4 + 20)
 
 	command <<<
 		set -euo pipefail
