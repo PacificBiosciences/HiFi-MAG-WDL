@@ -100,7 +100,7 @@ task long_contigs_to_bins {
 		while IFS= read -r bins_contigs_line || [[ -n "${bins_contigs_line}" ]]; do
 			original_fasta="long_bin_fastas_out_dir/$(echo "${bins_contigs_line}" | cut -f 1).fa"
 			renamed_fasta="long_bin_fastas_renamed_out_dir/$(echo "${bins_contigs_line}" | cut -f 2).fa"
-			mv "${original_fasta}" "${renamed_fasta}"
+			cp "${original_fasta}" "${renamed_fasta}"
 		done < ~{sample_id}.bin_key.txt
 	>>>
 
