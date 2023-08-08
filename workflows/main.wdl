@@ -82,7 +82,7 @@ workflow metagenomics {
 				sample_id = sample_id,
 				gtdb_batch_txt = bin_reads.gtdb_batch_txt,
 				gtdbtk_data_tar_gz = gtdbtk_data_tar_gz,
-				derep_bins = bin_reads.derep_bins,
+				derep_bins = flatten([bin_reads.long_bin_fastas, bin_reads.dastool_bins]),
 				filtered_quality_report_tsv = bin_reads.filtered_quality_report_tsv,
 				min_mag_completeness = min_mag_completeness,
 				max_mag_contamination = max_mag_contamination,
@@ -100,7 +100,7 @@ workflow metagenomics {
 		File bins_contigs_key_txt = bin_reads.bins_contigs_key_txt
 		Array[File] long_bin_fastas = bin_reads.long_bin_fastas
 		File incomplete_contigs_fasta = bin_reads.incomplete_contigs_fasta
-		File? contig_quality_report_tsv = bin_reads.contig_quality_report_tsv
+		File? contig_bin_quality_report_tsv = bin_reads.contig_bin_quality_report_tsv
 		File? passed_bins_txt = bin_reads.passed_bins_txt
 		File? scatterplot_pdf = bin_reads.scatterplot_pdf
 		File? histogram_pdf = bin_reads.histogram_pdf
@@ -118,7 +118,6 @@ workflow metagenomics {
 		Array[File] dastool_bins = bin_reads.dastool_bins
 
 		# CheckM2 output
-		Array[File] derep_bins = bin_reads.derep_bins
 		File bin_quality_report_tsv = bin_reads.bin_quality_report_tsv
 		File gtdb_batch_txt = bin_reads.gtdb_batch_txt
 		File passed_bin_count_txt = bin_reads.passed_bin_count_txt

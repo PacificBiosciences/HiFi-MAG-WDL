@@ -35,11 +35,11 @@ workflow bin_reads {
 	}
 
 	if (length(long_contigs_to_bins.long_bin_fastas) > 0) {
-		call checkm2_contig_analysis {
+		call predict_bin_quality as predict_bin_quality_contigs {
 		input:
-			sample_id = sample_id,
+			prefix = "~{sample_id}.contigs",
 			checkm2_ref_db = checkm2_ref_db,
-			long_bin_fastas = long_contigs_to_bins.long_bin_fastas,
+			bin_fas = long_contigs_to_bins.long_bin_fastas,
 			runtime_attributes = default_runtime_attributes
 		}
 
@@ -47,7 +47,7 @@ workflow bin_reads {
 		input:
 			sample_id = sample_id,
 			contigs_fasta = contigs_fasta,
-			contig_quality_report_tsv = checkm2_contig_analysis.contig_quality_report_tsv,
+			bin_quality_report_tsv = predict_bin_quality_contigs.bin_quality_report_tsv,
 			bins_contigs_key_txt = long_contigs_to_bins.bins_contigs_key_txt,
 			min_contig_length = min_contig_length,
 			min_contig_completeness = min_contig_completeness,
@@ -64,7 +64,7 @@ workflow bin_reads {
 			runtime_attributes = default_runtime_attributes
 	}
 
-	call jgi_bam_depth {
+	call summarize_contig_depth {
 		input:
 			sample_id = sample_id,
 			aligned_sorted_bam = align_hifiasm.aligned_sorted_bam,
@@ -72,10 +72,10 @@ workflow bin_reads {
 			runtime_attributes = default_runtime_attributes
 	}
 
-	call convert_jgi_bamdepth {
+	call filter_contig_depth {
 		input:
 			sample_id = sample_id,
-			contig_depth_txt = jgi_bam_depth.contig_depth_txt,
+			contig_depth_txt = summarize_contig_depth.contig_depth_txt,
 			bins_contigs_key_txt = long_contigs_to_bins.bins_contigs_key_txt,
 			runtime_attributes = default_runtime_attributes
 	}
@@ -85,7 +85,7 @@ workflow bin_reads {
 		input:
 			sample_id = sample_id,
 			incomplete_contigs_fasta = long_contigs_to_bins.incomplete_contigs_fasta,
-			filtered_contig_depth_txt = convert_jgi_bamdepth.filtered_contig_depth_txt,
+			filtered_contig_depth_txt = filter_contig_depth.filtered_contig_depth_txt,
 			metabat2_min_contig_size = metabat2_min_contig_size,
 			runtime_attributes = default_runtime_attributes
 	}
@@ -127,21 +127,21 @@ workflow bin_reads {
 	}
 
 	# Assess bin quality
-	call checkm2_bin_analysis {
+	# TODO change task call name and prefix
+	call predict_bin_quality as predict_bin_quality_dastool {
 		input:
-			sample_id = sample_id,
+			prefix = "~{sample_id}.dastool",
 			checkm2_ref_db = checkm2_ref_db,
-			long_bin_fastas = long_contigs_to_bins.long_bin_fastas,
-			dastool_bins = dastool_analysis.dastool_bins,
+			bin_fas = flatten([long_contigs_to_bins.long_bin_fastas, dastool_analysis.dastool_bins]),
 			runtime_attributes = default_runtime_attributes
 	}
 
 	call assess_checkm2_bins {
 		input:
 			sample_id = sample_id,
-			bin_quality_report_tsv = checkm2_bin_analysis.bin_quality_report_tsv,
-			filtered_contig_depth_txt = convert_jgi_bamdepth.filtered_contig_depth_txt,
-			derep_bins = checkm2_bin_analysis.derep_bins,
+			bin_quality_report_tsv = predict_bin_quality_dastool.bin_quality_report_tsv,
+			filtered_contig_depth_txt = filter_contig_depth.filtered_contig_depth_txt,
+			derep_bins = flatten([long_contigs_to_bins.long_bin_fastas, dastool_analysis.dastool_bins]),
 			min_mag_completeness = min_mag_completeness,
 			max_mag_contamination = max_mag_contamination,
 			max_contigs = max_contigs,
@@ -154,7 +154,7 @@ workflow bin_reads {
 		Array[File] long_bin_fastas = long_contigs_to_bins.long_bin_fastas
 		File incomplete_contigs_fasta = long_contigs_to_bins.incomplete_contigs_fasta
 
-		File? contig_quality_report_tsv = checkm2_contig_analysis.contig_quality_report_tsv
+		File? contig_bin_quality_report_tsv = predict_bin_quality_contigs.bin_quality_report_tsv
 		File? passed_bins_txt = filter_complete_contigs.passed_bins_txt
 		File? scatterplot_pdf = filter_complete_contigs.scatterplot_pdf
 		File? histogram_pdf = filter_complete_contigs.histogram_pdf
@@ -164,7 +164,7 @@ workflow bin_reads {
 			"data": align_hifiasm.aligned_sorted_bam,
 			"data_index": align_hifiasm.aligned_sorted_bam_index
 		}
-		File filtered_contig_depth_txt = convert_jgi_bamdepth.filtered_contig_depth_txt
+		File filtered_contig_depth_txt = filter_contig_depth.filtered_contig_depth_txt
 
 		# Incomplete contig binning
 		Array[File] metabat2_reconstructed_bins_fastas = metabat2_analysis.discovered_bins_fastas
@@ -175,8 +175,7 @@ workflow bin_reads {
 		Array[File] dastool_bins = dastool_analysis.dastool_bins
 
 		# Bin quality
-		Array[File] derep_bins = checkm2_bin_analysis.derep_bins
-		File bin_quality_report_tsv = checkm2_bin_analysis.bin_quality_report_tsv
+		File bin_quality_report_tsv = predict_bin_quality_dastool.bin_quality_report_tsv
 		File gtdb_batch_txt = assess_checkm2_bins.gtdb_batch_txt
 		File passed_bin_count_txt = assess_checkm2_bins.passed_bin_count_txt
 		File filtered_quality_report_tsv = assess_checkm2_bins.filtered_quality_report_tsv
@@ -233,31 +232,33 @@ task long_contigs_to_bins {
 	}
 }
 
-task checkm2_contig_analysis {
+task predict_bin_quality {
 	input {
-		String sample_id
+		String prefix
 		File checkm2_ref_db
 
-		Array[File] long_bin_fastas
+		Array[File] bin_fas
 
 		RuntimeAttributes runtime_attributes
 	}
 
 	Int threads = 24
 	Int mem_gb = threads * 4
-	Int disk_size = ceil((size(checkm2_ref_db, "GB") + (size(long_bin_fastas[0], "GB") * length(long_bin_fastas))) * 2 + 20)
+	Int disk_size = ceil((size(checkm2_ref_db, "GB") + (size(bin_fas[0], "GB") * length(bin_fas))) * 2 + 20)
 
 	command <<<
 		set -euo pipefail
 
 		checkm2 --version
 
-		long_bin_fastas_dir=$(dirname ~{long_bin_fastas[0]})
-
-		mkdir tmp_dir
+		# Ensure all bins are in the bin_dir
+		mkdir tmp_dir bin_dir
+		while read -r bin || [[ -n "${bin}" ]]; do
+			ln -s "${bin}" "$(pwd)/bin_dir"
+		done < ~{write_lines(bin_fas)}
 
 		checkm2 predict \
-			--input "${long_bin_fastas_dir}" \
+			--input bin_dir \
 			--output-directory checkm2_out_dir \
 			--extension fa \
 			--threads ~{threads} \
@@ -265,11 +266,11 @@ task checkm2_contig_analysis {
 			--remove_intermediates \
 			--tmpdir tmp_dir
 
-		mv checkm2_out_dir/quality_report.tsv checkm2_out_dir/"~{sample_id}.contig.quality_report.tsv"
+		mv checkm2_out_dir/quality_report.tsv "checkm2_out_dir/~{prefix}.quality_report.tsv"
 	>>>
 
 	output {
-		File contig_quality_report_tsv = "checkm2_out_dir/~{sample_id}.contig.quality_report.tsv"
+		File bin_quality_report_tsv = "checkm2_out_dir/~{prefix}.quality_report.tsv"
 	}
 
 	runtime {
@@ -291,7 +292,7 @@ task filter_complete_contigs {
 		String sample_id
 		File contigs_fasta
 
-		File contig_quality_report_tsv
+		File bin_quality_report_tsv
 		File bins_contigs_key_txt
 
 		Int min_contig_length
@@ -307,7 +308,7 @@ task filter_complete_contigs {
 
 		python /opt/scripts/Filter-Complete-Contigs.py \
 			--input_fasta ~{contigs_fasta} \
-			--checkm ~{contig_quality_report_tsv} \
+			--checkm ~{bin_quality_report_tsv} \
 			--bins_contigs ~{bins_contigs_key_txt} \
 			--length ~{min_contig_length} \
 			--min_completeness ~{min_contig_completeness} \
@@ -401,7 +402,7 @@ task align_hifiasm {
 	}
 }
 
-task jgi_bam_depth {
+task summarize_contig_depth {
 	input {
 		String sample_id
 
@@ -441,7 +442,7 @@ task jgi_bam_depth {
 	}
 }
 
-task convert_jgi_bamdepth {
+task filter_contig_depth {
 	input {
 		String sample_id
 
@@ -684,68 +685,6 @@ task dastool_analysis {
 	}
 }
 
-task checkm2_bin_analysis {
-	input {
-		String sample_id
-		File checkm2_ref_db
-		Array[File] long_bin_fastas
-		Array[File] dastool_bins
-
-		RuntimeAttributes runtime_attributes
-	}
-
-	Int threads = 24
-	Int mem_gb = threads * 4
-	Int disk_size = ceil((size(checkm2_ref_db, "GB") + (size(long_bin_fastas[0], "GB") * length(long_bin_fastas)) + (size(dastool_bins[0], "GB") * length(dastool_bins))) * 2 + 20)
-
-	command <<<
-		set -euo pipefail
-
-		checkm2 --version
-
-		mkdir derep_bins_dir
-		mkdir checkm2_out_dir
-		mkdir tmp_dir
-
-		while read -r fasta || [[ -n "${fasta}" ]]; do
-			ln -s "${fasta}" "$(pwd)"/derep_bins_dir/
-		done < ~{write_lines(long_bin_fastas)}
-
-		while read -r fasta || [[ -n "${fasta}" ]]; do
-			ln -s "${fasta}" "$(pwd)"/derep_bins_dir/
-		done < ~{write_lines(dastool_bins)}
-
-		checkm2 predict \
-			--input derep_bins_dir \
-			--output-directory checkm2_out_dir \
-			--extension fa \
-			--threads ~{threads} \
-			--database_path ~{checkm2_ref_db} \
-			--remove_intermediates \
-			--tmpdir tmp_dir
-
-		mv checkm2_out_dir/quality_report.tsv checkm2_out_dir/"~{sample_id}.bin.quality_report.tsv"
-	>>>
-
-	output {
-		Array[File] derep_bins = glob("derep_bins_dir/*.fa")
-		File bin_quality_report_tsv = "checkm2_out_dir/~{sample_id}.bin.quality_report.tsv"
-	}
-
-	runtime {
-		docker: "~{runtime_attributes.container_registry}/checkm2:5e8307c"
-		cpu: threads
-		memory: mem_gb + " GB"
-		disk: disk_size + " GB"
-		disks: "local-disk " + disk_size + " HDD"
-		preemptible: runtime_attributes.preemptible_tries
-		maxRetries: runtime_attributes.max_retries
-		awsBatchRetryAttempts: runtime_attributes.max_retries
-		queueArn: runtime_attributes.queue_arn
-		zones: runtime_attributes.zones
-	}
-}
-
 task assess_checkm2_bins {
 	input {
 		String sample_id
@@ -761,23 +700,28 @@ task assess_checkm2_bins {
 		RuntimeAttributes runtime_attributes
 	}
 
+	String bin_quality_report_tsv_basename = basename(bin_quality_report_tsv, ".tsv")
 	Int disk_size = ceil(size(derep_bins[0], "GB") * length(derep_bins) * 2 + 20)
 
 	command <<<
 		set -euo pipefail
 
-		derep_bins_dir=$(dirname ~{derep_bins[0]})
+		# Ensure all bins are in the bin_dir
+		mkdir bin_dir
+		while read -r bin || [[ -n "${bin}" ]]; do
+			ln -s "${bin}" "$(pwd)/bin_dir"
+		done < ~{write_lines(derep_bins)}
 
 		python /opt/scripts/Filter-Checkm2-Bins.py \
 			--input_tsv ~{bin_quality_report_tsv} \
-			--bin_dir "${derep_bins_dir}" \
+			--bin_dir bin_dir \
 			--depth_file ~{filtered_contig_depth_txt} \
 			--min_completeness ~{min_mag_completeness} \
 			--max_contamination ~{max_mag_contamination} \
 			--max_contigs ~{max_contigs} \
 			--gtdb_outfile "~{sample_id}.GTDBTk_batch_file.txt" \
 			--target_outfile "~{sample_id}.BinCount.txt" \
-			--updated_tsv "~{sample_id}.quality_report.tsv"
+			--updated_tsv "~{bin_quality_report_tsv_basename}.filtered.tsv"
 
 		# Check if there are bins after CheckM2, before running GTDB-Tk and the MAG summary
 		if [[ -s "~{sample_id}.BinCount.txt" ]]; then
@@ -791,7 +735,7 @@ task assess_checkm2_bins {
 	output {
 		File gtdb_batch_txt = "~{sample_id}.GTDBTk_batch_file.txt"
 		File passed_bin_count_txt = "~{sample_id}.BinCount.txt"
-		File filtered_quality_report_tsv = "~{sample_id}.quality_report.tsv"
+		File filtered_quality_report_tsv = "~{bin_quality_report_tsv_basename}.filtered.tsv"
 		Boolean bin_count_nonempty = read_boolean("bin_count_nonempty.txt")
 	}
 
