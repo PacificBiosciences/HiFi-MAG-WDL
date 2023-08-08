@@ -49,7 +49,6 @@ workflow bin_reads {
 			contigs_fasta = contigs_fasta,
 			bin_quality_report_tsv = predict_bin_quality_contigs.bin_quality_report_tsv,
 			bins_contigs_key_txt = long_contigs_to_bins.bins_contigs_key_txt,
-			min_contig_length = min_contig_length,
 			min_contig_completeness = min_contig_completeness,
 			runtime_attributes = default_runtime_attributes
 		}
@@ -310,7 +309,6 @@ task filter_complete_contigs {
 			--input_fasta ~{contigs_fasta} \
 			--checkm ~{bin_quality_report_tsv} \
 			--bins_contigs ~{bins_contigs_key_txt} \
-			--length ~{min_contig_length} \
 			--min_completeness ~{min_contig_completeness} \
 			--passed_bins "~{sample_id}.passed_bins.txt" \
 			--plot_scatter "~{sample_id}.completeness_vs_size_scatter.pdf" \
