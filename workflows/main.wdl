@@ -3,13 +3,7 @@ version 1.0
 import "wdl-common/wdl/structs.wdl"
 import "wdl-common/wdl/workflows/backend_configuration/backend_configuration.wdl" as BackendConfiguration
 import "assemble_reads/assemble_reads.wdl" as AssembleReads
-
-
-import "completeness_aware_binning/completeness_aware_binning.wdl" as CompletenessAwareBinning
-import "coverage/coverage.wdl" as Coverage
-import "binning/binning.wdl" as Binning
-import "checkm2/checkm2.wdl" as CheckM2
-
+import "bin_reads/bin_reads.wdl" as BinReads
 import "assign_summarize_taxonomy/assign_summarize_taxonomy.wdl" as AssignSummarizeTaxonomy
 
 workflow metagenomics {
@@ -63,59 +57,33 @@ workflow metagenomics {
 			default_runtime_attributes = default_runtime_attributes
 	}
 
-	call CompletenessAwareBinning.completeness_aware_binning {
+	call BinReads.bin_reads {
 		input:
 			sample_id = sample_id,
 			contigs_fasta = assemble_reads.primary_contig_fasta,
+			contigs_fasta_gz = assemble_reads.primary_contig_fasta_gz,
 			min_contig_length = min_contig_length,
 			min_contig_completeness = min_contig_completeness,
 			checkm2_ref_db = checkm2_ref_db,
-			default_runtime_attributes = default_runtime_attributes
-	}
-
-	call Coverage.coverage {
-		input:
-			sample_id = sample_id,
-			contigs_fasta_gz = assemble_reads.primary_contig_fasta_gz,
 			hifi_reads_fastq = select_first([assemble_reads.fastq, hifi_reads]),
-			bins_contigs_key_txt = completeness_aware_binning.bins_contigs_key_txt,
-			default_runtime_attributes = default_runtime_attributes
-	}
-
-	call Binning.binning {
-		input:
-			sample_id = sample_id,
-			incomplete_contigs_fasta = completeness_aware_binning.incomplete_contigs_fasta,
-			filtered_contig_depth_txt = coverage.filtered_contig_depth_txt,
-			aligned_sorted_bam = coverage.aligned_sorted_bam.data,
 			metabat2_min_contig_size = metabat2_min_contig_size,
 			semibin2_model = semibin2_model,
 			dastool_search_engine = dastool_search_engine,
 			dastool_score_threshold = dastool_score_threshold,
-			default_runtime_attributes = default_runtime_attributes
-	}
-
-	call CheckM2.checkm2 {
-		input:
-			sample_id = sample_id,
-			checkm2_ref_db = checkm2_ref_db,
-			filtered_contig_depth_txt = coverage.filtered_contig_depth_txt,
-			long_bin_fastas = completeness_aware_binning.long_bin_fastas,
-			dastool_bins = binning.dastool_bins,
 			min_mag_completeness = min_mag_completeness,
 			max_mag_contamination = max_mag_contamination,
 			max_contigs = max_contigs,
 			default_runtime_attributes = default_runtime_attributes
 	}
 
-	if (checkm2.passed_bin_count_nonempty) {
+	if (bin_reads.bin_count_nonempty) {
 		call AssignSummarizeTaxonomy.assign_summarize_taxonomy {
 			input:
 				sample_id = sample_id,
-				gtdb_batch_txt = checkm2.gtdb_batch_txt,
+				gtdb_batch_txt = bin_reads.gtdb_batch_txt,
 				gtdbtk_data_tar_gz = gtdbtk_data_tar_gz,
-				derep_bins = checkm2.derep_bins,
-				filtered_quality_report_tsv = checkm2.filtered_quality_report_tsv,
+				derep_bins = bin_reads.derep_bins,
+				filtered_quality_report_tsv = bin_reads.filtered_quality_report_tsv,
 				min_mag_completeness = min_mag_completeness,
 				max_mag_contamination = max_mag_contamination,
 				default_runtime_attributes = default_runtime_attributes
@@ -123,38 +91,38 @@ workflow metagenomics {
 	}
 
 	output {
-		# Preprocessing
+		# assemble_reads output
 		File? fastq = assemble_reads.fastq
 		File primary_contig_gfa = assemble_reads.primary_contig_gfa
 		File primary_contig_fasta_gz = assemble_reads.primary_contig_fasta_gz
 
 		# Completeness-aware binning output
-		File bins_contigs_key_txt = completeness_aware_binning.bins_contigs_key_txt
-		Array[File] long_bin_fastas = completeness_aware_binning.long_bin_fastas
-		File incomplete_contigs_fasta = completeness_aware_binning.incomplete_contigs_fasta
-		File? contig_quality_report_tsv = completeness_aware_binning.contig_quality_report_tsv
-		File? passed_bins_txt = completeness_aware_binning.passed_bins_txt
-		File? scatterplot_pdf = completeness_aware_binning.scatterplot_pdf
-		File? histogram_pdf = completeness_aware_binning.histogram_pdf
+		File bins_contigs_key_txt = bin_reads.bins_contigs_key_txt
+		Array[File] long_bin_fastas = bin_reads.long_bin_fastas
+		File incomplete_contigs_fasta = bin_reads.incomplete_contigs_fasta
+		File? contig_quality_report_tsv = bin_reads.contig_quality_report_tsv
+		File? passed_bins_txt = bin_reads.passed_bins_txt
+		File? scatterplot_pdf = bin_reads.scatterplot_pdf
+		File? histogram_pdf = bin_reads.histogram_pdf
 
 		# Coverage output
-		IndexData aligned_sorted_bam = coverage.aligned_sorted_bam
-		File filtered_contig_depth_txt = coverage.filtered_contig_depth_txt
+		IndexData aligned_sorted_bam = bin_reads.aligned_sorted_bam
+		File filtered_contig_depth_txt = bin_reads.filtered_contig_depth_txt
 
 		# Binning output
-		Array[File] metabat2_reconstructed_bins_fastas = binning.metabat2_reconstructed_bins_fastas
-		File metabat2_bin_sets_tsv = binning.metabat2_bin_sets_tsv
-		File semibin2_bins_tsv = binning.semibin2_bins_tsv
-		Array[File] semibin2_reconstructed_bins_fastas = binning.semibin2_reconstructed_bins_fastas
-		File semibin2_bin_sets_tsv = binning.semibin2_bin_sets_tsv
-		Array[File] dastool_bins = binning.dastool_bins
+		Array[File] metabat2_reconstructed_bins_fastas = bin_reads.metabat2_reconstructed_bins_fastas
+		File metabat2_bin_sets_tsv = bin_reads.metabat2_bin_sets_tsv
+		File semibin2_bins_tsv = bin_reads.semibin2_bins_tsv
+		Array[File] semibin2_reconstructed_bins_fastas = bin_reads.semibin2_reconstructed_bins_fastas
+		File semibin2_bin_sets_tsv = bin_reads.semibin2_bin_sets_tsv
+		Array[File] dastool_bins = bin_reads.dastool_bins
 
 		# CheckM2 output
-		Array[File] derep_bins = checkm2.derep_bins
-		File bin_quality_report_tsv = checkm2.bin_quality_report_tsv
-		File gtdb_batch_txt = checkm2.gtdb_batch_txt
-		File passed_bin_count_txt = checkm2.passed_bin_count_txt
-		File filtered_quality_report_tsv = checkm2.filtered_quality_report_tsv
+		Array[File] derep_bins = bin_reads.derep_bins
+		File bin_quality_report_tsv = bin_reads.bin_quality_report_tsv
+		File gtdb_batch_txt = bin_reads.gtdb_batch_txt
+		File passed_bin_count_txt = bin_reads.passed_bin_count_txt
+		File filtered_quality_report_tsv = bin_reads.filtered_quality_report_tsv
 
 		# GTDB-Tk output
 		File? gtdbtk_summary_txt = assign_summarize_taxonomy.gtdbtk_summary_txt
@@ -189,7 +157,7 @@ workflow metagenomics {
 		max_contigs: {help: "The maximum number of contigs allowed in a genome bin; default value is set to 20"}
 
 		# GTDBT-k
-		gtdbtk_data_tar_gz: {help: "A TAR GZ file of GTDB-Tk (Genome Database Taxonomy toolkit) reference data, release207_v2 used for assigning taxonomic classifications to bacterial and archaeal genomes"}
+		gtdbtk_data_tar_gz: {help: "A .tar.gz file of GTDB-Tk (Genome Database Taxonomy toolkit) reference data, release207_v2 used for assigning taxonomic classifications to bacterial and archaeal genomes"}
 
 		# Backend configuration
 		backend: {help: "Backend where the workflow will be executed ['GCP', 'Azure', 'AWS']"}
