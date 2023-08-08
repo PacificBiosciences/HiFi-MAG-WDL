@@ -82,13 +82,18 @@ task assign_taxonomy {
 	command <<<
 		set -euo pipefail
 
-		gtdbtk --version
-
 		# Must set $GTDBTK_DATA_PATH variable to use gtdbtk command
+		tar -xzvf ~{gtdbtk_data_tar_gz}
 		GTDBTK_DATA_PATH="$(pwd)/$(tar -tzf ~{gtdbtk_data_tar_gz} | head -1 | cut -d '/' -f 1)"
 		export GTDBTK_DATA_PATH
 
-		tar -xzvf ~{gtdbtk_data_tar_gz}
+		gtdbtk --version
+
+		# Ensure all bins are in the bin_dir; this will match the structure of the gtdb_batch_txt
+		mkdir bin_dir
+		while read -r bin || [[ -n "${bin}" ]]; do
+			ln -s "${bin}" "$(pwd)/bin_dir"
+		done < ~{write_lines(derep_bins)}
 
 		mkdir ~{sample_id}_gtdbtk tmp_dir
 
@@ -178,13 +183,17 @@ task mag_copy {
 	command <<<
 		set -euo pipefail
 
-		derep_bins_dir=$(dirname ~{derep_bins[0]})
+		# Ensure all bins are in the bin_dir
+		mkdir bin_dir
+		while read -r bin || [[ -n "${bin}" ]]; do
+			ln -s "${bin}" "$(pwd)/bin_dir"
+		done < ~{write_lines(derep_bins)}
 
 		mkdir filtered_mags_out_dir
 
 		python /opt/scripts/Copy-Final-MAGs.py \
 			--mag_summary ~{mag_summary_txt} \
-			--magdir "${derep_bins_dir}" \
+			--magdir bin_dir \
 			--outdir filtered_mags_out_dir
 	>>>
 
