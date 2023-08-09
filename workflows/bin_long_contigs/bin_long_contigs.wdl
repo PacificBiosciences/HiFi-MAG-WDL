@@ -95,7 +95,7 @@ task long_contigs_to_bins {
 
 	output {
 		File long_contig_bin_map = "~{sample_id}.long_contig_bin_map.tsv"
-		Array[File] long_bin_fas = glob("long_bin_fas/*.fa")
+		Array[File] long_bin_fas = glob("long_bin_fas/~{sample_id}.*.fa")
 	}
 
 	runtime {
@@ -172,7 +172,7 @@ task make_incomplete_contigs {
 		RuntimeAttributes runtime_attributes
 	}
 
-	Int disk_size = ceil(size(assembled_contigs_fa, "GB") * 2 + 20)
+	Int disk_size = ceil(size(assembled_contigs_fa, "GB") + size(long_bin_fas[0], "GB") * length(long_bin_fas) * 2 + 20)
 
 	command <<<
 		set -euo pipefail
