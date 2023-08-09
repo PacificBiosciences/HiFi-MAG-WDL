@@ -60,8 +60,8 @@ workflow metagenomics {
 	call BinReads.bin_reads {
 		input:
 			sample_id = sample_id,
-			contigs_fasta = assemble_reads.primary_contig_fasta,
-			contigs_fasta_gz = assemble_reads.primary_contig_fasta_gz,
+			assembled_contigs_fa = assemble_reads.assembled_contigs_fa,
+			assembled_contigs_fa_gz = assemble_reads.assembled_contigs_fa_gz,
 			hifi_reads_fastq = select_first([assemble_reads.fastq, hifi_reads]),
 			checkm2_ref_db = checkm2_ref_db,
 			min_contig_length = min_contig_length,
@@ -93,8 +93,8 @@ workflow metagenomics {
 	output {
 		# assemble_reads output
 		File? fastq = assemble_reads.fastq
-		File primary_contig_gfa = assemble_reads.primary_contig_gfa
-		File primary_contig_fasta_gz = assemble_reads.primary_contig_fasta_gz
+		File assembled_contigs_gfa = assemble_reads.assembled_contigs_gfa
+		File assembled_contigs_fa_gz = assemble_reads.assembled_contigs_fa_gz
 
 		# Completeness-aware binning output
 		File bins_contigs_key_txt = bin_reads.bins_contigs_key_txt

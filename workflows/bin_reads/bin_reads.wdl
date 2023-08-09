@@ -5,8 +5,8 @@ import "../wdl-common/wdl/structs.wdl"
 workflow bin_reads {
 	input {
 		String sample_id
-		File contigs_fasta
-		File contigs_fasta_gz
+		File assembled_contigs_fa
+		File assembled_contigs_fa_gz
 		File hifi_reads_fastq
 
 		File checkm2_ref_db
@@ -29,7 +29,7 @@ workflow bin_reads {
 	call long_contigs_to_bins {
 		input:
 			sample_id = sample_id,
-			contigs_fasta = contigs_fasta,
+			assembled_contigs_fa = assembled_contigs_fa,
 			min_contig_length = min_contig_length,
 			runtime_attributes = default_runtime_attributes
 	}
@@ -43,10 +43,10 @@ workflow bin_reads {
 			runtime_attributes = default_runtime_attributes
 		}
 
-		call filter_complete_contigs {
+		call filter_contigs_by_completeness {
 		input:
 			sample_id = sample_id,
-			contigs_fasta = contigs_fasta,
+			assembled_contigs_fa = assembled_contigs_fa,
 			bin_quality_report_tsv = predict_bin_quality_contigs.bin_quality_report_tsv,
 			bins_contigs_key_txt = long_contigs_to_bins.bins_contigs_key_txt,
 			min_contig_completeness = min_contig_completeness,
@@ -55,10 +55,10 @@ workflow bin_reads {
 	}
 
 	# Calculate coverage
-	call align_hifiasm {
+	call align_reads_to_assembled_contigs {
 		input:
 			sample_id = sample_id,
-			contigs_fasta_gz = contigs_fasta_gz,
+			assembled_contigs = assembled_contigs_fa_gz,
 			hifi_reads_fastq = hifi_reads_fastq,
 			runtime_attributes = default_runtime_attributes
 	}
@@ -66,8 +66,8 @@ workflow bin_reads {
 	call summarize_contig_depth {
 		input:
 			sample_id = sample_id,
-			aligned_sorted_bam = align_hifiasm.aligned_sorted_bam,
-			aligned_sorted_bam_index = align_hifiasm.aligned_sorted_bam_index,
+			aligned_sorted_bam = align_reads_to_assembled_contigs.aligned_sorted_bam,
+			aligned_sorted_bam_index = align_reads_to_assembled_contigs.aligned_sorted_bam_index,
 			runtime_attributes = default_runtime_attributes
 	}
 
@@ -101,7 +101,7 @@ workflow bin_reads {
 		input:
 			sample_id = sample_id,
 			incomplete_contigs_fasta = long_contigs_to_bins.incomplete_contigs_fasta,
-			aligned_sorted_bam = align_hifiasm.aligned_sorted_bam,
+			aligned_sorted_bam = align_reads_to_assembled_contigs.aligned_sorted_bam,
 			semibin2_model = semibin2_model,
 			runtime_attributes = default_runtime_attributes
 	}
@@ -154,14 +154,14 @@ workflow bin_reads {
 		File incomplete_contigs_fasta = long_contigs_to_bins.incomplete_contigs_fasta
 
 		File? contig_bin_quality_report_tsv = predict_bin_quality_contigs.bin_quality_report_tsv
-		File? passed_bins_txt = filter_complete_contigs.passed_bins_txt
-		File? scatterplot_pdf = filter_complete_contigs.scatterplot_pdf
-		File? histogram_pdf = filter_complete_contigs.histogram_pdf
+		File? passed_bins_txt = filter_contigs_by_completeness.passed_bins_txt
+		File? scatterplot_pdf = filter_contigs_by_completeness.scatterplot_pdf
+		File? histogram_pdf = filter_contigs_by_completeness.histogram_pdf
 
 		# Coverage
 		IndexData aligned_sorted_bam = {
-			"data": align_hifiasm.aligned_sorted_bam,
-			"data_index": align_hifiasm.aligned_sorted_bam_index
+			"data": align_reads_to_assembled_contigs.aligned_sorted_bam,
+			"data_index": align_reads_to_assembled_contigs.aligned_sorted_bam_index
 		}
 		File filtered_contig_depth_txt = filter_contig_depth.filtered_contig_depth_txt
 
@@ -185,27 +185,27 @@ workflow bin_reads {
 task long_contigs_to_bins {
 	input {
 		String sample_id
-		File contigs_fasta
+		File assembled_contigs_fa
 
 		Int min_contig_length
 
 		RuntimeAttributes runtime_attributes
 	}
 
-	Int disk_size = ceil(size(contigs_fasta, "GB") * 2 + 20)
+	Int disk_size = ceil(size(assembled_contigs_fa, "GB") * 2 + 20)
 
 	command <<<
 		set -euo pipefail
 
 		python /opt/scripts/Fasta-Make-Long-Seq-Bins.py \
-			--input_fasta ~{contigs_fasta} \
+			--input_fasta ~{assembled_contigs_fa} \
 			--bins_contigs "~{sample_id}.bin_key.txt" \
 			--length ~{min_contig_length} \
 			--outdir long_bin_fastas \
 			--prefix ~{sample_id}
 
 		python /opt/scripts/Make-Incomplete-Contigs.py \
-			--input_fasta ~{contigs_fasta} \
+			--input_fasta ~{assembled_contigs_fa} \
 			--output_fasta "~{sample_id}.incomplete_contigs.fasta" \
 			--passed_bins "~{sample_id}.bin_key.txt" \
 			--fastadir long_bin_fastas
@@ -286,10 +286,10 @@ task predict_bin_quality {
 	}
 }
 
-task filter_complete_contigs {
+task filter_contigs_by_completeness {
 	input {
 		String sample_id
-		File contigs_fasta
+		File assembled_contigs_fa
 
 		File bin_quality_report_tsv
 		File bins_contigs_key_txt
@@ -299,13 +299,13 @@ task filter_complete_contigs {
 		RuntimeAttributes runtime_attributes
 	}
 
-	Int disk_size = ceil(size(contigs_fasta, "GB") * 2 + 20)
+	Int disk_size = ceil(size(assembled_contigs_fa, "GB") * 2 + 20)
 
 	command <<<
 		set -euo pipefail
 
 		python /opt/scripts/Filter-Complete-Contigs.py \
-			--input_fasta ~{contigs_fasta} \
+			--input_fasta ~{assembled_contigs_fa} \
 			--checkm ~{bin_quality_report_tsv} \
 			--bins_contigs ~{bins_contigs_key_txt} \
 			--min_completeness ~{min_contig_completeness} \
@@ -334,11 +334,11 @@ task filter_complete_contigs {
 	}
 }
 
-task align_hifiasm {
+task align_reads_to_assembled_contigs {
 	input {
 		String sample_id
 
-		File contigs_fasta_gz
+		File assembled_contigs
 		File hifi_reads_fastq
 
 		RuntimeAttributes runtime_attributes
@@ -346,7 +346,7 @@ task align_hifiasm {
 
 	Int threads = 24
 	Int mem_gb = threads * 2
-	Int disk_size = ceil((size(contigs_fasta_gz, "GB") + size(hifi_reads_fastq, "GB")) * 2 + 20)
+	Int disk_size = ceil((size(assembled_contigs, "GB") + size(hifi_reads_fastq, "GB")) * 2 + 20)
 
 	command <<<
 		set -euo pipefail
@@ -369,7 +369,7 @@ task align_hifiasm {
 			-z 400,50 \
 			--sam-hit-only \
 			-t ~{threads / 2} \
-			~{contigs_fasta_gz} \
+			~{assembled_contigs} \
 			~{hifi_reads_fastq} \
 		| samtools sort \
 			-@ ~{threads / 2 - 1} \

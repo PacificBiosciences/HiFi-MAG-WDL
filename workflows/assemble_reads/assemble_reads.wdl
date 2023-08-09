@@ -31,9 +31,9 @@ workflow assemble_reads {
 	output {
 		File? fastq = bam_to_fastq.fastq
 
-		File primary_contig_gfa = assemble_metagenomes.primary_contig_gfa
-		File primary_contig_fasta = assemble_metagenomes.primary_contig_fasta
-		File primary_contig_fasta_gz = assemble_metagenomes.primary_contig_fasta_gz
+		File assembled_contigs_gfa = assemble_metagenomes.assembled_contigs_gfa
+		File assembled_contigs_fa = assemble_metagenomes.assembled_contigs_fa
+		File assembled_contigs_fa_gz = assemble_metagenomes.assembled_contigs_fa_gz
 	}
 }
 
@@ -114,9 +114,9 @@ task assemble_metagenomes {
 	>>>
 
 	output {
-		File primary_contig_gfa = "~{sample_id}.asm.p_ctg.gfa"
-		File primary_contig_fasta = "~{sample_id}.asm.p_ctg.fa"
-		File primary_contig_fasta_gz = "~{sample_id}.asm.p_ctg.fa.gz"
+		File assembled_contigs_gfa = "~{sample_id}.asm.p_ctg.gfa"
+		File assembled_contigs_fa = "~{sample_id}.asm.p_ctg.fa"
+		File assembled_contigs_fa_gz = "~{sample_id}.asm.p_ctg.fa.gz"
 	}
 
 	runtime {
