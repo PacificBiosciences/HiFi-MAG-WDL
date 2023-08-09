@@ -48,7 +48,7 @@ workflow bin_reads {
 			sample_id = sample_id,
 			assembled_contigs_fa = assembled_contigs_fa,
 			bin_quality_report_tsv = predict_bin_quality_contigs.bin_quality_report_tsv,
-			bins_contigs_key_txt = long_contigs_to_bins.bins_contigs_key_txt,
+			bin_contig_map = long_contigs_to_bins.bin_contig_map,
 			min_contig_completeness = min_contig_completeness,
 			runtime_attributes = default_runtime_attributes
 		}
@@ -75,7 +75,7 @@ workflow bin_reads {
 		input:
 			sample_id = sample_id,
 			contig_depth_txt = summarize_contig_depth.contig_depth_txt,
-			bins_contigs_key_txt = long_contigs_to_bins.bins_contigs_key_txt,
+			bin_contig_map = long_contigs_to_bins.bin_contig_map,
 			runtime_attributes = default_runtime_attributes
 	}
 
@@ -149,7 +149,7 @@ workflow bin_reads {
 
 	output {
 		# Completeness-aware binning
-		File bins_contigs_key_txt = long_contigs_to_bins.bins_contigs_key_txt
+		File bin_contig_map = long_contigs_to_bins.bin_contig_map
 		Array[File] long_bin_fastas = long_contigs_to_bins.long_bin_fastas
 		File incomplete_contigs_fasta = long_contigs_to_bins.incomplete_contigs_fasta
 
@@ -199,7 +199,7 @@ task long_contigs_to_bins {
 
 		python /opt/scripts/Fasta-Make-Long-Seq-Bins.py \
 			--input_fasta ~{assembled_contigs_fa} \
-			--bins_contigs "~{sample_id}.bin_key.txt" \
+			--bins_contigs "~{sample_id}.bin_contig_map.tsv" \
 			--length ~{min_contig_length} \
 			--outdir long_bin_fastas \
 			--prefix ~{sample_id}
@@ -207,12 +207,12 @@ task long_contigs_to_bins {
 		python /opt/scripts/Make-Incomplete-Contigs.py \
 			--input_fasta ~{assembled_contigs_fa} \
 			--output_fasta "~{sample_id}.incomplete_contigs.fasta" \
-			--passed_bins "~{sample_id}.bin_key.txt" \
+			--passed_bins "~{sample_id}.bin_contig_map.tsv" \
 			--fastadir long_bin_fastas
 	>>>
 
 	output {
-		File bins_contigs_key_txt = "~{sample_id}.bin_key.txt"
+		File bin_contig_map = "~{sample_id}.bin_contig_map.tsv"
 		Array[File] long_bin_fastas = glob("long_bin_fastas/*.fa")
 		File incomplete_contigs_fasta = "~{sample_id}.incomplete_contigs.fasta"
 	}
@@ -292,7 +292,7 @@ task filter_contigs_by_completeness {
 		File assembled_contigs_fa
 
 		File bin_quality_report_tsv
-		File bins_contigs_key_txt
+		File bin_contig_map
 
 		Int min_contig_completeness
 
@@ -307,7 +307,7 @@ task filter_contigs_by_completeness {
 		python /opt/scripts/Filter-Complete-Contigs.py \
 			--input_fasta ~{assembled_contigs_fa} \
 			--checkm ~{bin_quality_report_tsv} \
-			--bins_contigs ~{bins_contigs_key_txt} \
+			--bins_contigs ~{bin_contig_map} \
 			--min_completeness ~{min_contig_completeness} \
 			--passed_bins "~{sample_id}.passed_bins.txt" \
 			--plot_scatter "~{sample_id}.completeness_vs_size_scatter.pdf" \
@@ -444,19 +444,19 @@ task filter_contig_depth {
 		String sample_id
 
 		File contig_depth_txt
-		File bins_contigs_key_txt
+		File bin_contig_map
 
 		RuntimeAttributes runtime_attributes
 	}
 
-	Int disk_size = ceil((size(contig_depth_txt, "GB") + size(bins_contigs_key_txt, "GB")) * 2 + 20)
+	Int disk_size = ceil((size(contig_depth_txt, "GB") + size(bin_contig_map, "GB")) * 2 + 20)
 
 	command <<<
 		set -euo pipefail
 
 		python /opt/scripts/Convert-JGI-Coverages.py \
 			--in_jgi ~{contig_depth_txt} \
-			--passed_bins ~{bins_contigs_key_txt} \
+			--passed_bins ~{bin_contig_map} \
 			--out_jgi "~{sample_id}.JGI.filtered.depth.txt"
 	>>>
 

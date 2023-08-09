@@ -97,7 +97,7 @@ workflow metagenomics {
 		File assembled_contigs_fa_gz = assemble_reads.assembled_contigs_fa_gz
 
 		# Completeness-aware binning output
-		File bins_contigs_key_txt = bin_reads.bins_contigs_key_txt
+		File bin_contig_map = bin_reads.bin_contig_map
 		Array[File] long_bin_fastas = bin_reads.long_bin_fastas
 		File incomplete_contigs_fasta = bin_reads.incomplete_contigs_fasta
 		File? contig_bin_quality_report_tsv = bin_reads.contig_bin_quality_report_tsv
