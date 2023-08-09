@@ -2,13 +2,13 @@ version 1.0
 
 import "../wdl-common/wdl/structs.wdl"
 
-workflow assign_summarize_taxonomy {
+workflow assign_taxonomy {
 	input {
 		String sample_id
 
 		File gtdb_batch_txt
 		File gtdbtk_data_tar_gz
-		Array[File] dereplicated_bins
+		Array[File] dereplicated_bin_fas
 
 		File filtered_quality_report_tsv
 
@@ -19,19 +19,19 @@ workflow assign_summarize_taxonomy {
 		RuntimeAttributes default_runtime_attributes
 	}
 
-	call assign_taxonomy {
+	call assign_taxonomy_gtdbtk {
 		input:
 			sample_id = sample_id,
 			gtdb_batch_txt = gtdb_batch_txt,
 			gtdbtk_data_tar_gz = gtdbtk_data_tar_gz,
-			dereplicated_bins= dereplicated_bins,
+			dereplicated_bin_fas= dereplicated_bin_fas,
 			runtime_attributes = default_runtime_attributes
 	}
 
 	call mag_summary {
 		input:
 			sample_id = sample_id,
-			gtdbtk_summary_txt = assign_taxonomy.gtdbtk_summary_txt,
+			gtdbtk_summary_txt = assign_taxonomy_gtdbtk.gtdbtk_summary_txt,
 			filtered_quality_report_tsv = filtered_quality_report_tsv,
 			runtime_attributes = default_runtime_attributes
 	}
@@ -39,7 +39,7 @@ workflow assign_summarize_taxonomy {
 	call mag_copy {
 		input:
 			mag_summary_txt = mag_summary.mag_summary_txt,
-			dereplicated_bins = dereplicated_bins,
+			dereplicated_bin_fas = dereplicated_bin_fas,
 			runtime_attributes = default_runtime_attributes
 	}
 
@@ -54,30 +54,30 @@ workflow assign_summarize_taxonomy {
 	}
 
 	output {
-		File gtdbtk_summary_txt = assign_taxonomy.gtdbtk_summary_txt
-		File gtdbk_output_tar_gz = assign_taxonomy.gtdbk_output_tar_gz
+		File gtdbtk_summary_txt = assign_taxonomy_gtdbtk.gtdbtk_summary_txt
+		File gtdbk_output_tar_gz = assign_taxonomy_gtdbtk.gtdbk_output_tar_gz
 		File mag_summary_txt = mag_summary.mag_summary_txt
-		Array[File] filtered_mags_fastas = mag_copy.filtered_mags_fastas
+		Array[File] filtered_mags_fas = mag_copy.filtered_mags_fas
 		File dastool_bins_plot_pdf = mag_plots.dastool_bins_plot_pdf
 		File contigs_quality_plot_pdf = mag_plots.contigs_quality_plot_pdf
 		File genome_size_depths_plot_df = mag_plots.genome_size_depths_plot_df
 	}
 }
 
-task assign_taxonomy {
+task assign_taxonomy_gtdbtk {
 	input {
 		String sample_id
 
 		File gtdb_batch_txt
 		File gtdbtk_data_tar_gz
-		Array[File] dereplicated_bins
+		Array[File] dereplicated_bin_fas
 
 		RuntimeAttributes runtime_attributes
 	}
 
 	Int threads = 48
 	Int mem_gb = threads * 2
-	Int disk_size = ceil((size(gtdbtk_data_tar_gz, "GB") + (size(dereplicated_bins[0], "GB") * length(dereplicated_bins))) * 2 + 20)
+	Int disk_size = ceil((size(gtdbtk_data_tar_gz, "GB") + (size(dereplicated_bin_fas[0], "GB") * length(dereplicated_bin_fas))) * 2 + 20)
 
 	command <<<
 		set -euo pipefail
@@ -89,11 +89,11 @@ task assign_taxonomy {
 
 		gtdbtk --version
 
-		# Ensure all bins are in the bin_dir; this will match the structure of the gtdb_batch_txt
-		mkdir bin_dir
-		while read -r bin || [[ -n "${bin}" ]]; do
-			ln -s "${bin}" "$(pwd)/bin_dir"
-		done < ~{write_lines(dereplicated_bins)}
+		# Ensure all bins are in the bin_fa_dir; this will match the structure of the gtdb_batch_txt
+		mkdir bin_fa_dir
+		while read -r bin_fa || [[ -n "${bin_fa}" ]]; do
+			ln -s "${bin_fa}" "$(pwd)/bin_fa_dir"
+		done < ~{write_lines(dereplicated_bin_fas)}
 
 		mkdir ~{sample_id}_gtdbtk tmp_dir
 
@@ -173,32 +173,32 @@ task mag_summary {
 task mag_copy {
 	input {
 		File mag_summary_txt
-		Array[File] dereplicated_bins
+		Array[File] dereplicated_bin_fas
 
 		RuntimeAttributes runtime_attributes
 	}
 
-	Int disk_size = ceil((size(mag_summary_txt, "GB") + (size(dereplicated_bins[0], "GB") * length(dereplicated_bins))) * 2 + 20)
+	Int disk_size = ceil((size(mag_summary_txt, "GB") + (size(dereplicated_bin_fas[0], "GB") * length(dereplicated_bin_fas))) * 2 + 20)
 
 	command <<<
 		set -euo pipefail
 
-		# Ensure all bins are in the bin_dir
-		mkdir bin_dir
-		while read -r bin || [[ -n "${bin}" ]]; do
-			ln -s "${bin}" "$(pwd)/bin_dir"
-		done < ~{write_lines(dereplicated_bins)}
+		# Ensure all bins are in the bin_fa_dir
+		mkdir bin_fa_dir
+		while read -r bin_fa || [[ -n "${bin_fa}" ]]; do
+			ln -s "${bin_fa}" "$(pwd)/bin_fa_dir"
+		done < ~{write_lines(dereplicated_bin_fas)}
 
 		mkdir filtered_mags_out_dir
 
 		python /opt/scripts/Copy-Final-MAGs.py \
 			--mag_summary ~{mag_summary_txt} \
-			--magdir bin_dir \
+			--magdir bin_fa_dir \
 			--outdir filtered_mags_out_dir
 	>>>
 
 	output {
-		Array[File] filtered_mags_fastas = glob("filtered_mags_out_dir/*.fa")
+		Array[File] filtered_mags_fas = glob("filtered_mags_out_dir/*.fa")
 	}
 
 	runtime {

@@ -2,7 +2,7 @@ version 1.0
 
 import "../wdl-common/wdl/structs.wdl"
 
-workflow assemble_reads {
+workflow assemble_metagenomes {
 	input {
 		String sample_id
 		File hifi_reads
@@ -21,7 +21,7 @@ workflow assemble_reads {
 		}
 	}
 
-	call assemble_metagenomes {
+	call assemble_reads {
 		input:
 			sample_id = sample_id,
 			fastq = select_first([bam_to_fastq.fastq, hifi_reads]),
@@ -31,9 +31,9 @@ workflow assemble_reads {
 	output {
 		File? fastq = bam_to_fastq.fastq
 
-		File assembled_contigs_gfa = assemble_metagenomes.assembled_contigs_gfa
-		File assembled_contigs_fa = assemble_metagenomes.assembled_contigs_fa
-		File assembled_contigs_fa_gz = assemble_metagenomes.assembled_contigs_fa_gz
+		File assembled_contigs_gfa = assemble_reads.assembled_contigs_gfa
+		File assembled_contigs_fa = assemble_reads.assembled_contigs_fa
+		File assembled_contigs_fa_gz = assemble_reads.assembled_contigs_fa_gz
 	}
 }
 
@@ -79,7 +79,7 @@ task bam_to_fastq {
 	}
 }
 
-task assemble_metagenomes {
+task assemble_reads {
 	input {
 		String sample_id
 		File fastq
