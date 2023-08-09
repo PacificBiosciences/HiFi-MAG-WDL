@@ -99,7 +99,7 @@ workflow metagenomics {
 		# bin_contigs output
 		## bin_long_contigs
 		File long_contig_bin_map = bin_contigs.long_contig_bin_map
-		Array[File] long_bin_fas = bin_contigs.long_bin_fas
+		Array[File] filtered_long_bin_fas = bin_contigs.filtered_long_bin_fas
 		File incomplete_contigs_fa = bin_contigs.incomplete_contigs_fa
 		File? long_contig_bin_quality_report_tsv = bin_contigs.long_contig_bin_quality_report_tsv
 		File? filtered_long_contig_bin_map = bin_contigs.filtered_long_contig_bin_map

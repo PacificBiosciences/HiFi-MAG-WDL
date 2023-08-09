@@ -32,7 +32,7 @@ workflow bin_long_contigs {
 				runtime_attributes = default_runtime_attributes
 		}
 
-		# Filter long contigs by completeness %
+		# Filter long contigs by completeness percent
 		call filter_complete_contigs {
 			input:
 				sample_id = sample_id,
@@ -44,17 +44,29 @@ workflow bin_long_contigs {
 			}
 	}
 
+	File passing_contig_bin_map = select_first([filter_complete_contigs.filtered_long_contig_bin_map, long_contigs_to_bins.long_contig_bin_map])
+
+	call make_incomplete_contigs {
+		input:
+			sample_id = sample_id,
+			assembled_contigs_fa = assembled_contigs_fa,
+			passing_contig_bin_map = passing_contig_bin_map,
+			long_bin_fas = long_contigs_to_bins.long_bin_fas,
+			runtime_attributes = default_runtime_attributes
+	}
+
 	output {
 		File long_contig_bin_map = long_contigs_to_bins.long_contig_bin_map
-		Array[File] long_bin_fas = long_contigs_to_bins.long_bin_fas
-		File incomplete_contigs_fa = long_contigs_to_bins.incomplete_contigs_fa
 
 		File? long_contig_bin_quality_report_tsv = predict_bin_quality.bin_quality_report_tsv
 		File? filtered_long_contig_bin_map = filter_complete_contigs.filtered_long_contig_bin_map
 		File? scatterplot_pdf = filter_complete_contigs.scatterplot_pdf
 		File? histogram_pdf = filter_complete_contigs.histogram_pdf
 
-		File passing_long_contig_bin_map = select_first([filter_complete_contigs.filtered_long_contig_bin_map, long_contigs_to_bins.long_contig_bin_map])
+		File passing_long_contig_bin_map = passing_contig_bin_map
+
+		Array[File] filtered_long_bin_fas = make_incomplete_contigs.filtered_long_bin_fas
+		File incomplete_contigs_fa = make_incomplete_contigs.incomplete_contigs_fa
 	}
 }
 
@@ -79,18 +91,11 @@ task long_contigs_to_bins {
 			--length ~{min_contig_length} \
 			--outdir long_bin_fas \
 			--prefix ~{sample_id}
-
-		python /opt/scripts/Make-Incomplete-Contigs.py \
-			--input_fasta ~{assembled_contigs_fa} \
-			--output_fasta "~{sample_id}.incomplete_contigs.fa" \
-			--passed_bins "~{sample_id}.long_contig_bin_map.tsv" \
-			--fastadir long_bin_fas
 	>>>
 
 	output {
 		File long_contig_bin_map = "~{sample_id}.long_contig_bin_map.tsv"
 		Array[File] long_bin_fas = glob("long_bin_fas/*.fa")
-		File incomplete_contigs_fa = "~{sample_id}.incomplete_contigs.fa"
 	}
 
 	runtime {
@@ -140,6 +145,51 @@ task filter_complete_contigs {
 		File filtered_long_contig_bin_map = "~{contig_bin_map_basename}.filtered.tsv"
 		File scatterplot_pdf = "~{sample_id}.completeness_vs_size_scatter.pdf"
 		File histogram_pdf = "~{sample_id}.completeness_histo.pdf"
+	}
+
+	runtime {
+		docker: "~{runtime_attributes.container_registry}/python:5e8307c"
+		cpu: 2
+		memory: "4 GB"
+		disk: disk_size + " GB"
+		disks: "local-disk " + disk_size + " HDD"
+		preemptible: runtime_attributes.preemptible_tries
+		maxRetries: runtime_attributes.max_retries
+		awsBatchRetryAttempts: runtime_attributes.max_retries
+		queueArn: runtime_attributes.queue_arn
+		zones: runtime_attributes.zones
+	}
+}
+
+task make_incomplete_contigs {
+	input {
+		String sample_id
+		File assembled_contigs_fa
+
+		File passing_contig_bin_map
+		Array[File] long_bin_fas
+
+		RuntimeAttributes runtime_attributes
+	}
+
+	Int disk_size = ceil(size(assembled_contigs_fa, "GB") * 2 + 20)
+
+	command <<<
+		set -euo pipefail
+
+		long_bin_fa_dir=$(dirname ~{long_bin_fas[0]})
+
+		python /opt/scripts/Make-Incomplete-Contigs.py \
+			--input_fasta ~{assembled_contigs_fa} \
+			--output_fasta "~{sample_id}.incomplete_contigs.fa" \
+			--passed_bins ~{passing_contig_bin_map} \
+			--fastadir "${long_bin_fa_dir}" \
+			--outdir filtered_long_bin_fa_dir
+	>>>
+
+	output {
+		Array[File] filtered_long_bin_fas = glob("filtered_long_bin_fa_dir/*.fa")
+		File incomplete_contigs_fa = "~{sample_id}.incomplete_contigs.fa"
 	}
 
 	runtime {

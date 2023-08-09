@@ -52,7 +52,7 @@ workflow bin_contigs {
 			default_runtime_attributes = default_runtime_attributes
 	}
 
-	Array[File] derep_bin_fas = flatten([bin_long_contigs.long_bin_fas, bin_incomplete_contigs.merged_incomplete_bin_fas])
+	Array[File] derep_bin_fas = flatten([bin_long_contigs.filtered_long_bin_fas, bin_incomplete_contigs.merged_incomplete_bin_fas])
 
 	call PredictBinQuality.predict_bin_quality {
 		input:
@@ -77,7 +77,7 @@ workflow bin_contigs {
 	output {
 		# bin_long_contigs output
 		File long_contig_bin_map = bin_long_contigs.long_contig_bin_map
-		Array[File] long_bin_fas = bin_long_contigs.long_bin_fas
+		Array[File] filtered_long_bin_fas = bin_long_contigs.filtered_long_bin_fas
 		File incomplete_contigs_fa = bin_long_contigs.incomplete_contigs_fa
 
 		File? long_contig_bin_quality_report_tsv = bin_long_contigs.long_contig_bin_quality_report_tsv
