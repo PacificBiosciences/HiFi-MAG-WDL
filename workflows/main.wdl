@@ -62,10 +62,10 @@ workflow metagenomics {
 			sample_id = sample_id,
 			contigs_fasta = assemble_reads.primary_contig_fasta,
 			contigs_fasta_gz = assemble_reads.primary_contig_fasta_gz,
+			hifi_reads_fastq = select_first([assemble_reads.fastq, hifi_reads]),
+			checkm2_ref_db = checkm2_ref_db,
 			min_contig_length = min_contig_length,
 			min_contig_completeness = min_contig_completeness,
-			checkm2_ref_db = checkm2_ref_db,
-			hifi_reads_fastq = select_first([assemble_reads.fastq, hifi_reads]),
 			metabat2_min_contig_size = metabat2_min_contig_size,
 			semibin2_model = semibin2_model,
 			dastool_search_engine = dastool_search_engine,
@@ -82,7 +82,7 @@ workflow metagenomics {
 				sample_id = sample_id,
 				gtdb_batch_txt = bin_reads.gtdb_batch_txt,
 				gtdbtk_data_tar_gz = gtdbtk_data_tar_gz,
-				derep_bins = flatten([bin_reads.long_bin_fastas, bin_reads.dastool_bins]),
+				dereplicated_bins = flatten([bin_reads.long_bin_fastas, bin_reads.dastool_bins]),
 				filtered_quality_report_tsv = bin_reads.filtered_quality_report_tsv,
 				min_mag_completeness = min_mag_completeness,
 				max_mag_contamination = max_mag_contamination,
@@ -155,7 +155,7 @@ workflow metagenomics {
 		max_mag_contamination: {help: "Maximum contamination threshold for a genome bin; default value is set to 10%"}
 		max_contigs: {help: "The maximum number of contigs allowed in a genome bin; default value is set to 20"}
 
-		# GTDBT-k
+		# Taxonomy assignment
 		gtdbtk_data_tar_gz: {help: "A .tar.gz file of GTDB-Tk (Genome Database Taxonomy toolkit) reference data, release207_v2 used for assigning taxonomic classifications to bacterial and archaeal genomes"}
 
 		# Backend configuration

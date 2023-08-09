@@ -8,7 +8,7 @@ workflow assign_summarize_taxonomy {
 
 		File gtdb_batch_txt
 		File gtdbtk_data_tar_gz
-		Array[File] derep_bins
+		Array[File] dereplicated_bins
 
 		File filtered_quality_report_tsv
 
@@ -24,7 +24,7 @@ workflow assign_summarize_taxonomy {
 			sample_id = sample_id,
 			gtdb_batch_txt = gtdb_batch_txt,
 			gtdbtk_data_tar_gz = gtdbtk_data_tar_gz,
-			derep_bins= derep_bins,
+			dereplicated_bins= dereplicated_bins,
 			runtime_attributes = default_runtime_attributes
 	}
 
@@ -39,7 +39,7 @@ workflow assign_summarize_taxonomy {
 	call mag_copy {
 		input:
 			mag_summary_txt = mag_summary.mag_summary_txt,
-			derep_bins = derep_bins,
+			dereplicated_bins = dereplicated_bins,
 			runtime_attributes = default_runtime_attributes
 	}
 
@@ -70,14 +70,14 @@ task assign_taxonomy {
 
 		File gtdb_batch_txt
 		File gtdbtk_data_tar_gz
-		Array[File] derep_bins
+		Array[File] dereplicated_bins
 
 		RuntimeAttributes runtime_attributes
 	}
 
 	Int threads = 48
 	Int mem_gb = threads * 2
-	Int disk_size = ceil((size(gtdbtk_data_tar_gz, "GB") + (size(derep_bins[0], "GB") * length(derep_bins))) * 2 + 20)
+	Int disk_size = ceil((size(gtdbtk_data_tar_gz, "GB") + (size(dereplicated_bins[0], "GB") * length(dereplicated_bins))) * 2 + 20)
 
 	command <<<
 		set -euo pipefail
@@ -93,7 +93,7 @@ task assign_taxonomy {
 		mkdir bin_dir
 		while read -r bin || [[ -n "${bin}" ]]; do
 			ln -s "${bin}" "$(pwd)/bin_dir"
-		done < ~{write_lines(derep_bins)}
+		done < ~{write_lines(dereplicated_bins)}
 
 		mkdir ~{sample_id}_gtdbtk tmp_dir
 
@@ -173,12 +173,12 @@ task mag_summary {
 task mag_copy {
 	input {
 		File mag_summary_txt
-		Array[File] derep_bins
+		Array[File] dereplicated_bins
 
 		RuntimeAttributes runtime_attributes
 	}
 
-	Int disk_size = ceil((size(mag_summary_txt, "GB") + (size(derep_bins[0], "GB") * length(derep_bins))) * 2 + 20)
+	Int disk_size = ceil((size(mag_summary_txt, "GB") + (size(dereplicated_bins[0], "GB") * length(dereplicated_bins))) * 2 + 20)
 
 	command <<<
 		set -euo pipefail
@@ -187,7 +187,7 @@ task mag_copy {
 		mkdir bin_dir
 		while read -r bin || [[ -n "${bin}" ]]; do
 			ln -s "${bin}" "$(pwd)/bin_dir"
-		done < ~{write_lines(derep_bins)}
+		done < ~{write_lines(dereplicated_bins)}
 
 		mkdir filtered_mags_out_dir
 

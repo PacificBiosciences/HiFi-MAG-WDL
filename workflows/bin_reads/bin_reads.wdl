@@ -140,7 +140,7 @@ workflow bin_reads {
 			sample_id = sample_id,
 			bin_quality_report_tsv = predict_bin_quality_dastool.bin_quality_report_tsv,
 			filtered_contig_depth_txt = filter_contig_depth.filtered_contig_depth_txt,
-			derep_bins = flatten([long_contigs_to_bins.long_bin_fastas, dastool_analysis.dastool_bins]),
+			dereplicated_bins = flatten([long_contigs_to_bins.long_bin_fastas, dastool_analysis.dastool_bins]),
 			min_mag_completeness = min_mag_completeness,
 			max_mag_contamination = max_mag_contamination,
 			max_contigs = max_contigs,
@@ -294,7 +294,6 @@ task filter_complete_contigs {
 		File bin_quality_report_tsv
 		File bins_contigs_key_txt
 
-		Int min_contig_length
 		Int min_contig_completeness
 
 		RuntimeAttributes runtime_attributes
@@ -689,7 +688,7 @@ task assess_checkm2_bins {
 
 		File bin_quality_report_tsv
 		File filtered_contig_depth_txt
-		Array[File] derep_bins
+		Array[File] dereplicated_bins
 
 		Int min_mag_completeness
 		Int max_mag_contamination
@@ -699,7 +698,7 @@ task assess_checkm2_bins {
 	}
 
 	String bin_quality_report_tsv_basename = basename(bin_quality_report_tsv, ".tsv")
-	Int disk_size = ceil(size(derep_bins[0], "GB") * length(derep_bins) * 2 + 20)
+	Int disk_size = ceil(size(dereplicated_bins[0], "GB") * length(dereplicated_bins) * 2 + 20)
 
 	command <<<
 		set -euo pipefail
@@ -708,7 +707,7 @@ task assess_checkm2_bins {
 		mkdir bin_dir
 		while read -r bin || [[ -n "${bin}" ]]; do
 			ln -s "${bin}" "$(pwd)/bin_dir"
-		done < ~{write_lines(derep_bins)}
+		done < ~{write_lines(dereplicated_bins)}
 
 		python /opt/scripts/Filter-Checkm2-Bins.py \
 			--input_tsv ~{bin_quality_report_tsv} \
