@@ -109,7 +109,7 @@ workflow metagenomics {
 
 		## coverage
 		IndexData aligned_sorted_bam = bin_contigs.aligned_sorted_bam
-		File filtered_contig_depth_txt = bin_contigs.filtered_contig_depth_txt
+		File contig_depth_txt = bin_contigs.contig_depth_txt
 
 		## bin_incomplete_contigs
 		Array[File] metabat2_bin_fas = bin_contigs.metabat2_bin_fas

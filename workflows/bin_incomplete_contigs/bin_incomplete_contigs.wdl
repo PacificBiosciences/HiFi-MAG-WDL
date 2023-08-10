@@ -20,7 +20,6 @@ workflow bin_incomplete_contigs {
 	}
 
 	# Calculate coverage
-	# TODO <incomplete contigs>; maybe also needed for long bins?
 	call align_reads_to_assembled_contigs {
 		input:
 			sample_id = sample_id,
@@ -29,7 +28,7 @@ workflow bin_incomplete_contigs {
 			runtime_attributes = default_runtime_attributes
 	}
 
-	# TODO <incomplete contigs>
+	# This gets depth for all contigs, not just incomplete ones
 	call summarize_contig_depth {
 		input:
 			sample_id = sample_id,
@@ -38,7 +37,7 @@ workflow bin_incomplete_contigs {
 			runtime_attributes = default_runtime_attributes
 	}
 
-	# TODO <incomplete contigs>
+	# Filter the contig depth to only include incomplete contigs
 	call filter_contig_depth {
 		input:
 			contig_depth_txt = summarize_contig_depth.contig_depth_txt,
@@ -46,7 +45,6 @@ workflow bin_incomplete_contigs {
 			runtime_attributes = default_runtime_attributes
 	}
 
-	# TODO <incomplete contigs>
 	# Bin incomplete contigs (contigs <500kb)
 	call bin_incomplete_contigs_metabat2 {
 		input:
@@ -57,7 +55,6 @@ workflow bin_incomplete_contigs {
 			runtime_attributes = default_runtime_attributes
 	}
 
-	# TODO <incomplete contigs>
 	call bin_incomplete_contigs_semibin2 {
 		input:
 			sample_id = sample_id,
@@ -67,7 +64,6 @@ workflow bin_incomplete_contigs {
 			runtime_attributes = default_runtime_attributes
 	}
 
-	# TODO <incomplete contigs>
 	call map_contig_to_bin as map_contig_to_bin_metabat2 {
 		input:
 			sample_id = sample_id,
@@ -76,7 +72,6 @@ workflow bin_incomplete_contigs {
 			runtime_attributes = default_runtime_attributes
 	}
 
-	# TODO <incomplete contigs>
 	call map_contig_to_bin as map_contig_to_bin_semibin2 {
 		input:
 			sample_id = sample_id,
@@ -85,7 +80,6 @@ workflow bin_incomplete_contigs {
 			runtime_attributes = default_runtime_attributes
 	}
 
-	# TODO <incomplete contigs>
 	call merge_incomplete_bins {
 		input:
 			sample_id = sample_id,
@@ -103,7 +97,8 @@ workflow bin_incomplete_contigs {
 			"data": align_reads_to_assembled_contigs.aligned_sorted_bam,
 			"data_index": align_reads_to_assembled_contigs.aligned_sorted_bam_index
 		}
-		File filtered_contig_depth_txt = filter_contig_depth.filtered_contig_depth_txt
+
+		File contig_depth_txt = summarize_contig_depth.contig_depth_txt
 
 		# Incomplete contig binning
 		Array[File] metabat2_bin_fas = bin_incomplete_contigs_metabat2.bin_fas
@@ -248,7 +243,7 @@ task filter_contig_depth {
 	}
 
 	runtime {
-		docker: "~{runtime_attributes.container_registry}/python:5e8307c"
+		docker: "~{runtime_attributes.container_registry}/python@sha256:c7e594d86c35d2c3b2cd8fabf51d9274d74347464433c4f3e55e5306be7bd1ea"
 		cpu: 2
 		memory: "4 GB"
 		disk: disk_size + " GB"

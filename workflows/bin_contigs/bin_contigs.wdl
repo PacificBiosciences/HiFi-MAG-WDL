@@ -66,7 +66,7 @@ workflow bin_contigs {
 		input:
 			sample_id = sample_id,
 			bin_quality_report_tsv = predict_bin_quality.bin_quality_report_tsv,
-			filtered_contig_depth_txt = bin_incomplete_contigs.filtered_contig_depth_txt,
+			contig_depth_txt = bin_incomplete_contigs.contig_depth_txt,
 			dereplicated_bin_fas = derep_bin_fas,
 			min_mag_completeness = min_mag_completeness,
 			max_mag_contamination = max_mag_contamination,
@@ -90,7 +90,7 @@ workflow bin_contigs {
 		# bin_incomplete_contigs output
 		# Coverage
 		IndexData aligned_sorted_bam = bin_incomplete_contigs.aligned_sorted_bam
-		File filtered_contig_depth_txt = bin_incomplete_contigs.filtered_contig_depth_txt
+		File contig_depth_txt = bin_incomplete_contigs.contig_depth_txt
 
 		# Incomplete contig binning
 		Array[File] metabat2_bin_fas = bin_incomplete_contigs.metabat2_bin_fas
@@ -117,7 +117,7 @@ task filter_dereplicated_bins {
 		String sample_id
 
 		File bin_quality_report_tsv
-		File filtered_contig_depth_txt
+		File contig_depth_txt
 		Array[File] dereplicated_bin_fas
 
 		Int min_mag_completeness
@@ -142,7 +142,7 @@ task filter_dereplicated_bins {
 		python /opt/scripts/Filter-Checkm2-Bins.py \
 			--input_tsv ~{bin_quality_report_tsv} \
 			--bin_dir bin_fa_dir \
-			--depth_file ~{filtered_contig_depth_txt} \
+			--depth_file ~{contig_depth_txt} \
 			--min_completeness ~{min_mag_completeness} \
 			--max_contamination ~{max_mag_contamination} \
 			--max_contigs ~{max_contigs} \
@@ -158,7 +158,7 @@ task filter_dereplicated_bins {
 	}
 
 	runtime {
-		docker: "~{runtime_attributes.container_registry}/python:5e8307c"
+		docker: "~{runtime_attributes.container_registry}/python@sha256:c7e594d86c35d2c3b2cd8fabf51d9274d74347464433c4f3e55e5306be7bd1ea"
 		cpu: 2
 		memory: "4 GB"
 		disk: disk_size + " GB"
