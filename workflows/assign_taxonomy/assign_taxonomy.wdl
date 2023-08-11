@@ -83,8 +83,12 @@ task assign_taxonomy_gtdbtk {
 		set -euo pipefail
 
 		# Must set $GTDBTK_DATA_PATH variable to use gtdbtk command
-		tar -xzvf ~{gtdbtk_data_tar_gz}
-		GTDBTK_DATA_PATH="$(pwd)/$(tar -tzf ~{gtdbtk_data_tar_gz} | head -1 | cut -d '/' -f 1)"
+		mkdir gtdbtk_data
+		tar \
+			-xzvf ~{gtdbtk_data_tar_gz} \
+			-C gtdbtk_data \
+			--strip-components 1
+		GTDBTK_DATA_PATH="$(pwd)/gtdbtk_data"
 		export GTDBTK_DATA_PATH
 
 		gtdbtk --version
