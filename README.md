@@ -160,11 +160,20 @@ The workflow can start with either a FASTQ or BAM file.
 
 | Type | Name | Description | Notes |
 | :- | :- | :- | :- |
-| String | sample_id | Sample name; used for naming files. | |
-| File | hifi_reads | HiFi reads in BAM or FASTQ format. If BAM, the reads will first be converted to a FASTQ. | |
-| File | db | The CheckM2 DIAMOND reference database Uniref100/KO used to predict the completeness and contamination of MAGs. | |
-| Int | min_length | Minimum size of a contig to consider for completeness scores. The default value will be used [500000]. If modified, this value should not be increased. | |
-| Int | min_completeness | Minimum completeness score (from CheckM2) to mark a contig as complete and place it in a distinct bin. The default value will be used [93%]. If modified, this value should not be lower than 90%. | |
+| String | sample_id | Sample ID; used for naming files. | |
+| File | hifi_reads_bam | HiFi reads in BAM format. If supplied, the reads will first be converted to a FASTQ. One of [hifi_reads_bam, hifi_reads_fastq] is required. | |
+| File | hifi_reads_fastq | HiFi reads in FASTQ format. One of [hifi_reads_bam, hifi_reads_fastq] is required. | |
+| File | checkm2_ref_db | The CheckM2 DIAMOND reference database Uniref100/KO used to predict the completeness and contamination of MAGs. | |
+| Int | min_contig_length | Minimum size of a contig to consider a long contig. [500000] | |
+| Int | min_contig_completeness | Minimum completeness percentage (from CheckM2) to mark a contig as complete and place it in a distinct bin; this value should not be lower than 90%. [93] | |
+| Int | metabat2_min_contig_size | The minimum size of contig to be included in binning for MetaBAT2. [30000] | |
+| String | semibin2_model | The trained model to be used in SemiBin2. If set to 'TRAIN', a new model will be trained from your data. ('TRAIN', 'human_gut', 'human_oral', 'dog_gut', 'cat_gut', 'mouse_gut', 'pig_gut', 'chicken_caecum', 'ocean', 'soil', 'built_environment', 'wastewater',  'global') ['global'] | |
+| String | dastool_search_engine | The engine for single copy gene searching used in DAS Tool. ('blast', 'diamond', 'usearch') ['diamond'] | |
+| Float | dastool_score_threshold | Score threshold until selection algorithm will keep selecting bins (0..1); used by DAS Tool. [0.2] | |
+| Int | min_mag_completeness | Minimum completeness percent for a genome bin. [70] | |
+| Int | max_mag_contamination | Maximum contamination threshold for a genome bin. [10] | |
+| Int | max_contigs | The maximum number of contigs allowed in a genome bin. [20] | |
+| File | gtdbtk_data_tar_gz | A .tar.gz file of GTDB-Tk (Genome Database Taxonomy toolkit) reference data, release207_v2 used for assigning taxonomic classifications to bacterial and archaeal genomes. | |
 
 ## Other inputs
 

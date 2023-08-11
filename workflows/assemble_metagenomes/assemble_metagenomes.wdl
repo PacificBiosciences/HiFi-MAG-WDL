@@ -5,18 +5,16 @@ import "../wdl-common/wdl/structs.wdl"
 workflow assemble_metagenomes {
 	input {
 		String sample_id
-		File hifi_reads
+		File? hifi_reads_bam
+		File? hifi_reads_fastq
 
 		RuntimeAttributes default_runtime_attributes
 	}
 
-	# Detect the input format of the hifi_reads; if BAM, first convert to FASTQ
-	String hifi_reads_extension = sub(basename(hifi_reads), basename(hifi_reads, ".bam"), "")
-
-	if (hifi_reads_extension == ".bam") {
+	if (! defined(hifi_reads_fastq)) {
 		call bam_to_fastq {
 			input:
-				bam = hifi_reads,
+				hifi_reads_bam = select_first([hifi_reads_bam]),
 				runtime_attributes = default_runtime_attributes
 		}
 	}
@@ -24,12 +22,12 @@ workflow assemble_metagenomes {
 	call assemble_reads {
 		input:
 			sample_id = sample_id,
-			fastq = select_first([bam_to_fastq.fastq, hifi_reads]),
+			fastq = select_first([bam_to_fastq.converted_fastq, hifi_reads_fastq]),
 			runtime_attributes = default_runtime_attributes
 	}
 
 	output {
-		File? fastq = bam_to_fastq.fastq
+		File? converted_fastq = bam_to_fastq.converted_fastq
 
 		File assembled_contigs_gfa = assemble_reads.assembled_contigs_gfa
 		File assembled_contigs_fa = assemble_reads.assembled_contigs_fa
@@ -39,14 +37,14 @@ workflow assemble_metagenomes {
 
 task bam_to_fastq {
 	input {
-		File bam
+		File hifi_reads_bam
 
 		RuntimeAttributes runtime_attributes
 	}
 
-	String bam_basename = basename(bam, ".bam")
+	String bam_basename = basename(hifi_reads_bam, ".bam")
 	Int threads = 2
-	Int disk_size = ceil(size(bam, "GB") * 2 + 20)
+	Int disk_size = ceil(size(hifi_reads_bam, "GB") * 2 + 20)
 
 	command <<<
 		set -euo pipefail
@@ -55,14 +53,14 @@ task bam_to_fastq {
 
 		samtools fastq \
 			-@ ~{threads - 1} \
-			~{bam} \
+			~{hifi_reads_bam} \
 		| bgzip \
 			--stdout \
 		> "~{bam_basename}.fastq.gz"
 	>>>
 
 	output {
-		File fastq = "~{bam_basename}.fastq.gz"
+		File converted_fastq = "~{bam_basename}.fastq.gz"
 	}
 
 	runtime {

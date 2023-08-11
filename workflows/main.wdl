@@ -9,7 +9,8 @@ import "assign_taxonomy/assign_taxonomy.wdl" as AssignTaxonomy
 workflow metagenomics {
 	input {
 		String sample_id
-		File hifi_reads
+		File? hifi_reads_bam
+		File? hifi_reads_fastq
 
 		# Complete-aware binning
 		File checkm2_ref_db
@@ -53,7 +54,8 @@ workflow metagenomics {
 	call AssembleMetagenomes.assemble_metagenomes {
 		input:
 			sample_id = sample_id,
-			hifi_reads = hifi_reads,
+			hifi_reads_bam = hifi_reads_bam,
+			hifi_reads_fastq = hifi_reads_fastq,
 			default_runtime_attributes = default_runtime_attributes
 	}
 
@@ -65,7 +67,7 @@ workflow metagenomics {
 			checkm2_ref_db = checkm2_ref_db,
 			min_contig_length = min_contig_length,
 			min_contig_completeness = min_contig_completeness,
-			hifi_reads_fastq = select_first([assemble_metagenomes.fastq, hifi_reads]),
+			hifi_reads_fastq = select_first([assemble_metagenomes.converted_fastq, hifi_reads_fastq]),
 			metabat2_min_contig_size = metabat2_min_contig_size,
 			semibin2_model = semibin2_model,
 			dastool_search_engine = dastool_search_engine,
@@ -92,7 +94,7 @@ workflow metagenomics {
 
 	output {
 		# assemble_metagenomes output
-		File? fastq = assemble_metagenomes.fastq
+		File? converted_fastq = assemble_metagenomes.converted_fastq
 		File assembled_contigs_gfa = assemble_metagenomes.assembled_contigs_gfa
 		File assembled_contigs_fa_gz = assemble_metagenomes.assembled_contigs_fa_gz
 
@@ -140,19 +142,20 @@ workflow metagenomics {
 	}
 
 	parameter_meta {
-		sample_id: {help: "Sample ID"}
-		hifi_reads: {help: "HiFi reads in BAM or FASTQ format"}
+		sample_id: {help: "Sample ID; used for naming files."}
+		hifi_reads_bam: {help: "HiFi reads in BAM format. If supplied, the reads will first be converted to a FASTQ. One of [hifi_reads_bam, hifi_reads_fastq] is required."}
+		hifi_reads_fastq: {help: "HiFi reads in FASTQ format. One of [hifi_reads_bam, hifi_reads_fastq] is required."}
 
 		# Completeness-aware binning
-		checkm2_ref_db: {help: "CheckM2 DIAMOND reference database Uniref100/KO"}
-		min_contig_length: {help: "Minimum size of a contig to consider for completeness scores; default value is set to 500kb. This value should not be increased"}
-		min_contig_completeness: {help: "Minimum completeness score (from CheckM2) to mark a contig as complete and place it in a distinct bin; default value is set to 93%. This value should not be lower than 90%"}
+		checkm2_ref_db: {help: "The CheckM2 DIAMOND reference database Uniref100/KO used to predict the completeness and contamination of MAGs."}
+		min_contig_length: {help: "Minimum size of a contig to consider a long contig. [500000]"}
+		min_contig_completeness: {help: "Minimum completeness percentage (from CheckM2) to mark a contig as complete and place it in a distinct bin; this value should not be lower than 90%. [93]"}
 
 		# Binning
-		metabat2_min_contig_size: {help: "The minimum size of contig to be included in binning for MetaBAT2; default value is set to 30000"}
+		metabat2_min_contig_size: {help: "The minimum size of contig to be included in binning for MetaBAT2. [30000]"}
 		semibin2_model: {help: "The trained model to be used in SemiBin2. If set to 'TRAIN', a new model will be trained from your data. ('TRAIN', 'human_gut', 'human_oral', 'dog_gut', 'cat_gut', 'mouse_gut', 'pig_gut', 'chicken_caecum', 'ocean', 'soil', 'built_environment', 'wastewater',  'global') ['global']"}
 		dastool_search_engine: {help: "The engine for single copy gene searching used in DAS Tool. ('blast', 'diamond', 'usearch') ['diamond']"}
-		dastool_score_threshold: {help: "Score threshold until selection algorithm will keep selecting bins [0 to 1] used in DAS Tool; default value is set to 0.2 (20%)"}
+		dastool_score_threshold: {help: "Score threshold until selection algorithm will keep selecting bins (0..1); used in DAS Tool. [0.2]"}
 
 		# Quality filters for MAGs
 		min_mag_completeness: {help: "Minimum completeness score for a genome bin; default value is set to 70%"}

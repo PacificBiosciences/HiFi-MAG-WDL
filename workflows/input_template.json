@@ -1,7 +1,7 @@
 {
   "metagenomics.sample_id": "String",
-  "metagenomics.bam": "File? (optional)",
-  "metagenomics.fastq": "File? (optional)",
+  "metagenomics.hifi_reads_bam": "File? (optional)",
+  "metagenomics.hifi_reads_fastq": "File? (optional)",
   "metagenomics.checkm2_ref_db": "File",
   "metagenomics.min_contig_length": "Int (optional, default = 500000)",
   "metagenomics.min_contig_completeness": "Int (optional, default = 93)",
