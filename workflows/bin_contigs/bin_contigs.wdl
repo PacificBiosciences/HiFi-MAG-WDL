@@ -1,9 +1,9 @@
 version 1.0
 
 import "../wdl-common/wdl/structs.wdl"
-import "../bin_long_contigs/bin_long_contigs.wdl" as BinLongContigs
-import "../bin_incomplete_contigs/bin_incomplete_contigs.wdl" as BinIncompleteContigs
-import "../common/predict_bin_quality.wdl" as PredictBinQuality
+import "bin_long_contigs/bin_long_contigs.wdl" as BinLongContigs
+import "bin_incomplete_contigs/bin_incomplete_contigs.wdl" as BinIncompleteContigs
+import "common/predict_bin_quality.wdl" as PredictBinQuality
 
 workflow bin_contigs {
 	input {

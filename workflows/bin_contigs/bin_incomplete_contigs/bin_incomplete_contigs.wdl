@@ -1,6 +1,6 @@
 version 1.0
 
-import "../wdl-common/wdl/structs.wdl"
+import "../../wdl-common/wdl/structs.wdl"
 
 workflow bin_incomplete_contigs {
 	input {

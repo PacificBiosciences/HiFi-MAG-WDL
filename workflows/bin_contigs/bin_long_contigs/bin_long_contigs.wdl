@@ -1,6 +1,6 @@
 version 1.0
 
-import "../wdl-common/wdl/structs.wdl"
+import "../../wdl-common/wdl/structs.wdl"
 import "../common/predict_bin_quality.wdl" as PredictBinQuality
 
 workflow bin_long_contigs {
