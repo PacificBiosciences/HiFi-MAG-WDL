@@ -160,12 +160,20 @@ The workflow can start with either a FASTQ or BAM file.
 
 | Type | Name | Description | Notes |
 | :- | :- | :- | :- |
-| String | sample_id | Sample name; used for naming files. | |
-| File? | bam | HiFi reads in BAM format to be converted into FASTQ format. | |
-| File? | fastq | HiFi reads in FASTQ format. | |
-| File | db | The CheckM2 DIAMOND reference database Uniref100/KO used to predict the completeness and contamination of MAGs. | |
-| Int | min_length | Minimum size of a contig to consider for completeness scores. The default value will be used [500000]. If modified, this value should not be increased. | |
-| Int | min_completeness | Minimum completeness score (from CheckM2) to mark a contig as complete and place it in a distinct bin. The default value will be used [93%]. If modified, this value should not be lower than 90%. | |
+| String | sample_id | Sample ID; used for naming files. | |
+| File | hifi_reads_bam | HiFi reads in BAM format. If supplied, the reads will first be converted to a FASTQ. One of [hifi_reads_bam, hifi_reads_fastq] is required. | |
+| File | hifi_reads_fastq | HiFi reads in FASTQ format. One of [hifi_reads_bam, hifi_reads_fastq] is required. | |
+| File | checkm2_ref_db | The CheckM2 DIAMOND reference database Uniref100/KO used to predict the completeness and contamination of MAGs. | |
+| Int | min_contig_length | Minimum size of a contig to consider a long contig. [500000] | |
+| Int | min_contig_completeness | Minimum completeness percentage (from CheckM2) to mark a contig as complete and place it in a distinct bin; this value should not be lower than 90%. [93] | |
+| Int | metabat2_min_contig_size | The minimum size of contig to be included in binning for MetaBAT2. [30000] | |
+| String | semibin2_model | The trained model to be used in SemiBin2. If set to 'TRAIN', a new model will be trained from your data. ('TRAIN', 'human_gut', 'human_oral', 'dog_gut', 'cat_gut', 'mouse_gut', 'pig_gut', 'chicken_caecum', 'ocean', 'soil', 'built_environment', 'wastewater',  'global') ['global'] | |
+| String | dastool_search_engine | The engine for single copy gene searching used in DAS Tool. ('blast', 'diamond', 'usearch') ['diamond'] | |
+| Float | dastool_score_threshold | Score threshold until selection algorithm will keep selecting bins (0..1); used by DAS Tool. [0.2] | |
+| Int | min_mag_completeness | Minimum completeness percent for a genome bin. [70] | |
+| Int | max_mag_contamination | Maximum contamination threshold for a genome bin. [10] | |
+| Int | max_contigs | The maximum number of contigs allowed in a genome bin. [20] | |
+| File | gtdbtk_data_tar_gz | A .tar.gz file of GTDB-Tk (Genome Database Taxonomy toolkit) reference data, release207_v2 used for assigning taxonomic classifications to bacterial and archaeal genomes. | |
 
 ## Other inputs
 
@@ -180,71 +188,69 @@ The workflow can start with either a FASTQ or BAM file.
 
 # Workflow outputs
 
-## General outputs
+## Assemble metagenomes
 
 | Type | Name | Description | Notes |
 | :- | :- | :- | :- |
 | File? | converted_fastq | | |
-| File | primary_contig_graph | | |
-| File | primary_contig_fasta | | |
-| File | hifi_reads_fasta | | |
+| File | assembled_contigs_gfa | | |
+| File | assembled_contigs_fa_gz | | |
 
-## Completeness-aware binning
-
-| Type | Name | Description | Notes |
-| :- | :- | :- | :- |
-| File | bins_contigs_key_txt | | |
-| File | incomplete_contigs | | |
-| Array[File] | long_bin_fastas | | |
-| File? | contig_quality_report_tsv | | |
-| File? | passed_bins_txt | | |
-| File? | scatterplot_pdf | | |
-| File? | histogram_pdf | | |
-
-## Coverage
+## Bin contigs
+### Bin long contigs
 
 | Type | Name | Description | Notes |
 | :- | :- | :- | :- |
-| File | sorted_bam | | |
-| File | sorted_bam_index | | |
-| File | filtered_contig_depth_txt | | |
+| File | long_contig_bin_map | | |
+| Array[File] | filtered_long_bin_fas | | |
+| File | incomplete_contigs_fa | | |
+| File? | long_contig_bin_quality_report_tsv | | |
+| File? | filtered_long_contig_bin_map | | |
+| File? | long_contig_scatterplot_pdf | | |
+| File? | long_contig_histogram_pdf | | |
+| File | passing_long_contig_bin_map | | |
 
-## Binning
+### Coverage
 
 | Type | Name | Description | Notes |
 | :- | :- | :- | :- |
-| Array[File] | metabat2_reconstructed_bins_fastas | | |
-| File | metabat2_bin_sets_tsv | | |
+| IndexData | aligned_sorted_bam | | |
+| File | contig_depth_txt | | |
+
+### Bin incomplete contigs
+
+| Type | Name | Description | Notes |
+| :- | :- | :- | :- |
+| Array[File] | metabat2_bin_fas | | |
+| File | metabat2_contig_bin_map | | |
 | File | semibin2_bins_tsv | | |
-| Array[File] | semibin2_reconstructed_bins_fastas | | |
-| File | semibin2_bin_sets_tsv | | |
-| Array[File] | dastool_bins | | |
+| Array[File] | semibin2_bin_fas | | |
+| File | semibin2_contig_bin_map | | |
+| Array[File] | merged_incomplete_bin_fas | | |
 
-## CheckM2
+### Dereplicated bins
 
 | Type | Name | Description | Notes |
-| :- | :- | :- | :- |
-| Array[File] | derep_bins | | |
+| :- | :- | :- | :- ||
 | File | bin_quality_report_tsv | | |
 | File | gtdb_batch_txt | | |
 | File | passed_bin_count_txt | | |
 | File | filtered_quality_report_tsv | | |
+| Array[File] | dereplicated_bin_fas | | 
 
-## GTDBTK
+## Assign taxonomy
 
 | Type | Name | Description | Notes |
 | :- | :- | :- | :- |
-| File? | gtdbtk_align_tar_gz | | |
-| File? | gtdbtk_classify_tar_gz | | |
-| File? | gtdbtk_identify_tar_gz | | |
 | File? | gtdbtk_summary_txt | | |
+| File? | gtdbk_output_tar_gz | | |
 
-## MAG
+### MAG summary and plots
 
 | Type | Name | Description | Notes |
 | :- | :- | :- | :- |
 | File? | mag_summary_txt | | |
-| Array[File]? | filtered_mags_fastas | | |
+| Array[File]? | filtered_mags_fas | | |
 | File? | dastool_bins_plot_pdf | | |
 | File? | contigs_quality_plot_pdf | | |
 | File? | genome_size_depths_plot_df | | |
@@ -259,10 +265,11 @@ The Docker image used by a particular step of the workflow can be identified by 
 
 | Image | Major tool versions | Links |
 | :- | :- | :- |
-| python | <ul><li>python 3.7; custom scripts</li></ul> | [Dockerfile](https://github.com/PacificBiosciences/wdl-dockerfiles/tree/79e314df42ff4c68fa6df04972fa05a7f0fee459/docker/python/metagenomics) |
-| samtools | <ul><li>[samtools 1.10](https://github.com/samtools/samtools/releases/tag/1.10)</li><li>[minimap2 2.17](https://github.com/lh3/minimap2/releases/tag/v2.17)</li></ul> | [Dockerfile](https://github.com/PacificBiosciences/wdl-dockerfiles/tree/79e314df42ff4c68fa6df04972fa05a7f0fee459/docker/samtools/metagenomics) |
-| checkm2 | <ul><li>[checkm2 1.0.1](https://github.com/chklovski/CheckM2/releases/tag/1.0.1)</li></ul> | [Dockerfile](https://github.com/PacificBiosciences/wdl-dockerfiles/tree/79e314df42ff4c68fa6df04972fa05a7f0fee459/docker/checkm2) |
-| metabat | <ul><li>[metabat2 2.15](https://bitbucket.org/berkeleylab/metabat/downloads/?tab=tags)</li></ul> | [Dockerfile](https://github.com/PacificBiosciences/wdl-dockerfiles/tree/79e314df42ff4c68fa6df04972fa05a7f0fee459/docker/metabat) |
-| semibin | <ul><li>[semibin 1.5](https://github.com/BigDataBiology/SemiBin/releases/tag/v1.5.0)</li></ul> | [Dockerfile](https://github.com/PacificBiosciences/wdl-dockerfiles/tree/79e314df42ff4c68fa6df04972fa05a7f0fee459/docker/semibin) |
-| dastool | <ul><li>[dastool 1.1.6](https://github.com/cmks/DAS_Tool/releases/tag/1.1.6)</li></ul> | [Dockerfile](https://github.com/PacificBiosciences/wdl-dockerfiles/tree/79e314df42ff4c68fa6df04972fa05a7f0fee459/docker/dastool) |
-| gtdbtk | <ul><li>[gtdbtk 2.1.1](https://github.com/Ecogenomics/GTDBTk/releases/tag/2.1.1)</li><li>python 3.7</li></ul> | [Dockerfile](https://github.com/PacificBiosciences/wdl-dockerfiles/tree/79e314df42ff4c68fa6df04972fa05a7f0fee459/docker/gtdbtk) |
+| python | <ul><li>python 3.7; custom scripts</li></ul> | [Dockerfile](https://github.com/PacificBiosciences/wdl-dockerfiles/tree/343bb7f1ce6954c49e2ca1ca029f2878015a7940/docker/python/metagenomics) |
+| samtools | <ul><li>[samtools 1.10](https://github.com/samtools/samtools/releases/tag/1.10)</li><li>[minimap2 2.17](https://github.com/lh3/minimap2/releases/tag/v2.17)</li></ul> | [Dockerfile](https://github.com/PacificBiosciences/wdl-dockerfiles/tree/343bb7f1ce6954c49e2ca1ca029f2878015a7940/docker/samtools/metagenomics) |
+| hifiasm-meta | <ul><li>[hifiasm-meta 0.3.1](https://github.com/xfengnefx/hifiasm-meta/releases/tag/hamtv0.3.1)</li><li>[gfatools 0.4](https://github.com/lh3/gfatools/releases/tag/v0.4)</li></ul> | [Dockerfile](https://github.com/PacificBiosciences/wdl-dockerfiles/tree/343bb7f1ce6954c49e2ca1ca029f2878015a7940/docker/hifiasm-meta/metagenomics) |
+| checkm2 | <ul><li>[checkm2 1.0.1](https://github.com/chklovski/CheckM2/releases/tag/1.0.1)</li></ul> | [Dockerfile](https://github.com/PacificBiosciences/wdl-dockerfiles/tree/343bb7f1ce6954c49e2ca1ca029f2878015a7940/docker/checkm2) |
+| metabat | <ul><li>[metabat2 2.15](https://bitbucket.org/berkeleylab/metabat/downloads/?tab=tags)</li></ul> | [Dockerfile](https://github.com/PacificBiosciences/wdl-dockerfiles/tree/343bb7f1ce6954c49e2ca1ca029f2878015a7940/docker/metabat) |
+| semibin | <ul><li>[semibin 1.5](https://github.com/BigDataBiology/SemiBin/releases/tag/v1.5.0)</li></ul> | [Dockerfile](https://github.com/PacificBiosciences/wdl-dockerfiles/tree/343bb7f1ce6954c49e2ca1ca029f2878015a7940/docker/semibin) |
+| dastool | <ul><li>[dastool 1.1.6](https://github.com/cmks/DAS_Tool/releases/tag/1.1.6)</li></ul> | [Dockerfile](https://github.com/PacificBiosciences/wdl-dockerfiles/tree/343bb7f1ce6954c49e2ca1ca029f2878015a7940/docker/dastool) |
+| gtdbtk | <ul><li>[gtdbtk 2.1.1](https://github.com/Ecogenomics/GTDBTk/releases/tag/2.1.1)</li><li>python 3.7; custom scripts</li></ul> | [Dockerfile](https://github.com/PacificBiosciences/wdl-dockerfiles/tree/343bb7f1ce6954c49e2ca1ca029f2878015a7940/docker/gtdbtk) |

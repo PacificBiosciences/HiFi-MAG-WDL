@@ -2,24 +2,36 @@ version 1.0
 
 import "../wdl-common/wdl/structs.wdl"
 
-workflow mag {
+workflow assign_taxonomy {
 	input {
 		String sample_id
 
-		File gtdbtk_summary_txt
+		File gtdb_batch_txt
+		File gtdbtk_data_tar_gz
+		Array[File] dereplicated_bin_fas
+
 		File filtered_quality_report_tsv
-		Array[File] derep_bins
 
 		Int min_mag_completeness
 		Int max_mag_contamination
 
+
 		RuntimeAttributes default_runtime_attributes
+	}
+
+	call assign_taxonomy_gtdbtk {
+		input:
+			sample_id = sample_id,
+			gtdb_batch_txt = gtdb_batch_txt,
+			gtdbtk_data_tar_gz = gtdbtk_data_tar_gz,
+			dereplicated_bin_fas= dereplicated_bin_fas,
+			runtime_attributes = default_runtime_attributes
 	}
 
 	call mag_summary {
 		input:
 			sample_id = sample_id,
-			gtdbtk_summary_txt = gtdbtk_summary_txt,
+			gtdbtk_summary_txt = assign_taxonomy_gtdbtk.gtdbtk_summary_txt,
 			filtered_quality_report_tsv = filtered_quality_report_tsv,
 			runtime_attributes = default_runtime_attributes
 	}
@@ -27,7 +39,7 @@ workflow mag {
 	call mag_copy {
 		input:
 			mag_summary_txt = mag_summary.mag_summary_txt,
-			derep_bins = derep_bins,
+			dereplicated_bin_fas = dereplicated_bin_fas,
 			runtime_attributes = default_runtime_attributes
 	}
 
@@ -42,11 +54,84 @@ workflow mag {
 	}
 
 	output {
+		File gtdbtk_summary_txt = assign_taxonomy_gtdbtk.gtdbtk_summary_txt
+		File gtdbk_output_tar_gz = assign_taxonomy_gtdbtk.gtdbk_output_tar_gz
 		File mag_summary_txt = mag_summary.mag_summary_txt
-		Array[File] filtered_mags_fastas = mag_copy.filtered_mags_fastas
+		Array[File] filtered_mags_fas = mag_copy.filtered_mags_fas
 		File dastool_bins_plot_pdf = mag_plots.dastool_bins_plot_pdf
 		File contigs_quality_plot_pdf = mag_plots.contigs_quality_plot_pdf
 		File genome_size_depths_plot_df = mag_plots.genome_size_depths_plot_df
+	}
+}
+
+task assign_taxonomy_gtdbtk {
+	input {
+		String sample_id
+
+		File gtdb_batch_txt
+		File gtdbtk_data_tar_gz
+		Array[File] dereplicated_bin_fas
+
+		RuntimeAttributes runtime_attributes
+	}
+
+	Int threads = 48
+	Int mem_gb = threads * 2
+	Int disk_size = ceil((size(gtdbtk_data_tar_gz, "GB") + (size(dereplicated_bin_fas[0], "GB") * length(dereplicated_bin_fas))) * 2 + 20)
+
+	command <<<
+		set -euo pipefail
+
+		# Must set $GTDBTK_DATA_PATH variable to use gtdbtk command
+		mkdir gtdbtk_data
+		tar \
+			-xzvf ~{gtdbtk_data_tar_gz} \
+			-C gtdbtk_data \
+			--strip-components 1
+		GTDBTK_DATA_PATH="$(pwd)/gtdbtk_data"
+		export GTDBTK_DATA_PATH
+
+		gtdbtk --version
+
+		# Ensure all bins are in the bin_fa_dir; this will match the structure of the gtdb_batch_txt
+		mkdir bin_fa_dir
+		while read -r bin_fa || [[ -n "${bin_fa}" ]]; do
+			ln -s "${bin_fa}" "$(pwd)/bin_fa_dir"
+		done < ~{write_lines(dereplicated_bin_fas)}
+
+		mkdir ~{sample_id}_gtdbtk tmp_dir
+
+		gtdbtk classify_wf \
+			--batchfile ~{gtdb_batch_txt} \
+			--out_dir ~{sample_id}_gtdbtk \
+			--extension fa \
+			--prefix ~{sample_id} \
+			--cpus ~{threads} \
+			--tmpdir tmp_dir
+
+		python /opt/scripts/GTDBTk-Organize.py \
+			--input_dir ~{sample_id}_gtdbtk/classify \
+			--outfile "~{sample_id}.GTDBTk_Summary.txt"
+
+		tar -zcvf "~{sample_id}_gtdbtk.tar.gz" ~{sample_id}_gtdbtk
+	>>>
+
+	output {
+		File gtdbtk_summary_txt = "~{sample_id}.GTDBTk_Summary.txt"
+		File gtdbk_output_tar_gz = "~{sample_id}_gtdbtk.tar.gz"
+	}
+
+	runtime {
+		docker: "~{runtime_attributes.container_registry}/gtdbtk:2.1.1"
+		cpu: threads
+		memory: mem_gb + " GB"
+		disk: disk_size + " GB"
+		disks: "local-disk " + disk_size + " HDD"
+		preemptible: runtime_attributes.preemptible_tries
+		maxRetries: runtime_attributes.max_retries
+		awsBatchRetryAttempts: runtime_attributes.max_retries
+		queueArn: runtime_attributes.queue_arn
+		zones: runtime_attributes.zones
 	}
 }
 
@@ -92,28 +177,32 @@ task mag_summary {
 task mag_copy {
 	input {
 		File mag_summary_txt
-		Array[File] derep_bins
+		Array[File] dereplicated_bin_fas
 
 		RuntimeAttributes runtime_attributes
 	}
- 
-	Int disk_size = ceil((size(mag_summary_txt, "GB") + (size(derep_bins[0], "GB") * length(derep_bins))) * 2 + 20)
+
+	Int disk_size = ceil((size(mag_summary_txt, "GB") + (size(dereplicated_bin_fas[0], "GB") * length(dereplicated_bin_fas))) * 2 + 20)
 
 	command <<<
 		set -euo pipefail
 
-		derep_bins_dir=$(dirname ~{derep_bins[0]})
+		# Ensure all bins are in the bin_fa_dir
+		mkdir bin_fa_dir
+		while read -r bin_fa || [[ -n "${bin_fa}" ]]; do
+			ln -s "${bin_fa}" "$(pwd)/bin_fa_dir"
+		done < ~{write_lines(dereplicated_bin_fas)}
 
 		mkdir filtered_mags_out_dir
 
 		python /opt/scripts/Copy-Final-MAGs.py \
 			--mag_summary ~{mag_summary_txt} \
-			--magdir "${derep_bins_dir}" \
+			--magdir bin_fa_dir \
 			--outdir filtered_mags_out_dir
 	>>>
 
 	output {
-		Array[File] filtered_mags_fastas = glob("filtered_mags_out_dir/*.fa")
+		Array[File] filtered_mags_fas = glob("filtered_mags_out_dir/*.fa")
 	}
 
 	runtime {
@@ -142,7 +231,7 @@ task mag_plots {
 
 		RuntimeAttributes runtime_attributes
 	}
- 
+
 	Int disk_size = ceil((size(filtered_quality_report_tsv, "GB") + size(mag_summary_txt, "GB")) * 2 + 20)
 
 	command <<<
