@@ -86,8 +86,8 @@ task assemble_reads {
 	}
 
 	Int threads = 32
-	Int mem_gb = threads * 4
-	Int disk_size = ceil(size(fastq, "GB") * 4 + 20)
+	Int mem_gb = threads * 6
+	Int disk_size = ceil(size(fastq, "GB") * 6 + 20)
 
 	command <<<
 		set -euo pipefail

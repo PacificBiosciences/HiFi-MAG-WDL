@@ -269,7 +269,7 @@ task bin_incomplete_contigs_metabat2 {
 	}
 
 	Int threads = 12
-	Int mem_gb = threads * 4
+	Int mem_gb = threads * 2
 	Int disk_size = ceil(size(incomplete_contigs_fa, "GB") * 2 + 20)
 
 	command <<<
@@ -316,7 +316,7 @@ task bin_incomplete_contigs_semibin2 {
 	}
 
 	Int threads = 48
-	Int mem_gb = threads * 4
+	Int mem_gb = threads * 2
 	Int disk_size = ceil((size(incomplete_contigs_fa, "GB") + size(aligned_sorted_bam, "GB")) * 2 + 20)
 
 	String semibin2_model_flag = if (semibin2_model == "TRAIN") then "" else "--environment ~{semibin2_model}"
@@ -419,7 +419,7 @@ task merge_incomplete_bins {
 	}
 
 	Int threads = 24
-	Int mem_gb = threads * 4
+	Int mem_gb = threads * 2
 	Int disk_size = ceil(size(incomplete_contigs_fa, "GB") * 2 + 20)
 
 	command <<<

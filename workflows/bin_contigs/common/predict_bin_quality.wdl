@@ -13,7 +13,7 @@ task predict_bin_quality {
 	}
 
 	Int threads = 24
-	Int mem_gb = threads * 4
+	Int mem_gb = threads * 2
 	Int disk_size = ceil((size(checkm2_ref_db, "GB") + (size(bin_fas[0], "GB") * length(bin_fas))) * 2 + 20)
 
 	command <<<
