@@ -195,7 +195,7 @@ This section describes the inputs required for a run of the workflow. An input t
 ## Bin contigs
 
 | Type | Name | Description | Notes |
-| :- | :- | :- | :- ||
+| :- | :- | :- | :- |
 | Array[File] | dereplicated_bin_fas | Set of passing long contig and non-redundant incomplete contig bins | |
 | File | bin_quality_report_tsv | CheckM2 completeness/contamination report for long and non-redundant incomplete contig bins | |
 | File | gtdb_batch_txt | GTDB-Tk batch file; used during taxonomy assignment | |
