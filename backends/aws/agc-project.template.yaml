@@ -1,12 +1,10 @@
-# TODO replace
-name: _projectName_
+name: metagenomicsAgc
 schemaVersion: 1
 data:
   - location: s3://dnastack-resources
     readOnly: true
 workflows:
-  # TODO replace
-  _workflowName_:
+  metagenomics:
     type:
       language: wdl
       version: 1.0
