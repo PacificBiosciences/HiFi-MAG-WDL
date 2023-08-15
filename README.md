@@ -17,10 +17,9 @@ The metagenomics workflow combines contig assembly and PacBio's [HiFi-MAG-Pipeli
 
 Some tasks and workflows are pulled in from other repositories. Ensure you have initialized submodules following cloning by running `git submodule update --init --recursive`.
 
-# TODO - confirm
 ## Resource requirements
 
-The workflow requires at minimum _cores_ cores, 45-150 GB of RAM, and >250GB temporary disk space. Ensure that the backend environment you're using has enough quota to run the workflow.
+The workflow requires at minimum 48 cores, 45-150 GB of RAM, and >250GB temporary disk space. Ensure that the backend environment you're using has enough quota to run the workflow.
 
 ## Reference datasets and associated workflow files
 
@@ -151,10 +150,7 @@ dnastack workbench runs submit \
 
 # Workflow inputs
 
-This section describes the inputs required for a run of the workflow.
-
-# TODO - confirm
-The workflow can start with either a FASTQ or BAM file.
+This section describes the inputs required for a run of the workflow. An input template file may be found [here](workflows/input_template.json).
 
 # General inputs
 
@@ -192,70 +188,60 @@ The workflow can start with either a FASTQ or BAM file.
 
 | Type | Name | Description | Notes |
 | :- | :- | :- | :- |
-| File? | converted_fastq | | |
-| File | assembled_contigs_gfa | | |
-| File | assembled_contigs_fa_gz | | |
+| File? | converted_fastq | If a BAM file was provided, the converted FASTQ version of that file | |
+| File | assembled_contigs_gfa | Assembled contigs in gfa format | |
+| File | assembled_contigs_fa_gz | Assembled contigs in gzipped-fasta format | |
 
 ## Bin contigs
+
+| Type | Name | Description | Notes |
+| :- | :- | :- | :- |
+| Array[File] | dereplicated_bin_fas | Set of passing long contig and non-redundant incomplete contig bins | |
+| File | bin_quality_report_tsv | CheckM2 completeness/contamination report for long and non-redundant incomplete contig bins | |
+| File | gtdb_batch_txt | GTDB-Tk batch file; used during taxonomy assignment | |
+| File | passed_bin_count_txt | Txt file containing an integer specifying the number of bins that passed quality control | |
+| File | filtered_quality_report_tsv | Filtered `bin_quality_report_tsv` containing quality information about passing bins | |
+
 ### Bin long contigs
 
 | Type | Name | Description | Notes |
 | :- | :- | :- | :- |
-| File | long_contig_bin_map | | |
-| Array[File] | filtered_long_bin_fas | | |
-| File | incomplete_contigs_fa | | |
-| File? | long_contig_bin_quality_report_tsv | | |
-| File? | filtered_long_contig_bin_map | | |
-| File? | long_contig_scatterplot_pdf | | |
-| File? | long_contig_histogram_pdf | | |
-| File | passing_long_contig_bin_map | | |
-
-### Coverage
-
-| Type | Name | Description | Notes |
-| :- | :- | :- | :- |
-| IndexData | aligned_sorted_bam | | |
-| File | contig_depth_txt | | |
+| File | long_contig_bin_map | Map between passing long contigs and bins in TSV format | |
+| File? | long_contig_bin_quality_report_tsv | CheckM2 completeness/conamination report for long contigs | |
+| File? | filtered_long_contig_bin_map | Map between passing long contigs and bins that also pass the completeness threshold in TSV format | |
+| File? | long_contig_scatterplot_pdf | Completeness vs. size scatterplot | |
+| File? | long_contig_histogram_pdf | Completeness histogram | |
+| File | passing_long_contig_bin_map | If any contigs pass the length filter, this will be the `filtered_long_contig_bin_map`; otherwise, this is the `long_contig_bin_map` | |
+| Array[File] | filtered_long_bin_fas | Set of long bin fastas that pass the length and completeness thresholds | |
+| File | incomplete_contigs_fa | Fasta file containing contigs that do not pass either length or completeness thresholds | |
 
 ### Bin incomplete contigs
 
 | Type | Name | Description | Notes |
 | :- | :- | :- | :- |
-| Array[File] | metabat2_bin_fas | | |
-| File | metabat2_contig_bin_map | | |
-| File | semibin2_bins_tsv | | |
-| Array[File] | semibin2_bin_fas | | |
-| File | semibin2_contig_bin_map | | |
-| Array[File] | merged_incomplete_bin_fas | | |
-
-### Dereplicated bins
-
-| Type | Name | Description | Notes |
-| :- | :- | :- | :- ||
-| File | bin_quality_report_tsv | | |
-| File | gtdb_batch_txt | | |
-| File | passed_bin_count_txt | | |
-| File | filtered_quality_report_tsv | | |
-| Array[File] | dereplicated_bin_fas | | 
+| IndexData | aligned_sorted_bam | HiFi reads aligned to the assembled contigs | |
+| File | contig_depth_txt | Summary of aligned BAM contig depths | |
+| Array[File] | metabat2_bin_fas | Bins output by `metabat2` in fasta format | |
+| File | metabat2_contig_bin_map | Map between contigs and `metabat2` bins | |
+| File | semibin2_bins_tsv | Bin info TSV output by `semibin2` | |
+| Array[File] | semibin2_bin_fas | Bins output by `semibin2` in fasta format | |
+| File | semibin2_contig_bin_map | Map between contigs and `semibin2` bins | |
+| Array[File] | merged_incomplete_bin_fas | Non-redundant incomplete contig bin set from `metabat2` and `semibin2` | |
 
 ## Assign taxonomy
 
-| Type | Name | Description | Notes |
-| :- | :- | :- | :- |
-| File? | gtdbtk_summary_txt | | |
-| File? | gtdbk_output_tar_gz | | |
-
-### MAG summary and plots
+These outputs will be generated if at least one contig passes filters.
 
 | Type | Name | Description | Notes |
 | :- | :- | :- | :- |
-| File? | mag_summary_txt | | |
-| Array[File]? | filtered_mags_fas | | |
-| File? | dastool_bins_plot_pdf | | |
-| File? | contigs_quality_plot_pdf | | |
-| File? | genome_size_depths_plot_df | | |
+| File? | gtdbtk_summary_txt | GTDB-Tk summary file in txt format | |
+| File? | gtdbk_output_tar_gz | GTDB-Tk results for dereplicated bins that passed filtering with CheckM2 | |
+| File? | mag_summary_txt | A main summary file that brings together information from CheckM2 and GTDB-Tk for all MAGs that pass the filtering step. | |
+| Array[File]? | filtered_mags_fas | The fasta files for all high-quality MAGs/bins | |
+| File? | dastool_bins_plot_pdf |  Figure that shows the dereplicated bins that were created from the set of incomplete contigs (using MetaBat2 and SemiBin2) as well as the long complete contigs | |
+| File? | contigs_quality_plot_pdf | A plot showing the relationship between completeness and contamination for each high-quality MAG recovered, colored by the number of contigs per MAG. | |
+| File? | genome_size_depths_plot_df | A plot showing the relationship between genome size and depth of coverage for each high-quality MAG recovered, colored by % GC content per MAG. | |
 
-# TODO - finish
 # Tool versions and Docker images
 
 Docker images definitions used by this workflow can be found in [the wdl-dockerfiles repository](https://github.com/PacificBiosciences/wdl-dockerfiles/tree/987efde4d614a292fbfe9f3cf146b63005ad6a8a). Images are hosted in PacBio's [quay.io](https://quay.io/organization/pacbio). Docker images used in the workflow are pegged to specific versions by referring to their digests rather than tags.
