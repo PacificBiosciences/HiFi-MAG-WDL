@@ -1,5 +1,6 @@
 inputs.test_data*.json
 .wdltest*
+dependencies.zip
 
 # Mac/OSX system file
 .DS_Store
