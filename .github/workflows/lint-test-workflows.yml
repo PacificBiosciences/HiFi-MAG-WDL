@@ -24,4 +24,3 @@ jobs:
           workbench-workflow-service-url:  ${{ secrets.WORKBENCH_WORKFLOW_SERVICE_URL }}
           workbench-ewes-refresh-token: ${{ secrets.WORKBENCH_EWES_REFRESH_TOKEN }}
           workbench-workflow-service-refresh-token: ${{ secrets.WORKBENCH_WORKFLOW_SERVICE_REFRESH_TOKEN }}
-          wdl_ci_custom_test_wdl_dir: 'metagenomics-wdl-ci-custom-test-dir'
