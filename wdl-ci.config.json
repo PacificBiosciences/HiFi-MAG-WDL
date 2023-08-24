@@ -182,7 +182,7 @@
                   "value": "${input_resources_file_path}/ZymoTru4plex.GTDBTk_Summary.txt",
                   "test_tasks": [
                     "compare_file_basename",
-                    "check_empty_lines"
+                    "check_empty_lines",
                     "check_tab_delimited",
                     "count_columns"
                   ]
@@ -214,7 +214,7 @@
                   "value": "${input_resources_file_path}/ZymoTru4plex.HiFi_MAG.summary.txt",
                   "test_tasks": [
                     "compare_file_basename",
-                    "check_empty_lines"
+                    "check_empty_lines",
                     "check_tab_delimited",
                     "count_columns"
                   ]
@@ -722,7 +722,7 @@
                   "value": "${input_resources_file_path}/ZymoTru4plex.JGI.depth.txt",
                   "test_tasks": [
                     "compare_file_basename",
-                    "check_empty_lines"
+                    "check_empty_lines",
                     "check_tab_delimited",
                     "count_columns"
                   ]
@@ -746,7 +746,7 @@
                   "value": "${input_resources_file_path}/ZymoTru4plex.JGI.depth.filtered.txt",
                   "test_tasks": [
                     "compare_file_basename",
-                    "check_empty_lines"
+                    "check_empty_lines",
                     "check_tab_delimited",
                     "count_columns"
                   ]
@@ -1080,7 +1080,7 @@
                   "value": "${input_resources_file_path}/ZymoTru4plex.bins_info.tsv",
                   "test_tasks": [
                     "compare_file_basename",
-                    "check_empty_lines"
+                    "check_empty_lines",
                     "check_tab_delimited",
                     "count_columns"
                   ]
@@ -1472,7 +1472,7 @@
                   ],
                   "test_tasks": [
                     "compare_file_basename",
-                    "check_empty_lines"
+                    "check_empty_lines",
                     "fasta_validator"
                   ]
                 }
@@ -1779,7 +1779,7 @@
                   "value": "${input_resources_file_path}/ZymoTru4plex.metabat2.contig_bin_map.tsv",
                   "test_tasks": [
                     "compare_file_basename",
-                    "check_empty_lines"
+                    "check_empty_lines",
                     "check_tab_delimited",
                     "count_columns"
                   ]
@@ -2181,7 +2181,7 @@
                   "value": "${input_resources_file_path}/ZymoTru4plex.semibin2.contig_bin_map.tsv",
                   "test_tasks": [
                     "compare_file_basename",
-                    "check_empty_lines"
+                    "check_empty_lines",
                     "check_tab_delimited",
                     "count_columns"
                   ]
