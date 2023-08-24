@@ -13,7 +13,7 @@
       "tasks": {
         "assign_taxonomy_gtdbtk": {
           "key": "assign_taxonomy_gtdbtk",
-          "digest": "",
+          "digest": "rykd4qwxty3uqcpioan3x3i4obuomqno",
           "tests": [
             {
               "inputs": {
@@ -200,7 +200,7 @@
         },
         "mag_summary": {
           "key": "mag_summary",
-          "digest": "",
+          "digest": "avgnyyyv5zwwdyx46b4w6ot5luyk2kxi",
           "tests": [
             {
               "inputs": {
@@ -225,7 +225,7 @@
         },
         "mag_copy": {
           "key": "mag_copy",
-          "digest": "",
+          "digest": "qw2y7r2cvklumcoypukebz7mpp6phlsl",
           "tests": [
             {
               "inputs": {
@@ -433,7 +433,7 @@
           "tests": [
             {
               "inputs": {
-                "sample_id": "${sample_id",
+                "sample_id": "${sample_id}",
                 "filtered_quality_report_tsv": "${input_resources_file_path}/ZymoTru4plex.dereplicated_bins.quality_report.filtered.tsv",
                 "mag_summary_txt": "${input_resources_file_path}/ZymoTru4plex.HiFi_MAG.summary.txt",
                 "min_mag_completeness": 70,
@@ -478,7 +478,7 @@
       "tasks": {
         "filter_dereplicated_bins": {
           "key": "filter_dereplicated_bins",
-          "digest": "",
+          "digest": "lk7cn7zzf6mmt6cze7nfhzlidx3yzmxw",
           "tests": [
             {
               "inputs": {
@@ -757,7 +757,7 @@
         },
         "bin_incomplete_contigs_metabat2": {
           "key": "bin_incomplete_contigs_metabat2",
-          "digest": "",
+          "digest": "c3lo44lk245xaow53apoer376zumc32c",
           "tests": [
             {
               "inputs": {
@@ -1054,7 +1054,6 @@
                     "${input_resources_file_path}/metabat2_bin_fas/ZymoTru4plex.metabat2.282.fa"
                   ],
                   "test_tasks": [
-                    "compare_file_basename",
                     "check_empty_lines",
                     "fasta_validator"
                   ]
@@ -1065,7 +1064,7 @@
         },
         "bin_incomplete_contigs_semibin2": {
           "key": "bin_incomplete_contigs_semibin2",
-          "digest": "",
+          "digest": "533h63dxtdttjudqsc22oltgbwb6uh4z",
           "tests": [
             {
               "inputs": {
@@ -1471,7 +1470,6 @@
                     "${input_resources_file_path}/semibin2_bin_fas/ZymoTru4plex.semibin2_381.fa"
                   ],
                   "test_tasks": [
-                    "compare_file_basename",
                     "check_empty_lines",
                     "fasta_validator"
                   ]
@@ -1482,7 +1480,7 @@
         },
         "map_contig_to_bin": {
           "key": "map_contig_to_bin",
-          "digest": "",
+          "digest": "emt5ua3scjvmogydqszgnxjqmpjclj4u",
           "tests": [
             {
               "inputs": {
