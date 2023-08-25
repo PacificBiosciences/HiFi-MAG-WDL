@@ -13,12 +13,12 @@
       "tasks": {
         "assign_taxonomy_gtdbtk": {
           "key": "assign_taxonomy_gtdbtk",
-          "digest": "rykd4qwxty3uqcpioan3x3i4obuomqno",
+          "digest": "",
           "tests": [
             {
               "inputs": {
                 "sample_id": "${sample_id}",
-                "gtdb_batch_txt": "${input_resources_file_path}/ymoTru4plex.GTDBTk_batch_file.txt",
+                "gtdb_batch_txt": "${input_resources_file_path}/ZymoTru4plex.GTDBTk_batch_file.txt",
                 "gtdbtk_data_tar_gz": "${input_file_path}/public_data/gtdbtk_r207_v2_data.tar.gz",
                 "dereplicated_bin_fas": [
                   "${input_resources_file_path}/filtered_long_bin_fas/ZymoTru4plex.complete.4.fa",
@@ -475,13 +475,13 @@
       "tasks": {
         "filter_dereplicated_bins": {
           "key": "filter_dereplicated_bins",
-          "digest": "lk7cn7zzf6mmt6cze7nfhzlidx3yzmxw",
+          "digest": "",
           "tests": [
             {
               "inputs": {
                 "sample_id": "${sample_id}",
                 "bin_quality_report_tsv": "${input_resources_file_path}/ZymoTru4plex.dereplicated_bins.quality_report.tsv",
-                "contig_depth_txt": "${input_resources_file_path}/ZymoTru4plex.JGI.depth.filtered.txt",
+                "contig_depth_txt": "${input_resources_file_path}/ZymoTru4plex.JGI.depth.txt",
                 "dereplicated_bin_fas": [
                   "${input_resources_file_path}/filtered_long_bin_fas/ZymoTru4plex.complete.4.fa",
                   "${input_resources_file_path}/filtered_long_bin_fas/ZymoTru4plex.complete.5.fa",
@@ -644,7 +644,7 @@
               },
               "output_tests": {
                 "gtdb_batch_txt": {
-                  "value": "${input_resources_file_path}/ymoTru4plex.GTDBTk_batch_file.txt",
+                  "value": "${input_resources_file_path}/ZymoTru4plex.GTDBTk_batch_file.txt",
                   "test_tasks": [
                     "compare_file_basename",
                     "check_empty_lines",
@@ -2657,7 +2657,6 @@
                     "${input_resources_file_path}/filtered_long_bin_fas/ZymoTru4plex.complete.19.fa"
                   ],
                   "test_tasks": [
-                    "compare_file_basename",
                     "check_empty_lines",
                     "fasta_validator"
                   ]
