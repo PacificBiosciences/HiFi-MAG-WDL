@@ -1062,7 +1062,7 @@
         },
         "bin_incomplete_contigs_semibin2": {
           "key": "bin_incomplete_contigs_semibin2",
-          "digest": "",
+          "digest": "533h63dxtdttjudqsc22oltgbwb6uh4z",
           "tests": [
             {
               "inputs": {
@@ -1479,7 +1479,7 @@
         },
         "map_contig_to_bin": {
           "key": "map_contig_to_bin",
-          "digest": "emt5ua3scjvmogydqszgnxjqmpjclj4u",
+          "digest": "",
           "tests": [
             {
               "inputs": {
@@ -2543,7 +2543,7 @@
         },
         "make_incomplete_contigs": {
           "key": "make_incomplete_contigs",
-          "digest": "",
+          "digest": "ihuv3xh6q5t7tfgmik6ifn556yqxly24",
           "tests": [
             {
               "inputs": {
