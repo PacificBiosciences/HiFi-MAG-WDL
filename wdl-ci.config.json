@@ -429,7 +429,7 @@
         },
         "mag_plots": {
           "key": "mag_plots",
-          "digest": "",
+          "digest": "ps5tsl3v2mkficvrrvl6k7ed32nb4r53",
           "tests": [
             {
               "inputs": {
@@ -445,7 +445,6 @@
                   "value": "${input_resources_file_path}/ZymoTru4plex.All-DASTool-Bins.pdf",
                   "test_tasks": [
                     "compare_file_basename",
-                    "check_empty_lines",
                     "pdf_validator"
                   ]
                 },
@@ -453,7 +452,6 @@
                   "value": "${input_resources_file_path}/ZymoTru4plex.Completeness-Contamination-Contigs.pdf",
                   "test_tasks": [
                     "compare_file_basename",
-                    "check_empty_lines",
                     "pdf_validator"
                   ]
                 },
@@ -461,7 +459,6 @@
                   "value": "${input_resources_file_path}/ZymoTru4plex.GenomeSizes-Depths.pdf",
                   "test_tasks": [
                     "compare_file_basename",
-                    "check_empty_lines",
                     "pdf_validator"
                   ]
                 }
@@ -685,7 +682,7 @@
       "tasks": {
         "align_reads_to_assembled_contigs": {
           "key": "align_reads_to_assembled_contigs",
-          "digest": "",
+          "digest": "2ygddbx7w4o2lolsa5zt5ml5yglob3lc",
           "tests": [
             {
               "inputs": {
@@ -708,7 +705,7 @@
         },
         "summarize_contig_depth": {
           "key": "summarize_contig_depth",
-          "digest": "",
+          "digest": "xqzreaog5jzhugi7qrsbfcsw2ob2hpvc",
           "tests": [
             {
               "inputs": {
@@ -733,7 +730,7 @@
         },
         "filter_contig_depth": {
           "key": "filter_contig_depth",
-          "digest": "",
+          "digest": "kn63t276r6bxtpzjufsnm6g2x7dvwoc6",
           "tests": [
             {
               "inputs": {
@@ -1769,7 +1766,7 @@
                   "${input_resources_file_path}/metabat2_bin_fas/ZymoTru4plex.metabat2.280.fa",
                   "${input_resources_file_path}/metabat2_bin_fas/ZymoTru4plex.metabat2.281.fa",
                   "${input_resources_file_path}/metabat2_bin_fas/ZymoTru4plex.metabat2.282.fa"
-                  ],
+                ],
                 "runtime_attributes": "${default_runtime_attributes}"
               },
               "output_tests": {
@@ -2171,7 +2168,7 @@
                   "${input_resources_file_path}/semibin2_bin_fas/ZymoTru4plex.semibin2_379.fa",
                   "${input_resources_file_path}/semibin2_bin_fas/ZymoTru4plex.semibin2_380.fa",
                   "${input_resources_file_path}/semibin2_bin_fas/ZymoTru4plex.semibin2_381.fa"
-                  ],
+                ],
                 "runtime_attributes": "${default_runtime_attributes}"
               },
               "output_tests": {
@@ -2374,7 +2371,7 @@
       "tasks": {
         "long_contigs_to_bins": {
           "key": "long_contigs_to_bins",
-          "digest": "",
+          "digest": "zabcoc2mwryhplzmtgpxj2cnbwfnoxzb",
           "tests": [
             {
               "inputs": {
@@ -2493,7 +2490,6 @@
                     "${input_resources_file_path}/long_bin_fas/ZymoTru4plex.complete.96.fa"
                   ],
                   "test_tasks": [
-                    "compare_file_basename",
                     "check_empty_lines",
                     "fasta_validator"
                   ]
@@ -2504,7 +2500,7 @@
         },
         "filter_complete_contigs": {
           "key": "filter_complete_contigs",
-          "digest": "",
+          "digest": "ehtbh6pxdgh44rkxbwrnyilut2dmvqvv",
           "tests": [
             {
               "inputs": {
@@ -2529,7 +2525,6 @@
                   "value": "${input_resources_file_path}/ZymoTru4plex.completeness_vs_size_scatter.pdf",
                   "test_tasks": [
                     "compare_file_basename",
-                    "check_empty_lines",
                     "pdf_validator"
                   ]
                 },
@@ -2537,7 +2532,6 @@
                   "value": "${input_resources_file_path}/ZymoTru4plex.completeness_histo.pdf",
                   "test_tasks": [
                     "compare_file_basename",
-                    "check_empty_lines",
                     "pdf_validator"
                   ]
                 }
@@ -2651,16 +2645,16 @@
                   "${input_resources_file_path}/long_bin_fas/ZymoTru4plex.complete.94.fa",
                   "${input_resources_file_path}/long_bin_fas/ZymoTru4plex.complete.95.fa",
                   "${input_resources_file_path}/long_bin_fas/ZymoTru4plex.complete.96.fa"
-                  ],
+                ],
                 "runtime_attributes": "${default_runtime_attributes}"
               },
               "output_tests": {
                 "filtered_long_bin_fas": {
                   "value": [
-                    "${input_resources_file_path}/filtered_long_bin_fas/ZymoTru4plex.complete.4.fa",
                     "${input_resources_file_path}/filtered_long_bin_fas/ZymoTru4plex.complete.5.fa",
-                    "${input_resources_file_path}/filtered_long_bin_fas/ZymoTru4plex.complete.19.fa",
-                    "${input_resources_file_path}/filtered_long_bin_fas/ZymoTru4plex.complete.49.fa"
+                    "${input_resources_file_path}/filtered_long_bin_fas/ZymoTru4plex.complete.49.fa",
+                    "${input_resources_file_path}/filtered_long_bin_fas/ZymoTru4plex.complete.4.fa",
+                    "${input_resources_file_path}/filtered_long_bin_fas/ZymoTru4plex.complete.19.fa"
                   ],
                   "test_tasks": [
                     "compare_file_basename",
@@ -2693,7 +2687,7 @@
           "tests": [
             {
               "inputs": {
-                "prefix": "long_contigs",
+                "prefix": "${sample_id}.long_contigs",
                 "checkm2_ref_db": "${input_file_path}/public_data/uniref100.KO.1.dmnd",
                 "bin_fas": [
                   "${input_resources_file_path}/long_bin_fas/ZymoTru4plex.complete.1.fa",
@@ -2792,7 +2786,7 @@
                   "${input_resources_file_path}/long_bin_fas/ZymoTru4plex.complete.94.fa",
                   "${input_resources_file_path}/long_bin_fas/ZymoTru4plex.complete.95.fa",
                   "${input_resources_file_path}/long_bin_fas/ZymoTru4plex.complete.96.fa"
-                  ],
+                ],
                 "runtime_attributes": "${default_runtime_attributes}"
               },
               "output_tests": {
@@ -2809,7 +2803,7 @@
             },
             {
               "inputs": {
-                "prefix": "dereplicated_bins",
+                "prefix": "${sample_id}.dereplicated_bins",
                 "checkm2_ref_db": "${input_file_path}/public_data/uniref100.KO.1.dmnd",
                 "bin_fas": [
                   "${input_resources_file_path}/filtered_long_bin_fas/ZymoTru4plex.complete.4.fa",
@@ -2997,7 +2991,7 @@
       "tasks": {
         "bcftools_stats": {
           "key": "bcftools_stats",
-          "digest": "",
+          "digest": "hnaklilhvfhzokyogil55ymtufpzugdc",
           "tests": []
         }
       }
@@ -3009,7 +3003,7 @@
       "tasks": {
         "whatshap_stats": {
           "key": "whatshap_stats",
-          "digest": "",
+          "digest": "fx6u534oxskfrvjpo57wpruv3qvuy6wd",
           "tests": []
         }
       }
@@ -3021,22 +3015,22 @@
       "tasks": {
         "pangu_cyp2d6": {
           "key": "pangu_cyp2d6",
-          "digest": "",
+          "digest": "3ifjw7ys5r2xg4djj7hw5kuvaun7spmq",
           "tests": []
         },
         "pharmcat_preprocess": {
           "key": "pharmcat_preprocess",
-          "digest": "",
+          "digest": "27pdtlbuvwpg2lytfcyx6u7delgekhkx",
           "tests": []
         },
         "filter_preprocessed_vcf": {
           "key": "filter_preprocessed_vcf",
-          "digest": "",
+          "digest": "xzg5q6xi52twgzx3lfqexs4xb67sxxc4",
           "tests": []
         },
         "run_pharmcat": {
           "key": "run_pharmcat",
-          "digest": "",
+          "digest": "gkrkh6gtv73kr63ga7oo2szug5fwxflp",
           "tests": []
         }
       }
@@ -3048,7 +3042,7 @@
       "tasks": {
         "pbsv_discover": {
           "key": "pbsv_discover",
-          "digest": "",
+          "digest": "ik4zsyy76etbsbuq3dapogju47ck4oxi",
           "tests": []
         }
       }
@@ -3060,7 +3054,7 @@
       "tasks": {
         "zip_index_vcf": {
           "key": "zip_index_vcf",
-          "digest": "",
+          "digest": "zglkxnubs7arukywr6dtr2rmlrs4l6si",
           "tests": []
         }
       }
@@ -3072,7 +3066,7 @@
       "tasks": {
         "whatshap_haplotag": {
           "key": "whatshap_haplotag",
-          "digest": "",
+          "digest": "3lgrlpqwmyqwmtn325tllb7chycenhla",
           "tests": []
         }
       }
@@ -3084,7 +3078,7 @@
       "tasks": {
         "whatshap_phase": {
           "key": "whatshap_phase",
-          "digest": "",
+          "digest": "v6wsfphrdmgkzy6ecvdd5mzmq4l7fkfu",
           "tests": []
         }
       }
@@ -3096,7 +3090,7 @@
       "tasks": {
         "glnexus": {
           "key": "glnexus",
-          "digest": "",
+          "digest": "rjnujhi7onhoprtlqba2aqvj5jzvzora",
           "tests": []
         }
       }
@@ -3108,7 +3102,7 @@
       "tasks": {
         "pbsv_call": {
           "key": "pbsv_call",
-          "digest": "",
+          "digest": "53w2go2kuiyvtsty6yaxqaqdlf2mki3a",
           "tests": []
         }
       }
@@ -3120,7 +3114,7 @@
       "tasks": {
         "samtools_fasta": {
           "key": "samtools_fasta",
-          "digest": "",
+          "digest": "fzvpxhpi2a5nyyys7ktoirf4ww2exbe3",
           "tests": []
         }
       }
@@ -3132,7 +3126,7 @@
       "tasks": {
         "mosdepth": {
           "key": "mosdepth",
-          "digest": "",
+          "digest": "3is7ye6wciqqqeh3de43nkjkemqtip6n",
           "tests": []
         }
       }
@@ -3150,12 +3144,12 @@
       "tasks": {
         "split_vcf": {
           "key": "split_vcf",
-          "digest": "",
+          "digest": "adwcwarx5ozmifuokiw2do4wapz3yd7n",
           "tests": []
         },
         "bcftools_concat": {
           "key": "bcftools_concat",
-          "digest": "",
+          "digest": "44ywq2fpvbyvcfieryrek6wzkjiwydlk",
           "tests": []
         }
       }
@@ -3167,17 +3161,17 @@
       "tasks": {
         "deepvariant_make_examples": {
           "key": "deepvariant_make_examples",
-          "digest": "",
+          "digest": "acn7tx4he7l62firf7r5jlir2mswwnjd",
           "tests": []
         },
         "deepvariant_call_variants": {
           "key": "deepvariant_call_variants",
-          "digest": "",
+          "digest": "twtudsgxn2uwfuulbrhj2vpmkspckt3f",
           "tests": []
         },
         "deepvariant_postprocess_variants": {
           "key": "deepvariant_postprocess_variants",
-          "digest": "",
+          "digest": "angvgpjz6i5uh4qnzgrv3p6pyre6ub7w",
           "tests": []
         }
       }
@@ -3189,7 +3183,7 @@
       "tasks": {
         "bam_to_fastq": {
           "key": "bam_to_fastq",
-          "digest": "",
+          "digest": "sxhvgpnhcqwinatyjryudiqv6vdmvi22",
           "tests": [
             {
               "inputs": {
@@ -3210,7 +3204,7 @@
         },
         "assemble_reads": {
           "key": "assemble_reads",
-          "digest": "",
+          "digest": "svsanwhr6ljgacfehozqaxzmpv6pycnw",
           "tests": [
             {
               "inputs": {
@@ -3247,6 +3241,18 @@
               }
             }
           ]
+        }
+      }
+    },
+    "metagenomics-wdl-ci-custom-test-dir/pdf_validator.wdl": {
+      "key": "metagenomics-wdl-ci-custom-test-dir/pdf_validator.wdl",
+      "name": "",
+      "description": "",
+      "tasks": {
+        "pdf_validator": {
+          "key": "pdf_validator",
+          "digest": "ithevmx2nm4sdhbq6z5v5mtpl3luuru4",
+          "tests": []
         }
       }
     }
