@@ -13,7 +13,7 @@
       "tasks": {
         "assign_taxonomy_gtdbtk": {
           "key": "assign_taxonomy_gtdbtk",
-          "digest": "",
+          "digest": "rykd4qwxty3uqcpioan3x3i4obuomqno",
           "tests": [
             {
               "inputs": {
@@ -475,7 +475,7 @@
       "tasks": {
         "filter_dereplicated_bins": {
           "key": "filter_dereplicated_bins",
-          "digest": "",
+          "digest": "lk7cn7zzf6mmt6cze7nfhzlidx3yzmxw",
           "tests": [
             {
               "inputs": {
@@ -2187,7 +2187,7 @@
         },
         "merge_incomplete_bins": {
           "key": "merge_incomplete_bins",
-          "digest": "paq3psej2uzyzv3q3bmkildghslugiyy",
+          "digest": "",
           "tests": [
             {
               "inputs": {
@@ -2196,7 +2196,7 @@
                 "metabat2_contig_bin_map": "${input_resources_file_path}/ZymoTru4plex.metabat2.contig_bin_map.tsv",
                 "semibin2_contig_bin_map": "${input_resources_file_path}/ZymoTru4plex.semibin2.contig_bin_map.tsv",
                 "dastool_search_engine": "diamond",
-                "dastool_score_threshold": 0.2,
+                "dastool_score_threshold": "0.2",
                 "runtime_attributes": "${default_runtime_attributes}"
               },
               "output_tests": {
@@ -2541,7 +2541,7 @@
         },
         "make_incomplete_contigs": {
           "key": "make_incomplete_contigs",
-          "digest": "",
+          "digest": "ihuv3xh6q5t7tfgmik6ifn556yqxly24",
           "tests": [
             {
               "inputs": {
