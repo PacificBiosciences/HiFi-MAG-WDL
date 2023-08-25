@@ -2187,7 +2187,7 @@
         },
         "merge_incomplete_bins": {
           "key": "merge_incomplete_bins",
-          "digest": "",
+          "digest": "paq3psej2uzyzv3q3bmkildghslugiyy",
           "tests": [
             {
               "inputs": {
