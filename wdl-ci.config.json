@@ -225,7 +225,7 @@
         },
         "mag_copy": {
           "key": "mag_copy",
-          "digest": "",
+          "digest": "qw2y7r2cvklumcoypukebz7mpp6phlsl",
           "tests": [
             {
               "inputs": {
@@ -733,7 +733,7 @@
         },
         "bin_incomplete_contigs_metabat2": {
           "key": "bin_incomplete_contigs_metabat2",
-          "digest": "",
+          "digest": "c3lo44lk245xaow53apoer376zumc32c",
           "tests": [
             {
               "inputs": {
@@ -764,7 +764,7 @@
         },
         "bin_incomplete_contigs_semibin2": {
           "key": "bin_incomplete_contigs_semibin2",
-          "digest": "",
+          "digest": "533h63dxtdttjudqsc22oltgbwb6uh4z",
           "tests": [
             {
               "inputs": {
@@ -1514,7 +1514,7 @@
         },
         "merge_incomplete_bins": {
           "key": "merge_incomplete_bins",
-          "digest": "",
+          "digest": "paq3psej2uzyzv3q3bmkildghslugiyy",
           "tests": [
             {
               "inputs": {
@@ -1553,7 +1553,7 @@
       "tasks": {
         "long_contigs_to_bins": {
           "key": "long_contigs_to_bins",
-          "digest": "",
+          "digest": "zabcoc2mwryhplzmtgpxj2cnbwfnoxzb",
           "tests": [
             {
               "inputs": {
