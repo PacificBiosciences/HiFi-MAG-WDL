@@ -68,7 +68,7 @@ workflow bin_incomplete_contigs {
 		input:
 			sample_id = sample_id,
 			binning_algorithm = "metabat2",
-			bin_fas = bin_incomplete_contigs_metabat2.bin_fas,
+			bin_fas_tar = bin_incomplete_contigs_metabat2.bin_fas_tar,
 			runtime_attributes = default_runtime_attributes
 	}
 
@@ -76,7 +76,7 @@ workflow bin_incomplete_contigs {
 		input:
 			sample_id = sample_id,
 			binning_algorithm = "semibin2",
-			bin_fas = bin_incomplete_contigs_semibin2.bin_fas,
+			bin_fas_tar = bin_incomplete_contigs_semibin2.bin_fas_tar,
 			runtime_attributes = default_runtime_attributes
 	}
 
@@ -101,14 +101,14 @@ workflow bin_incomplete_contigs {
 		File contig_depth_txt = summarize_contig_depth.contig_depth_txt
 
 		# Incomplete contig binning
-		Array[File] metabat2_bin_fas = bin_incomplete_contigs_metabat2.bin_fas
+		File metabat2_bin_fas_tar = bin_incomplete_contigs_metabat2.bin_fas_tar
 		File metabat2_contig_bin_map = map_contig_to_bin_metabat2.contig_bin_map
 
 		File semibin2_bins_tsv = bin_incomplete_contigs_semibin2.bins_tsv
-		Array[File] semibin2_bin_fas = bin_incomplete_contigs_semibin2.bin_fas
+		File semibin2_bin_fas_tar = bin_incomplete_contigs_semibin2.bin_fas_tar
 		File semibin2_contig_bin_map = map_contig_to_bin_semibin2.contig_bin_map
 
-		Array[File] merged_incomplete_bin_fas = merge_incomplete_bins.merged_incomplete_bin_fas
+		File merged_incomplete_bin_fas_tar = merge_incomplete_bins.merged_incomplete_bin_fas_tar
 	}
 }
 
@@ -277,17 +277,20 @@ task bin_incomplete_contigs_metabat2 {
 
 		metabat --help |& grep "version"
 
+		mkdir output_bins
 		metabat2 \
 			--verbose \
 			--inFile ~{incomplete_contigs_fa} \
 			--abdFile ~{filtered_contig_depth_txt} \
-			--outFile ~{sample_id}.metabat2 \
+			--outFile bins/~{sample_id}.metabat2 \
 			--numThreads ~{threads} \
 			--minContig ~{metabat2_min_contig_size}
+
+		tar -zcvf ~{sample_id}.metabat2_bins.tar.gz output_bins/
 	>>>
 
 	output {
-		Array[File] bin_fas = glob("~{sample_id}.metabat2.*.fa")
+		File bin_fas_tar = "~{sample_id}.metabat2_bins.tar.gz"
 	}
 
 	runtime {
@@ -340,11 +343,12 @@ task bin_incomplete_contigs_semibin2 {
 			--verbose
 
 		mv semibin2_out_dir/bins_info.tsv "semibin2_out_dir/~{sample_id}.bins_info.tsv"
+		tar -zcv -C semibin2_out_dir -f ~{sample_id}.semibin2_bins.tar.gz output_bins/
 	>>>
 
 	output {
 		File bins_tsv = "semibin2_out_dir/~{sample_id}.bins_info.tsv"
-		Array[File] bin_fas = glob("semibin2_out_dir/output_bins/~{sample_id}.semibin2_*.fa")
+		File bin_fas_tar = "~{sample_id}.semibin2_bins.tar.gz"
 	}
 
 	runtime {
@@ -366,22 +370,24 @@ task map_contig_to_bin {
 		String sample_id
 		String binning_algorithm
 
-		Array[File] bin_fas
+		File bin_fas_tar
 
 		RuntimeAttributes runtime_attributes
 	}
 
-	Int disk_size = ceil(size(bin_fas[0], "GB") * length(bin_fas) * 2 + 20)
+	Int disk_size = ceil(size(bin_fas_tar, "GB") * 3 + 20)
 
 	command <<<
 		set -euo pipefail
 
 		DAS_Tool --version
 
-		bin_fa_dir=$(dirname ~{bin_fas[0]})
+		tar -zxvf ~{bin_fas_tar} \
+			-C bins \
+			--strip-components 1
 
 		Fasta_to_Contig2Bin.sh \
-			--input_folder "${bin_fa_dir}" \
+			--input_folder "$(pwd)/bins" \
 			--extension fa \
 		1> "~{sample_id}.~{binning_algorithm}.contig_bin_map.tsv"
 	>>>
@@ -437,10 +443,12 @@ task merge_incomplete_bins {
 			--threads ~{threads} \
 			--score_threshold ~{dastool_score_threshold} \
 			--debug
+
+		tar -zcvf ~{sample_id}.merged_incomplete_bin_fas.tar.gz ~{sample_id}_DASTool_bins
 	>>>
 
 	output {
-		Array[File] merged_incomplete_bin_fas = glob("~{sample_id}_DASTool_bins/*.fa")
+		File merged_incomplete_bin_fas_tar = "~{sample_id}.merged_incomplete_bin_fas.tar.gz"
 	}
 
 	runtime {

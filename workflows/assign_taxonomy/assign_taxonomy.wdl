@@ -8,7 +8,7 @@ workflow assign_taxonomy {
 
 		File gtdb_batch_txt
 		File gtdbtk_data_tar_gz
-		Array[File] dereplicated_bin_fas
+		Array[File] dereplicated_bin_fas_tars
 
 		File filtered_quality_report_tsv
 
@@ -24,7 +24,7 @@ workflow assign_taxonomy {
 			sample_id = sample_id,
 			gtdb_batch_txt = gtdb_batch_txt,
 			gtdbtk_data_tar_gz = gtdbtk_data_tar_gz,
-			dereplicated_bin_fas= dereplicated_bin_fas,
+			dereplicated_bin_fas_tars = dereplicated_bin_fas_tars,
 			runtime_attributes = default_runtime_attributes
 	}
 
@@ -39,7 +39,7 @@ workflow assign_taxonomy {
 	call mag_copy {
 		input:
 			mag_summary_txt = mag_summary.mag_summary_txt,
-			dereplicated_bin_fas = dereplicated_bin_fas,
+			dereplicated_bin_fas_tars = dereplicated_bin_fas_tars,
 			runtime_attributes = default_runtime_attributes
 	}
 
@@ -70,14 +70,14 @@ task assign_taxonomy_gtdbtk {
 
 		File gtdb_batch_txt
 		File gtdbtk_data_tar_gz
-		Array[File] dereplicated_bin_fas
+		Array[File] dereplicated_bin_fas_tars
 
 		RuntimeAttributes runtime_attributes
 	}
 
 	Int threads = 48
 	Int mem_gb = threads * 2
-	Int disk_size = ceil((size(gtdbtk_data_tar_gz, "GB") + (size(dereplicated_bin_fas[0], "GB") * length(dereplicated_bin_fas))) * 2 + 20)
+	Int disk_size = ceil((size(gtdbtk_data_tar_gz, "GB") + (size(dereplicated_bin_fas_tars, "GB") )) * 3 + 20)
 
 	command <<<
 		set -euo pipefail
@@ -93,11 +93,11 @@ task assign_taxonomy_gtdbtk {
 
 		gtdbtk --version
 
-		# Ensure all bins are in the bin_fa_dir; this will match the structure of the gtdb_batch_txt
-		mkdir bin_fa_dir
-		while read -r bin_fa || [[ -n "${bin_fa}" ]]; do
-			ln -s "${bin_fa}" "$(pwd)/bin_fa_dir"
-		done < ~{write_lines(dereplicated_bin_fas)}
+		while read -r bin_fas_tar || [[ -n "${bin_fas_tar}" ]]; do
+			tar -zxvf "${bin_fas_tar}" \
+				-C bins \
+				--strip-components 1
+		done < ~{write_lines(dereplicated_bin_fas_tars)}
 
 		mkdir ~{sample_id}_gtdbtk tmp_dir
 
@@ -177,27 +177,27 @@ task mag_summary {
 task mag_copy {
 	input {
 		File mag_summary_txt
-		Array[File] dereplicated_bin_fas
+		Array[File] dereplicated_bin_fas_tars
 
 		RuntimeAttributes runtime_attributes
 	}
 
-	Int disk_size = ceil((size(mag_summary_txt, "GB") + (size(dereplicated_bin_fas[0], "GB") * length(dereplicated_bin_fas))) * 2 + 20)
+	Int disk_size = ceil((size(mag_summary_txt, "GB") + (size(dereplicated_bin_fas_tars, "GB"))) * 3 + 20)
 
 	command <<<
 		set -euo pipefail
 
-		# Ensure all bins are in the bin_fa_dir
-		mkdir bin_fa_dir
-		while read -r bin_fa || [[ -n "${bin_fa}" ]]; do
-			ln -s "${bin_fa}" "$(pwd)/bin_fa_dir"
-		done < ~{write_lines(dereplicated_bin_fas)}
+		while read -r bin_fas_tar || [[ -n "${bin_fas_tar}" ]]; do
+			tar -zxvf "${bin_fas_tar}" \
+				-C bins \
+				--strip-components 1
+		done < ~{write_lines(dereplicated_bin_fas_tars)}
 
 		mkdir filtered_mags_out_dir
 
 		python /opt/scripts/Copy-Final-MAGs.py \
 			--mag_summary ~{mag_summary_txt} \
-			--magdir bin_fa_dir \
+			--magdir "$(pwd)/bins" \
 			--outdir filtered_mags_out_dir
 	>>>
 

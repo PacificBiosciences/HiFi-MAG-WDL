@@ -84,7 +84,7 @@ workflow metagenomics {
 				sample_id = sample_id,
 				gtdb_batch_txt = bin_contigs.gtdb_batch_txt,
 				gtdbtk_data_tar_gz = gtdbtk_data_tar_gz,
-				dereplicated_bin_fas = bin_contigs.dereplicated_bin_fas,
+				dereplicated_bin_fas_tars = bin_contigs.dereplicated_bin_fas_tars,
 				filtered_quality_report_tsv = bin_contigs.filtered_quality_report_tsv,
 				min_mag_completeness = min_mag_completeness,
 				max_mag_contamination = max_mag_contamination,
@@ -101,7 +101,7 @@ workflow metagenomics {
 		# bin_contigs output
 		## bin_long_contigs
 		File long_contig_bin_map = bin_contigs.long_contig_bin_map
-		Array[File] filtered_long_bin_fas = bin_contigs.filtered_long_bin_fas
+		File filtered_long_bin_fas_tar = bin_contigs.filtered_long_bin_fas_tar
 		File incomplete_contigs_fa = bin_contigs.incomplete_contigs_fa
 		File? long_contig_bin_quality_report_tsv = bin_contigs.long_contig_bin_quality_report_tsv
 		File? filtered_long_contig_bin_map = bin_contigs.filtered_long_contig_bin_map
@@ -114,12 +114,12 @@ workflow metagenomics {
 		File contig_depth_txt = bin_contigs.contig_depth_txt
 
 		## bin_incomplete_contigs
-		Array[File] metabat2_bin_fas = bin_contigs.metabat2_bin_fas
+		File metabat2_bin_fas_tar = bin_contigs.metabat2_bin_fas_tar
 		File metabat2_contig_bin_map = bin_contigs.metabat2_contig_bin_map
 		File semibin2_bins_tsv = bin_contigs.semibin2_bins_tsv
-		Array[File] semibin2_bin_fas = bin_contigs.semibin2_bin_fas
+		File semibin2_bin_fas_tar = bin_contigs.semibin2_bin_fas_tar
 		File semibin2_contig_bin_map = bin_contigs.semibin2_contig_bin_map
-		Array[File] merged_incomplete_bin_fas = bin_contigs.merged_incomplete_bin_fas
+		File merged_incomplete_bin_fas_tar = bin_contigs.merged_incomplete_bin_fas_tar
 
 		## dereplicated bins
 		File bin_quality_report_tsv = bin_contigs.bin_quality_report_tsv
@@ -127,7 +127,7 @@ workflow metagenomics {
 		File passed_bin_count_txt = bin_contigs.passed_bin_count_txt
 		File filtered_quality_report_tsv = bin_contigs.filtered_quality_report_tsv
 
-		Array[File] dereplicated_bin_fas = bin_contigs.dereplicated_bin_fas
+		Array[File] dereplicated_bin_fas_tars = bin_contigs.dereplicated_bin_fas_tars
 
 		# assign_taxonomy output
 		File? gtdbtk_summary_txt = assign_taxonomy.gtdbtk_summary_txt
