@@ -182,6 +182,7 @@ task make_incomplete_contigs {
 	command <<<
 		set -euo pipefail
 
+		mkdir bins
 		tar -zxvf ~{long_bin_fas_tar} \
 			-C bins \
 			--strip-components 1

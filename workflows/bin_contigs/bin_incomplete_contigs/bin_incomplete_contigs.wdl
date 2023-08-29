@@ -382,6 +382,7 @@ task map_contig_to_bin {
 
 		DAS_Tool --version
 
+		mkdir bins
 		tar -zxvf ~{bin_fas_tar} \
 			-C bins \
 			--strip-components 1

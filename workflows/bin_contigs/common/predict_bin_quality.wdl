@@ -21,6 +21,7 @@ task predict_bin_quality {
 
 		checkm2 --version
 
+		mkdir bins
 		while read -r bin_fas_tar || [[ -n "${bin_fas_tar}" ]]; do
 			tar -zxvf "${bin_fas_tar}" \
 				-C bins \

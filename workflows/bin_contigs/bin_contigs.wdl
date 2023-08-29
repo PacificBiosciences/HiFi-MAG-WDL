@@ -136,6 +136,7 @@ task filter_dereplicated_bins {
 	command <<<
 		set -euo pipefail
 
+		mkdir bins
 		while read -r bin_fas_tar || [[ -n "${bin_fas_tar}" ]]; do
 			tar -zxvf "${bin_fas_tar}" \
 				-C bins \

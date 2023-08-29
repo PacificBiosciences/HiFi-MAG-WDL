@@ -93,6 +93,7 @@ task assign_taxonomy_gtdbtk {
 
 		gtdbtk --version
 
+		mkdir bins
 		while read -r bin_fas_tar || [[ -n "${bin_fas_tar}" ]]; do
 			tar -zxvf "${bin_fas_tar}" \
 				-C bins \
@@ -187,6 +188,7 @@ task mag_copy {
 	command <<<
 		set -euo pipefail
 
+		mkdir bins
 		while read -r bin_fas_tar || [[ -n "${bin_fas_tar}" ]]; do
 			tar -zxvf "${bin_fas_tar}" \
 				-C bins \
