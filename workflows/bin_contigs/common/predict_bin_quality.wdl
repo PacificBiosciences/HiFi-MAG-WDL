@@ -28,6 +28,7 @@ task predict_bin_quality {
 				--strip-components 1
 		done < ~{write_lines(bin_fas_tars)}
 
+		mkdir tmp_dir
 		checkm2 predict \
 			--input "$(pwd)/bins" \
 			--output-directory checkm2_out_dir \
