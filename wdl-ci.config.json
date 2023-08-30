@@ -418,7 +418,7 @@
       "tasks": {
         "long_contigs_to_bins": {
           "key": "long_contigs_to_bins",
-          "digest": "",
+          "digest": "spibctejzrvzkxbn4sy7ehsznjqn4rm7",
           "tests": [
             {
               "inputs": {
@@ -492,7 +492,7 @@
         },
         "make_incomplete_contigs": {
           "key": "make_incomplete_contigs",
-          "digest": "",
+          "digest": "dq4lwksn5eam6vfaw6l24fnivgrvuasu",
           "tests": [
             {
               "inputs": {
