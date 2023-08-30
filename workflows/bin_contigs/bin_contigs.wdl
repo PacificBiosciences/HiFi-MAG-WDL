@@ -52,13 +52,16 @@ workflow bin_contigs {
 			default_runtime_attributes = default_runtime_attributes
 	}
 
-	Array[File] derep_bin_fas = flatten([bin_long_contigs.filtered_long_bin_fas, bin_incomplete_contigs.merged_incomplete_bin_fas])
+	Array[File] derep_bin_fas_tars = [
+		bin_long_contigs.filtered_long_bin_fas_tar,
+		bin_incomplete_contigs.merged_incomplete_bin_fas_tar
+	]
 
 	call PredictBinQuality.predict_bin_quality {
 		input:
 			prefix = "~{sample_id}.dereplicated_bins",
 			checkm2_ref_db = checkm2_ref_db,
-			bin_fas = derep_bin_fas,
+			bin_fas_tars = derep_bin_fas_tars,
 			runtime_attributes = default_runtime_attributes
 	}
 
@@ -67,7 +70,7 @@ workflow bin_contigs {
 			sample_id = sample_id,
 			bin_quality_report_tsv = predict_bin_quality.bin_quality_report_tsv,
 			contig_depth_txt = bin_incomplete_contigs.contig_depth_txt,
-			dereplicated_bin_fas = derep_bin_fas,
+			dereplicated_bin_fas_tars = derep_bin_fas_tars,
 			min_mag_completeness = min_mag_completeness,
 			max_mag_contamination = max_mag_contamination,
 			max_contigs = max_contigs,
@@ -77,7 +80,7 @@ workflow bin_contigs {
 	output {
 		# bin_long_contigs output
 		File long_contig_bin_map = bin_long_contigs.long_contig_bin_map
-		Array[File] filtered_long_bin_fas = bin_long_contigs.filtered_long_bin_fas
+		File filtered_long_bin_fas_tar = bin_long_contigs.filtered_long_bin_fas_tar
 		File incomplete_contigs_fa = bin_long_contigs.incomplete_contigs_fa
 
 		File? long_contig_bin_quality_report_tsv = bin_long_contigs.long_contig_bin_quality_report_tsv
@@ -93,16 +96,16 @@ workflow bin_contigs {
 		File contig_depth_txt = bin_incomplete_contigs.contig_depth_txt
 
 		# Incomplete contig binning
-		Array[File] metabat2_bin_fas = bin_incomplete_contigs.metabat2_bin_fas
+		File metabat2_bin_fas_tar = bin_incomplete_contigs.metabat2_bin_fas_tar
 		File metabat2_contig_bin_map = bin_incomplete_contigs.metabat2_contig_bin_map
 
 		File semibin2_bins_tsv = bin_incomplete_contigs.semibin2_bins_tsv
-		Array[File] semibin2_bin_fas = bin_incomplete_contigs.semibin2_bin_fas
+		File semibin2_bin_fas_tar = bin_incomplete_contigs.semibin2_bin_fas_tar
 		File semibin2_contig_bin_map = bin_incomplete_contigs.semibin2_contig_bin_map
 
-		Array[File] merged_incomplete_bin_fas = bin_incomplete_contigs.merged_incomplete_bin_fas
+		File merged_incomplete_bin_fas_tar = bin_incomplete_contigs.merged_incomplete_bin_fas_tar
 
-		Array[File] dereplicated_bin_fas = derep_bin_fas
+		Array[File] dereplicated_bin_fas_tars = derep_bin_fas_tars
 
 		# Bin quality
 		File bin_quality_report_tsv = predict_bin_quality.bin_quality_report_tsv
@@ -118,7 +121,7 @@ task filter_dereplicated_bins {
 
 		File bin_quality_report_tsv
 		File contig_depth_txt
-		Array[File] dereplicated_bin_fas
+		Array[File] dereplicated_bin_fas_tars
 
 		Int min_mag_completeness
 		Int max_mag_contamination
@@ -128,20 +131,21 @@ task filter_dereplicated_bins {
 	}
 
 	String bin_quality_report_tsv_basename = basename(bin_quality_report_tsv, ".tsv")
-	Int disk_size = ceil(size(dereplicated_bin_fas[0], "GB") * length(dereplicated_bin_fas) * 2 + 20)
+	Int disk_size = ceil(size(dereplicated_bin_fas_tars, "GB") * 3 + 20)
 
 	command <<<
 		set -euo pipefail
 
-		# Ensure all bins are in the bin_fa_dir
-		mkdir bin_fa_dir
-		while read -r bin_fa || [[ -n "${bin_fa}" ]]; do
-			ln -s "${bin_fa}" "$(pwd)/bin_fa_dir"
-		done < ~{write_lines(dereplicated_bin_fas)}
+		mkdir bins
+		while read -r bin_fas_tar || [[ -n "${bin_fas_tar}" ]]; do
+			tar -zxvf "${bin_fas_tar}" \
+				-C bins \
+				--strip-components 1
+		done < ~{write_lines(dereplicated_bin_fas_tars)}
 
 		python /opt/scripts/Filter-Checkm2-Bins.py \
 			--input_tsv ~{bin_quality_report_tsv} \
-			--bin_dir bin_fa_dir \
+			--bin_dir "$(pwd)/bins" \
 			--depth_file ~{contig_depth_txt} \
 			--min_completeness ~{min_mag_completeness} \
 			--max_contamination ~{max_mag_contamination} \
