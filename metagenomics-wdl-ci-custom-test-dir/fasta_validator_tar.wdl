@@ -20,15 +20,16 @@ task fasta_validator_tar {
 			echo -e "[ERROR] $message" >&2
 		}
 
+		validated_fa_filename=$(tar -tzf ~{validated_output} | grep -E "*.fa" | tail -n1)
+		current_run_fa_filename=$(tar -tzf ~{current_run_output} | grep -E "*.fa" | tail -n1)
+
 		mkdir validated_fas_dir
-		validated_fas=$(tar -xvf ~{validated_output} --wildcards --no-anchored '*.1.fa' --wildcards --no-anchored '*_1.fa')
-		mv "$validated_fas" validated_fas_dir
-		validated_fa=$(find validated_fas_dir | tail -n1)
+		validated_fa=$(tar -xvf ~{validated_output} --wildcards --no-anchored "$validated_fa_filename")
+		mv "$validated_fa" validated_fas_dir
 
 		mkdir current_run_fas_dir
-		current_run_fas=$(tar -xvf ~{current_run_output} --wildcards --no-anchored '*.1.fa' --wildcards --no-anchored '*_1.fa')
-		mv "$current_run_fas" current_run_fas_dir
-		current_run_fa=$(find current_run_fas_dir | tail -n1)
+		current_run_fa=$(tar -xvf ~{current_run_output} --wildcards --no-anchored "$current_run_fa_filename")
+		mv "$current_run_fa" current_run_fas_dir
 
 		# Checks both compressed and uncompressed fastas
 		if ! py_fasta_validator -f validated_fas_dir/"$validated_fa"; then

@@ -13,7 +13,7 @@
       "tasks": {
         "assign_taxonomy_gtdbtk": {
           "key": "assign_taxonomy_gtdbtk",
-          "digest": "",
+          "digest": "3yca7jvztlzblmlzfsd32wm5j4levkhq",
           "tests": [
             {
               "inputs": {
@@ -75,7 +75,7 @@
         },
         "mag_copy": {
           "key": "mag_copy",
-          "digest": "",
+          "digest": "xsmhjksfaf4ryzg4zhexhffnjhgnbdhg",
           "tests": [
             {
               "inputs": {
@@ -153,7 +153,7 @@
       "tasks": {
         "filter_dereplicated_bins": {
           "key": "filter_dereplicated_bins",
-          "digest": "",
+          "digest": "v4wvc2stddoa74gzwh7xi3vuulfp6bgy",
           "tests": [
             {
               "inputs": {
@@ -281,7 +281,7 @@
         },
         "bin_incomplete_contigs_metabat2": {
           "key": "bin_incomplete_contigs_metabat2",
-          "digest": "",
+          "digest": "gfwljsoh4vqkba67joirimeop3yu375z",
           "tests": [
             {
               "inputs": {
@@ -340,7 +340,7 @@
         },
         "map_contig_to_bin": {
           "key": "map_contig_to_bin",
-          "digest": "",
+          "digest": "xqytcxkw5dlxuk7mm5qgwfe6opjjrl62",
           "tests": [
             {
               "inputs": {
@@ -384,7 +384,7 @@
         },
         "merge_incomplete_bins": {
           "key": "merge_incomplete_bins",
-          "digest": "",
+          "digest": "bospucy2ftmxzgnnpr3nx24df6se7kcg",
           "tests": [
             {
               "inputs": {
@@ -532,13 +532,15 @@
       "tasks": {
         "predict_bin_quality": {
           "key": "predict_bin_quality",
-          "digest": "",
+          "digest": "hd5trw2cqwwlpxfgfiv4rpmnalz7pgmr",
           "tests": [
             {
               "inputs": {
                 "prefix": "${sample_id}.long_contigs",
                 "checkm2_ref_db": "${input_file_path}/public_data/uniref100.KO.1.dmnd",
-                "bin_fas_tars": "${input_resources_file_path}/ZymoTru4plex.long_bin_fas.tar.gz",
+                "bin_fas_tars": [
+                  "${input_resources_file_path}/ZymoTru4plex.long_bin_fas.tar.gz"
+                ],
                 "runtime_attributes": "${default_runtime_attributes}"
               },
               "output_tests": {
@@ -805,7 +807,7 @@
         },
         "assemble_reads": {
           "key": "assemble_reads",
-          "digest": "svsanwhr6ljgacfehozqaxzmpv6pycnw",
+          "digest": "zhz6ixo67b5l5xrvowjico6ncdqhiccv",
           "tests": [
             {
               "inputs": {
@@ -853,6 +855,30 @@
         "pdf_validator": {
           "key": "pdf_validator",
           "digest": "ithevmx2nm4sdhbq6z5v5mtpl3luuru4",
+          "tests": []
+        }
+      }
+    },
+    "metagenomics-wdl-ci-custom-test-dir/check_tar.wdl": {
+      "key": "metagenomics-wdl-ci-custom-test-dir/check_tar.wdl",
+      "name": "",
+      "description": "",
+      "tasks": {
+        "check_tar": {
+          "key": "check_tar",
+          "digest": "hsgjhhkguxhqovwalqfcilvl2zbar2xa",
+          "tests": []
+        }
+      }
+    },
+    "metagenomics-wdl-ci-custom-test-dir/fasta_validator_tar.wdl": {
+      "key": "metagenomics-wdl-ci-custom-test-dir/fasta_validator_tar.wdl",
+      "name": "",
+      "description": "",
+      "tasks": {
+        "fasta_validator_tar": {
+          "key": "fasta_validator_tar",
+          "digest": "x6kcdktewjyxh6mxidjnlmsw2nb2wh46",
           "tests": []
         }
       }

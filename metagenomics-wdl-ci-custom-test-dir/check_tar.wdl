@@ -20,8 +20,8 @@ task check_tar {
 			echo -e "[ERROR] $message" >&2
 		}
 
-		validated_output_tar_contents=$(tar -tzf ~{validated_output})
-		current_run_output_tar_contents=$(tar -tzf ~{current_run_output})
+		validated_output_tar_contents=$(tar -tzf ~{validated_output} | sort)
+		current_run_output_tar_contents=$(tar -tzf ~{current_run_output} | sort)
 
 		if [[ "$validated_output_tar_contents" != "$current_run_output_tar_contents" ]]; then
 			err "Contents in tar.gz do not match:
