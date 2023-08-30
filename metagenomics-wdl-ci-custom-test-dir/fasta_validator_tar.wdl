@@ -26,21 +26,23 @@ task fasta_validator_tar {
 		mkdir validated_fas_dir
 		validated_fa=$(tar -xvf ~{validated_output} --wildcards --no-anchored "$validated_fa_filename")
 		mv "$validated_fa" validated_fas_dir
+		validated_fa_basename=$(basename "$validated_fa")
 
 		mkdir current_run_fas_dir
 		current_run_fa=$(tar -xvf ~{current_run_output} --wildcards --no-anchored "$current_run_fa_filename")
 		mv "$current_run_fa" current_run_fas_dir
+		current_run_fa_basename=$(basename "$current_run_fa")
 
 		# Checks both compressed and uncompressed fastas
-		if ! py_fasta_validator -f validated_fas_dir/"$validated_fa"; then
-			err "Validated FASTA: [$validated_fa] is invalid"
+		if ! py_fasta_validator -f validated_fas_dir/"$validated_fa_basename"; then
+			err "Validated FASTA: [$validated_fa_basename] is invalid"
 			exit 1
 		else
-			if ! py_fasta_validator -f current_run_fas_dir/"$current_run_fa"; then
-				err "Current run FASTA: [$current_run_fa] is invalid"
+			if ! py_fasta_validator -f current_run_fas_dir/"$current_run_fa_basename"; then
+				err "Current run FASTA: [$current_run_fa_basename] is invalid"
 				exit 1
 			else
-				echo "Current run FASTA: [$current_run_fa] is valid"
+				echo "Current run FASTA: [$current_run_fa_basename] is valid"
 			fi
 		fi
 	>>>
