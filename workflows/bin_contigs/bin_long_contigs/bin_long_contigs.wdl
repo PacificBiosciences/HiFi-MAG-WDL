@@ -23,12 +23,12 @@ workflow bin_long_contigs {
 			runtime_attributes = default_runtime_attributes
 	}
 
-	if (length(long_contigs_to_bins.long_bin_fas) > 0) {
+	if (read_int(long_contigs_to_bins.long_bin_fas_count) > 0) {
 		call PredictBinQuality.predict_bin_quality {
 			input:
 				prefix = "~{sample_id}.long_contigs",
 				checkm2_ref_db = checkm2_ref_db,
-				bin_fas = long_contigs_to_bins.long_bin_fas,
+				bin_fas_tars = [long_contigs_to_bins.long_bin_fas_tar],
 				runtime_attributes = default_runtime_attributes
 		}
 
@@ -51,7 +51,7 @@ workflow bin_long_contigs {
 			sample_id = sample_id,
 			assembled_contigs_fa = assembled_contigs_fa,
 			passing_contig_bin_map = passing_contig_bin_map,
-			long_bin_fas = long_contigs_to_bins.long_bin_fas,
+			long_bin_fas_tar = long_contigs_to_bins.long_bin_fas_tar,
 			runtime_attributes = default_runtime_attributes
 	}
 
@@ -65,7 +65,7 @@ workflow bin_long_contigs {
 
 		File passing_long_contig_bin_map = passing_contig_bin_map
 
-		Array[File] filtered_long_bin_fas = make_incomplete_contigs.filtered_long_bin_fas
+		File filtered_long_bin_fas_tar = make_incomplete_contigs.filtered_long_bin_fas_tar
 		File incomplete_contigs_fa = make_incomplete_contigs.incomplete_contigs_fa
 	}
 }
@@ -91,11 +91,16 @@ task long_contigs_to_bins {
 			--length ~{min_contig_length} \
 			--outdir long_bin_fas \
 			--prefix ~{sample_id}
+
+		tar -zcvf ~{sample_id}.long_bin_fas.tar.gz long_bin_fas/
+
+		find long_bin_fas/ -type f -name "*.fa" | wc -l > ~{sample_id}.long_bin_fas_count.txt
 	>>>
 
 	output {
 		File long_contig_bin_map = "~{sample_id}.long_contig_bin_map.tsv"
-		Array[File] long_bin_fas = glob("long_bin_fas/~{sample_id}.*.fa")
+		File long_bin_fas_tar = "~{sample_id}.long_bin_fas.tar.gz"
+		File long_bin_fas_count = "~{sample_id}.long_bin_fas_count.txt"
 	}
 
 	runtime {
@@ -167,28 +172,33 @@ task make_incomplete_contigs {
 		File assembled_contigs_fa
 
 		File passing_contig_bin_map
-		Array[File] long_bin_fas
+		File long_bin_fas_tar
 
 		RuntimeAttributes runtime_attributes
 	}
 
-	Int disk_size = ceil(size(assembled_contigs_fa, "GB") + size(long_bin_fas[0], "GB") * length(long_bin_fas) * 2 + 20)
+	Int disk_size = ceil(size(assembled_contigs_fa, "GB") + size(long_bin_fas_tar, "GB") * 3 + 20)
 
 	command <<<
 		set -euo pipefail
 
-		long_bin_fa_dir=$(dirname ~{long_bin_fas[0]})
+		mkdir bins
+		tar -zxvf ~{long_bin_fas_tar} \
+			-C bins \
+			--strip-components 1
 
 		python /opt/scripts/Make-Incomplete-Contigs.py \
 			--input_fasta ~{assembled_contigs_fa} \
 			--output_fasta "~{sample_id}.incomplete_contigs.fa" \
 			--passed_bins ~{passing_contig_bin_map} \
-			--fastadir "${long_bin_fa_dir}" \
-			--outdir filtered_long_bin_fa_dir
+			--fastadir "$(pwd)/bins" \
+			--outdir filtered_long_bin_fas
+
+		tar -zcvf ~{sample_id}.filtered_long_bin_fas.tar.gz filtered_long_bin_fas/
 	>>>
 
 	output {
-		Array[File] filtered_long_bin_fas = glob("filtered_long_bin_fa_dir/*.fa")
+		File filtered_long_bin_fas_tar = "~{sample_id}.filtered_long_bin_fas.tar.gz"
 		File incomplete_contigs_fa = "~{sample_id}.incomplete_contigs.fa"
 	}
 
