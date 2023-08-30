@@ -282,7 +282,7 @@ task bin_incomplete_contigs_metabat2 {
 			--verbose \
 			--inFile ~{incomplete_contigs_fa} \
 			--abdFile ~{filtered_contig_depth_txt} \
-			--outFile bins/~{sample_id}.metabat2 \
+			--outFile output_bins/~{sample_id}.metabat2 \
 			--numThreads ~{threads} \
 			--minContig ~{metabat2_min_contig_size}
 
