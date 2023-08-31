@@ -13,7 +13,7 @@
       "tasks": {
         "assign_taxonomy_gtdbtk": {
           "key": "assign_taxonomy_gtdbtk",
-          "digest": "3yca7jvztlzblmlzfsd32wm5j4levkhq",
+          "digest": "",
           "tests": [
             {
               "inputs": {
@@ -75,7 +75,7 @@
         },
         "mag_copy": {
           "key": "mag_copy",
-          "digest": "xsmhjksfaf4ryzg4zhexhffnjhgnbdhg",
+          "digest": "",
           "tests": [
             {
               "inputs": {
@@ -153,7 +153,7 @@
       "tasks": {
         "filter_dereplicated_bins": {
           "key": "filter_dereplicated_bins",
-          "digest": "v4wvc2stddoa74gzwh7xi3vuulfp6bgy",
+          "digest": "",
           "tests": [
             {
               "inputs": {
@@ -281,7 +281,7 @@
         },
         "bin_incomplete_contigs_metabat2": {
           "key": "bin_incomplete_contigs_metabat2",
-          "digest": "gfwljsoh4vqkba67joirimeop3yu375z",
+          "digest": "",
           "tests": [
             {
               "inputs": {
@@ -340,7 +340,7 @@
         },
         "map_contig_to_bin": {
           "key": "map_contig_to_bin",
-          "digest": "xqytcxkw5dlxuk7mm5qgwfe6opjjrl62",
+          "digest": "",
           "tests": [
             {
               "inputs": {
@@ -384,7 +384,7 @@
         },
         "merge_incomplete_bins": {
           "key": "merge_incomplete_bins",
-          "digest": "bospucy2ftmxzgnnpr3nx24df6se7kcg",
+          "digest": "",
           "tests": [
             {
               "inputs": {
@@ -532,7 +532,7 @@
       "tasks": {
         "predict_bin_quality": {
           "key": "predict_bin_quality",
-          "digest": "hd5trw2cqwwlpxfgfiv4rpmnalz7pgmr",
+          "digest": "",
           "tests": [
             {
               "inputs": {
