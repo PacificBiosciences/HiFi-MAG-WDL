@@ -13,7 +13,7 @@
       "tasks": {
         "assign_taxonomy_gtdbtk": {
           "key": "assign_taxonomy_gtdbtk",
-          "digest": "",
+          "digest": "3yca7jvztlzblmlzfsd32wm5j4levkhq",
           "tests": [
             {
               "inputs": {
@@ -50,7 +50,7 @@
         },
         "mag_summary": {
           "key": "mag_summary",
-          "digest": "",
+          "digest": "avgnyyyv5zwwdyx46b4w6ot5luyk2kxi",
           "tests": [
             {
               "inputs": {
@@ -75,7 +75,7 @@
         },
         "mag_copy": {
           "key": "mag_copy",
-          "digest": "",
+          "digest": "xsmhjksfaf4ryzg4zhexhffnjhgnbdhg",
           "tests": [
             {
               "inputs": {
@@ -107,7 +107,7 @@
         },
         "mag_plots": {
           "key": "mag_plots",
-          "digest": "",
+          "digest": "ps5tsl3v2mkficvrrvl6k7ed32nb4r53",
           "tests": [
             {
               "inputs": {
@@ -153,7 +153,7 @@
       "tasks": {
         "filter_dereplicated_bins": {
           "key": "filter_dereplicated_bins",
-          "digest": "",
+          "digest": "v4wvc2stddoa74gzwh7xi3vuulfp6bgy",
           "tests": [
             {
               "inputs": {
@@ -209,7 +209,7 @@
       "tasks": {
         "align_reads_to_assembled_contigs": {
           "key": "align_reads_to_assembled_contigs",
-          "digest": "",
+          "digest": "2ygddbx7w4o2lolsa5zt5ml5yglob3lc",
           "tests": [
             {
               "inputs": {
@@ -232,7 +232,7 @@
         },
         "summarize_contig_depth": {
           "key": "summarize_contig_depth",
-          "digest": "",
+          "digest": "xqzreaog5jzhugi7qrsbfcsw2ob2hpvc",
           "tests": [
             {
               "inputs": {
@@ -257,7 +257,7 @@
         },
         "filter_contig_depth": {
           "key": "filter_contig_depth",
-          "digest": "",
+          "digest": "kn63t276r6bxtpzjufsnm6g2x7dvwoc6",
           "tests": [
             {
               "inputs": {
@@ -281,7 +281,7 @@
         },
         "bin_incomplete_contigs_metabat2": {
           "key": "bin_incomplete_contigs_metabat2",
-          "digest": "",
+          "digest": "gfwljsoh4vqkba67joirimeop3yu375z",
           "tests": [
             {
               "inputs": {
@@ -306,7 +306,7 @@
         },
         "bin_incomplete_contigs_semibin2": {
           "key": "bin_incomplete_contigs_semibin2",
-          "digest": "",
+          "digest": "6qzjstgtay6fqfmn2vkbgev7r2mea25b",
           "tests": [
             {
               "inputs": {
@@ -340,7 +340,7 @@
         },
         "map_contig_to_bin": {
           "key": "map_contig_to_bin",
-          "digest": "",
+          "digest": "xqytcxkw5dlxuk7mm5qgwfe6opjjrl62",
           "tests": [
             {
               "inputs": {
@@ -384,7 +384,7 @@
         },
         "merge_incomplete_bins": {
           "key": "merge_incomplete_bins",
-          "digest": "",
+          "digest": "bospucy2ftmxzgnnpr3nx24df6se7kcg",
           "tests": [
             {
               "inputs": {
@@ -418,7 +418,7 @@
       "tasks": {
         "long_contigs_to_bins": {
           "key": "long_contigs_to_bins",
-          "digest": "",
+          "digest": "spibctejzrvzkxbn4sy7ehsznjqn4rm7",
           "tests": [
             {
               "inputs": {
@@ -451,7 +451,7 @@
         },
         "filter_complete_contigs": {
           "key": "filter_complete_contigs",
-          "digest": "",
+          "digest": "ehtbh6pxdgh44rkxbwrnyilut2dmvqvv",
           "tests": [
             {
               "inputs": {
@@ -492,7 +492,7 @@
         },
         "make_incomplete_contigs": {
           "key": "make_incomplete_contigs",
-          "digest": "",
+          "digest": "dq4lwksn5eam6vfaw6l24fnivgrvuasu",
           "tests": [
             {
               "inputs": {
@@ -532,7 +532,7 @@
       "tasks": {
         "predict_bin_quality": {
           "key": "predict_bin_quality",
-          "digest": "",
+          "digest": "hd5trw2cqwwlpxfgfiv4rpmnalz7pgmr",
           "tests": [
             {
               "inputs": {
@@ -786,7 +786,7 @@
       "tasks": {
         "bam_to_fastq": {
           "key": "bam_to_fastq",
-          "digest": "",
+          "digest": "sxhvgpnhcqwinatyjryudiqv6vdmvi22",
           "tests": [
             {
               "inputs": {
@@ -807,7 +807,7 @@
         },
         "assemble_reads": {
           "key": "assemble_reads",
-          "digest": "",
+          "digest": "zhz6ixo67b5l5xrvowjico6ncdqhiccv",
           "tests": [
             {
               "inputs": {
