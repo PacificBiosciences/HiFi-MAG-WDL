@@ -20,9 +20,12 @@ task fasta_validator_tar {
 			echo -e "[ERROR] $message" >&2
 		}
 
-		validated_fa_filename=$(tar -tzf ~{validated_output} | grep '\.fa$' | head -n1)
+		echo "Testing"
+
+		validated_fa_filename=$(tar -tzf ~{validated_output} | grep '\.fa$' || [[ $? == 1 ]] | head -n1)
 		echo "$validated_fa_filename"
-		current_run_fa_filename=$(tar -tzf ~{current_run_output} | grep '\.fa$' | head -n1)
+
+		current_run_fa_filename=$(tar -tzf ~{current_run_output} | grep '\.fa$' || [[ $? == 1 ]] | head -n1)
 		echo "$current_run_fa_filename"
 
 		mkdir validated_fas_dir
