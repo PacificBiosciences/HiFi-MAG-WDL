@@ -22,10 +22,10 @@ task fasta_validator_tar {
 
 		echo "Testing"
 
-		validated_fa_filename=$(tar -tzf ~{validated_output} | grep '\.fa$' || [[ $? == 1 ]] | head -n1)
+		validated_fa_filename=$(tar -tzf ~{validated_output} | sort | grep -m 1 '\.fa$' || [[ $? == 1 ]])
 		echo "$validated_fa_filename"
 
-		current_run_fa_filename=$(tar -tzf ~{current_run_output} | grep '\.fa$' || [[ $? == 1 ]] | head -n1)
+		current_run_fa_filename=$(tar -tzf ~{current_run_output} | sort | grep -m 1 '\.fa$' || [[ $? == 1 ]])
 		echo "$current_run_fa_filename"
 
 		mkdir validated_fas_dir
