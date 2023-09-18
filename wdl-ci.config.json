@@ -1,0 +1,912 @@
+{
+  "workflows": {
+    "workflows/main.wdl": {
+      "key": "workflows/main.wdl",
+      "name": "",
+      "description": "",
+      "tasks": {}
+    },
+    "workflows/assign_taxonomy/assign_taxonomy.wdl": {
+      "key": "workflows/assign_taxonomy/assign_taxonomy.wdl",
+      "name": "",
+      "description": "",
+      "tasks": {
+        "assign_taxonomy_gtdbtk": {
+          "key": "assign_taxonomy_gtdbtk",
+          "digest": "3yca7jvztlzblmlzfsd32wm5j4levkhq",
+          "tests": [
+            {
+              "inputs": {
+                "sample_id": "${sample_id}",
+                "gtdb_batch_txt": "${input_resources_file_path}/ZymoTru4plex.GTDBTk_batch_file.txt",
+                "gtdbtk_data_tar_gz": "${input_file_path}/public_data/gtdbtk_r207_v2_data.tar.gz",
+                "dereplicated_bin_fas_tars": [
+                  "${input_resources_file_path}/ZymoTru4plex.filtered_long_bin_fas.tar.gz",
+                  "${input_resources_file_path}/ZymoTru4plex.merged_incomplete_bin_fas.tar.gz"
+                ],
+                "runtime_attributes": "${default_runtime_attributes}"
+              },
+              "output_tests": {
+                "gtdbtk_summary_txt": {
+                  "value": "${input_resources_file_path}/ZymoTru4plex.GTDBTk_Summary.txt",
+                  "test_tasks": [
+                    "compare_file_basename",
+                    "check_empty_lines",
+                    "check_tab_delimited",
+                    "count_columns"
+                  ]
+                },
+                "gtdbk_output_tar_gz": {
+                  "value": "${input_resources_file_path}/ZymoTru4plex_gtdbtk.tar.gz",
+                  "test_tasks": [
+                    "compare_file_basename",
+                    "check_gzip",
+                    "check_tar"
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "mag_summary": {
+          "key": "mag_summary",
+          "digest": "avgnyyyv5zwwdyx46b4w6ot5luyk2kxi",
+          "tests": [
+            {
+              "inputs": {
+                "sample_id": "${sample_id}",
+                "gtdbtk_summary_txt": "${input_resources_file_path}/ZymoTru4plex.GTDBTk_Summary.txt",
+                "filtered_quality_report_tsv": "${input_resources_file_path}/ZymoTru4plex.dereplicated_bins.quality_report.filtered.tsv",
+                "runtime_attributes": "${default_runtime_attributes}"
+              },
+              "output_tests": {
+                "mag_summary_txt": {
+                  "value": "${input_resources_file_path}/ZymoTru4plex.HiFi_MAG.summary.txt",
+                  "test_tasks": [
+                    "compare_file_basename",
+                    "check_empty_lines",
+                    "check_tab_delimited",
+                    "count_columns"
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "mag_copy": {
+          "key": "mag_copy",
+          "digest": "xsmhjksfaf4ryzg4zhexhffnjhgnbdhg",
+          "tests": [
+            {
+              "inputs": {
+                "mag_summary_txt": "${input_resources_file_path}/ZymoTru4plex.HiFi_MAG.summary.txt",
+                "dereplicated_bin_fas_tars": [
+                  "${input_resources_file_path}/ZymoTru4plex.filtered_long_bin_fas.tar.gz",
+                  "${input_resources_file_path}/ZymoTru4plex.merged_incomplete_bin_fas.tar.gz"
+                ],
+                "runtime_attributes": "${default_runtime_attributes}"
+              },
+              "output_tests": {
+                "filtered_mags_fas": {
+                  "value": [
+                    "${input_resources_file_path}/filtered_mags_fas/ZymoTru4plex.complete.19.fa",
+                    "${input_resources_file_path}/filtered_mags_fas/ZymoTru4plex.complete.4.fa",
+                    "${input_resources_file_path}/filtered_mags_fas/ZymoTru4plex.complete.49.fa",
+                    "${input_resources_file_path}/filtered_mags_fas/ZymoTru4plex.complete.5.fa",
+                    "${input_resources_file_path}/filtered_mags_fas/ZymoTru4plex.metabat2.151.fa"
+                  ],
+                  "test_tasks": [
+                    "compare_file_basename",
+                    "check_empty_lines",
+                    "fasta_validator"
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "mag_plots": {
+          "key": "mag_plots",
+          "digest": "ps5tsl3v2mkficvrrvl6k7ed32nb4r53",
+          "tests": [
+            {
+              "inputs": {
+                "sample_id": "${sample_id}",
+                "filtered_quality_report_tsv": "${input_resources_file_path}/ZymoTru4plex.dereplicated_bins.quality_report.filtered.tsv",
+                "mag_summary_txt": "${input_resources_file_path}/ZymoTru4plex.HiFi_MAG.summary.txt",
+                "min_mag_completeness": 70,
+                "max_mag_contamination": 10,
+                "runtime_attributes": "${default_runtime_attributes}"
+              },
+              "output_tests": {
+                "dastool_bins_plot_pdf": {
+                  "value": "${input_resources_file_path}/ZymoTru4plex.All-DASTool-Bins.pdf",
+                  "test_tasks": [
+                    "compare_file_basename",
+                    "pdf_validator"
+                  ]
+                },
+                "contigs_quality_plot_pdf": {
+                  "value": "${input_resources_file_path}/ZymoTru4plex.Completeness-Contamination-Contigs.pdf",
+                  "test_tasks": [
+                    "compare_file_basename",
+                    "pdf_validator"
+                  ]
+                },
+                "genome_size_depths_plot_df": {
+                  "value": "${input_resources_file_path}/ZymoTru4plex.GenomeSizes-Depths.pdf",
+                  "test_tasks": [
+                    "compare_file_basename",
+                    "pdf_validator"
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "workflows/bin_contigs/bin_contigs.wdl": {
+      "key": "workflows/bin_contigs/bin_contigs.wdl",
+      "name": "",
+      "description": "",
+      "tasks": {
+        "filter_dereplicated_bins": {
+          "key": "filter_dereplicated_bins",
+          "digest": "v4wvc2stddoa74gzwh7xi3vuulfp6bgy",
+          "tests": [
+            {
+              "inputs": {
+                "sample_id": "${sample_id}",
+                "bin_quality_report_tsv": "${input_resources_file_path}/ZymoTru4plex.dereplicated_bins.quality_report.tsv",
+                "contig_depth_txt": "${input_resources_file_path}/ZymoTru4plex.JGI.depth.txt",
+                "dereplicated_bin_fas_tars": [
+                  "${input_resources_file_path}/ZymoTru4plex.filtered_long_bin_fas.tar.gz",
+                  "${input_resources_file_path}/ZymoTru4plex.merged_incomplete_bin_fas.tar.gz"
+                ],
+                "min_mag_completeness": 70,
+                "max_mag_contamination": 10,
+                "max_contigs": 20,
+                "runtime_attributes": "${default_runtime_attributes}"
+              },
+              "output_tests": {
+                "gtdb_batch_txt": {
+                  "value": "${input_resources_file_path}/ZymoTru4plex.GTDBTk_batch_file.txt",
+                  "test_tasks": [
+                    "compare_file_basename",
+                    "check_empty_lines",
+                    "check_tab_delimited",
+                    "count_columns"
+                  ]
+                },
+                "passed_bin_count_txt": {
+                  "value": "${input_resources_file_path}/ZymoTru4plex.BinCount.txt",
+                  "test_tasks": [
+                    "compare_file_basename",
+                    "check_empty_lines",
+                    "check_numeric"
+                  ]
+                },
+                "filtered_quality_report_tsv": {
+                  "value": "${input_resources_file_path}/ZymoTru4plex.dereplicated_bins.quality_report.filtered.tsv",
+                  "test_tasks": [
+                    "compare_file_basename",
+                    "check_empty_lines",
+                    "check_tab_delimited",
+                    "count_columns"
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "workflows/bin_contigs/bin_incomplete_contigs/bin_incomplete_contigs.wdl": {
+      "key": "workflows/bin_contigs/bin_incomplete_contigs/bin_incomplete_contigs.wdl",
+      "name": "",
+      "description": "",
+      "tasks": {
+        "align_reads_to_assembled_contigs": {
+          "key": "align_reads_to_assembled_contigs",
+          "digest": "2ygddbx7w4o2lolsa5zt5ml5yglob3lc",
+          "tests": [
+            {
+              "inputs": {
+                "sample_id": "${sample_id}",
+                "assembled_contigs": "${input_resources_file_path}/ZymoTru4plex.asm.p_ctg.fa.gz",
+                "hifi_reads_fastq": "${input_file_path}/zymo/ZymoTru4plex.fastq.gz",
+                "runtime_attributes": "${default_runtime_attributes}"
+              },
+              "output_tests": {
+                "aligned_sorted_bam": {
+                  "value": "${input_resources_file_path}/ZymoTru4plex.aligned.sorted.bam",
+                  "test_tasks": [
+                    "compare_file_basename",
+                    "samtools_quickcheck"
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "summarize_contig_depth": {
+          "key": "summarize_contig_depth",
+          "digest": "xqzreaog5jzhugi7qrsbfcsw2ob2hpvc",
+          "tests": [
+            {
+              "inputs": {
+                "sample_id": "${sample_id}",
+                "aligned_sorted_bam": "${input_resources_file_path}/ZymoTru4plex.aligned.sorted.bam",
+                "aligned_sorted_bam_index": "${input_resources_file_path}/ZymoTru4plex.aligned.sorted.bam.bai",
+                "runtime_attributes": "${default_runtime_attributes}"
+              },
+              "output_tests": {
+                "contig_depth_txt": {
+                  "value": "${input_resources_file_path}/ZymoTru4plex.JGI.depth.txt",
+                  "test_tasks": [
+                    "compare_file_basename",
+                    "check_empty_lines",
+                    "check_tab_delimited",
+                    "count_columns"
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "filter_contig_depth": {
+          "key": "filter_contig_depth",
+          "digest": "kn63t276r6bxtpzjufsnm6g2x7dvwoc6",
+          "tests": [
+            {
+              "inputs": {
+                "contig_depth_txt": "${input_resources_file_path}/ZymoTru4plex.JGI.depth.txt",
+                "long_contig_bin_map": "${input_resources_file_path}/ZymoTru4plex.long_contig_bin_map.filtered.tsv",
+                "runtime_attributes": "${default_runtime_attributes}"
+              },
+              "output_tests": {
+                "filtered_contig_depth_txt": {
+                  "value": "${input_resources_file_path}/ZymoTru4plex.JGI.depth.filtered.txt",
+                  "test_tasks": [
+                    "compare_file_basename",
+                    "check_empty_lines",
+                    "check_tab_delimited",
+                    "count_columns"
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "bin_incomplete_contigs_metabat2": {
+          "key": "bin_incomplete_contigs_metabat2",
+          "digest": "gfwljsoh4vqkba67joirimeop3yu375z",
+          "tests": [
+            {
+              "inputs": {
+                "sample_id": "${sample_id}",
+                "incomplete_contigs_fa": "${input_resources_file_path}/ZymoTru4plex.incomplete_contigs.fa",
+                "filtered_contig_depth_txt": "${input_resources_file_path}/ZymoTru4plex.JGI.depth.filtered.txt",
+                "metabat2_min_contig_size": 30000,
+                "runtime_attributes": "${default_runtime_attributes}"
+              },
+              "output_tests": {
+                "bin_fas_tar": {
+                  "value": "${input_resources_file_path}/ZymoTru4plex.metabat2_bins.tar.gz",
+                  "test_tasks": [
+                    "compare_file_basename",
+                    "check_tar",
+                    "fasta_validator_tar"
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "bin_incomplete_contigs_semibin2": {
+          "key": "bin_incomplete_contigs_semibin2",
+          "digest": "6qzjstgtay6fqfmn2vkbgev7r2mea25b",
+          "tests": [
+            {
+              "inputs": {
+                "sample_id": "${sample_id}",
+                "incomplete_contigs_fa": "${input_resources_file_path}/ZymoTru4plex.incomplete_contigs.fa",
+                "aligned_sorted_bam": "${input_resources_file_path}/ZymoTru4plex.aligned.sorted.bam",
+                "semibin2_model": "global",
+                "runtime_attributes": "${default_runtime_attributes}"
+              },
+              "output_tests": {
+                "bins_tsv": {
+                  "value": "${input_resources_file_path}/ZymoTru4plex.bins_info.tsv",
+                  "test_tasks": [
+                    "compare_file_basename",
+                    "check_empty_lines",
+                    "check_tab_delimited",
+                    "count_columns"
+                  ]
+                },
+                "bin_fas_tar": {
+                  "value": "${input_resources_file_path}/ZymoTru4plex.semibin2_bins.tar.gz",
+                  "test_tasks": [
+                    "compare_file_basename",
+                    "check_tar",
+                    "fasta_validator_tar"
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "map_contig_to_bin": {
+          "key": "map_contig_to_bin",
+          "digest": "xqytcxkw5dlxuk7mm5qgwfe6opjjrl62",
+          "tests": [
+            {
+              "inputs": {
+                "sample_id": "${sample_id}",
+                "binning_algorithm": "metabat2",
+                "bin_fas_tar": "${input_resources_file_path}/ZymoTru4plex.metabat2_bins.tar.gz",
+                "runtime_attributes": "${default_runtime_attributes}"
+              },
+              "output_tests": {
+                "contig_bin_map": {
+                  "value": "${input_resources_file_path}/ZymoTru4plex.metabat2.contig_bin_map.tsv",
+                  "test_tasks": [
+                    "compare_file_basename",
+                    "check_empty_lines",
+                    "check_tab_delimited",
+                    "count_columns"
+                  ]
+                }
+              }
+            },
+            {
+              "inputs": {
+                "sample_id": "${sample_id}",
+                "binning_algorithm": "semibin2",
+                "bin_fas_tar": "${input_resources_file_path}/ZymoTru4plex.semibin2_bins.tar.gz",
+                "runtime_attributes": "${default_runtime_attributes}"
+              },
+              "output_tests": {
+                "contig_bin_map": {
+                  "value": "${input_resources_file_path}/ZymoTru4plex.semibin2.contig_bin_map.tsv",
+                  "test_tasks": [
+                    "compare_file_basename",
+                    "check_empty_lines",
+                    "check_tab_delimited",
+                    "count_columns"
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "merge_incomplete_bins": {
+          "key": "merge_incomplete_bins",
+          "digest": "bospucy2ftmxzgnnpr3nx24df6se7kcg",
+          "tests": [
+            {
+              "inputs": {
+                "sample_id": "${sample_id}",
+                "incomplete_contigs_fa": "${input_resources_file_path}/ZymoTru4plex.incomplete_contigs.fa",
+                "metabat2_contig_bin_map": "${input_resources_file_path}/ZymoTru4plex.metabat2.contig_bin_map.tsv",
+                "semibin2_contig_bin_map": "${input_resources_file_path}/ZymoTru4plex.semibin2.contig_bin_map.tsv",
+                "dastool_search_engine": "diamond",
+                "dastool_score_threshold": "0.2",
+                "runtime_attributes": "${default_runtime_attributes}"
+              },
+              "output_tests": {
+                "merged_incomplete_bin_fas_tar": {
+                  "value": "${input_resources_file_path}/ZymoTru4plex.merged_incomplete_bin_fas.tar.gz",
+                  "test_tasks": [
+                    "compare_file_basename",
+                    "check_tar",
+                    "fasta_validator_tar"
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "workflows/bin_contigs/bin_long_contigs/bin_long_contigs.wdl": {
+      "key": "workflows/bin_contigs/bin_long_contigs/bin_long_contigs.wdl",
+      "name": "",
+      "description": "",
+      "tasks": {
+        "long_contigs_to_bins": {
+          "key": "long_contigs_to_bins",
+          "digest": "spibctejzrvzkxbn4sy7ehsznjqn4rm7",
+          "tests": [
+            {
+              "inputs": {
+                "sample_id": "${sample_id}",
+                "assembled_contigs_fa": "${input_resources_file_path}/ZymoTru4plex.asm.p_ctg.fa",
+                "min_contig_length": 500000,
+                "runtime_attributes": "${default_runtime_attributes}"
+              },
+              "output_tests": {
+                "long_contig_bin_map": {
+                  "value": "${input_resources_file_path}/ZymoTru4plex.long_contig_bin_map.tsv",
+                  "test_tasks": [
+                    "compare_file_basename",
+                    "check_empty_lines",
+                    "check_tab_delimited",
+                    "count_columns"
+                  ]
+                },
+                "long_bin_fas_tar": {
+                  "value": "${input_resources_file_path}/ZymoTru4plex.long_bin_fas.tar.gz",
+                  "test_tasks": [
+                    "compare_file_basename",
+                    "check_tar",
+                    "fasta_validator_tar"
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "filter_complete_contigs": {
+          "key": "filter_complete_contigs",
+          "digest": "ehtbh6pxdgh44rkxbwrnyilut2dmvqvv",
+          "tests": [
+            {
+              "inputs": {
+                "sample_id": "${sample_id}",
+                "assembled_contigs_fa": "${input_resources_file_path}/ZymoTru4plex.asm.p_ctg.fa",
+                "bin_quality_report_tsv": "${input_resources_file_path}/ZymoTru4plex.long_contigs.quality_report.tsv",
+                "contig_bin_map": "${input_resources_file_path}/ZymoTru4plex.long_contig_bin_map.tsv",
+                "min_contig_completeness": 93,
+                "runtime_attributes": "${default_runtime_attributes}"
+              },
+              "output_tests": {
+                "filtered_long_contig_bin_map": {
+                  "value": "${input_resources_file_path}/ZymoTru4plex.long_contig_bin_map.filtered.tsv",
+                  "test_tasks": [
+                    "compare_file_basename",
+                    "check_empty_lines",
+                    "check_tab_delimited",
+                    "count_columns"
+                  ]
+                },
+                "scatterplot_pdf": {
+                  "value": "${input_resources_file_path}/ZymoTru4plex.completeness_vs_size_scatter.pdf",
+                  "test_tasks": [
+                    "compare_file_basename",
+                    "pdf_validator"
+                  ]
+                },
+                "histogram_pdf": {
+                  "value": "${input_resources_file_path}/ZymoTru4plex.completeness_histo.pdf",
+                  "test_tasks": [
+                    "compare_file_basename",
+                    "pdf_validator"
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "make_incomplete_contigs": {
+          "key": "make_incomplete_contigs",
+          "digest": "dq4lwksn5eam6vfaw6l24fnivgrvuasu",
+          "tests": [
+            {
+              "inputs": {
+                "sample_id": "${sample_id}",
+                "assembled_contigs_fa": "${input_resources_file_path}/ZymoTru4plex.asm.p_ctg.fa",
+                "passing_contig_bin_map": "${input_resources_file_path}/ZymoTru4plex.long_contig_bin_map.filtered.tsv",
+                "long_bin_fas_tar": "${input_resources_file_path}/ZymoTru4plex.long_bin_fas.tar.gz",
+                "runtime_attributes": "${default_runtime_attributes}"
+              },
+              "output_tests": {
+                "filtered_long_bin_fas_tar": {
+                  "value": "${input_resources_file_path}/ZymoTru4plex.filtered_long_bin_fas.tar.gz",
+                  "test_tasks": [
+                    "compare_file_basename",
+                    "check_tar",
+                    "fasta_validator_tar"
+                  ]
+                },
+                "incomplete_contigs_fa": {
+                  "value": "${input_resources_file_path}/ZymoTru4plex.incomplete_contigs.fa",
+                  "test_tasks": [
+                    "compare_file_basename",
+                    "check_empty_lines",
+                    "fasta_validator"
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "workflows/bin_contigs/common/predict_bin_quality.wdl": {
+      "key": "workflows/bin_contigs/common/predict_bin_quality.wdl",
+      "name": "",
+      "description": "",
+      "tasks": {
+        "predict_bin_quality": {
+          "key": "predict_bin_quality",
+          "digest": "hd5trw2cqwwlpxfgfiv4rpmnalz7pgmr",
+          "tests": [
+            {
+              "inputs": {
+                "prefix": "${sample_id}.long_contigs",
+                "checkm2_ref_db": "${input_file_path}/public_data/uniref100.KO.1.dmnd",
+                "bin_fas_tars": [
+                  "${input_resources_file_path}/ZymoTru4plex.long_bin_fas.tar.gz"
+                ],
+                "runtime_attributes": "${default_runtime_attributes}"
+              },
+              "output_tests": {
+                "bin_quality_report_tsv": {
+                  "value": "${input_resources_file_path}/ZymoTru4plex.long_contigs.quality_report.tsv",
+                  "test_tasks": [
+                    "compare_file_basename",
+                    "check_empty_lines",
+                    "check_tab_delimited",
+                    "count_columns"
+                  ]
+                }
+              }
+            },
+            {
+              "inputs": {
+                "prefix": "${sample_id}.dereplicated_bins",
+                "checkm2_ref_db": "${input_file_path}/public_data/uniref100.KO.1.dmnd",
+                "bin_fas_tars": [
+                  "${input_resources_file_path}/ZymoTru4plex.filtered_long_bin_fas.tar.gz",
+                  "${input_resources_file_path}/ZymoTru4plex.merged_incomplete_bin_fas.tar.gz"
+                ],
+                "runtime_attributes": "${default_runtime_attributes}"
+              },
+              "output_tests": {
+                "bin_quality_report_tsv": {
+                  "value": "${input_resources_file_path}/ZymoTru4plex.dereplicated_bins.quality_report.tsv",
+                  "test_tasks": [
+                    "compare_file_basename",
+                    "check_empty_lines",
+                    "check_tab_delimited",
+                    "count_columns"
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "workflows/wdl-common/wdl/structs.wdl": {
+      "key": "workflows/wdl-common/wdl/structs.wdl",
+      "name": "",
+      "description": "",
+      "tasks": {}
+    },
+    "workflows/wdl-common/wdl/tasks/bcftools_stats.wdl": {
+      "key": "workflows/wdl-common/wdl/tasks/bcftools_stats.wdl",
+      "name": "",
+      "description": "",
+      "tasks": {
+        "bcftools_stats": {
+          "key": "bcftools_stats",
+          "digest": "",
+          "tests": []
+        }
+      }
+    },
+    "workflows/wdl-common/wdl/tasks/whatshap_stats.wdl": {
+      "key": "workflows/wdl-common/wdl/tasks/whatshap_stats.wdl",
+      "name": "",
+      "description": "",
+      "tasks": {
+        "whatshap_stats": {
+          "key": "whatshap_stats",
+          "digest": "",
+          "tests": []
+        }
+      }
+    },
+    "workflows/wdl-common/wdl/tasks/pharmcat.wdl": {
+      "key": "workflows/wdl-common/wdl/tasks/pharmcat.wdl",
+      "name": "",
+      "description": "",
+      "tasks": {
+        "pangu_cyp2d6": {
+          "key": "pangu_cyp2d6",
+          "digest": "",
+          "tests": []
+        },
+        "pharmcat_preprocess": {
+          "key": "pharmcat_preprocess",
+          "digest": "",
+          "tests": []
+        },
+        "filter_preprocessed_vcf": {
+          "key": "filter_preprocessed_vcf",
+          "digest": "",
+          "tests": []
+        },
+        "run_pharmcat": {
+          "key": "run_pharmcat",
+          "digest": "",
+          "tests": []
+        }
+      }
+    },
+    "workflows/wdl-common/wdl/tasks/pbsv_discover.wdl": {
+      "key": "workflows/wdl-common/wdl/tasks/pbsv_discover.wdl",
+      "name": "",
+      "description": "",
+      "tasks": {
+        "pbsv_discover": {
+          "key": "pbsv_discover",
+          "digest": "",
+          "tests": []
+        }
+      }
+    },
+    "workflows/wdl-common/wdl/tasks/zip_index_vcf.wdl": {
+      "key": "workflows/wdl-common/wdl/tasks/zip_index_vcf.wdl",
+      "name": "",
+      "description": "",
+      "tasks": {
+        "zip_index_vcf": {
+          "key": "zip_index_vcf",
+          "digest": "",
+          "tests": []
+        }
+      }
+    },
+    "workflows/wdl-common/wdl/tasks/whatshap_haplotag.wdl": {
+      "key": "workflows/wdl-common/wdl/tasks/whatshap_haplotag.wdl",
+      "name": "",
+      "description": "",
+      "tasks": {
+        "whatshap_haplotag": {
+          "key": "whatshap_haplotag",
+          "digest": "",
+          "tests": []
+        }
+      }
+    },
+    "workflows/wdl-common/wdl/tasks/whatshap_phase.wdl": {
+      "key": "workflows/wdl-common/wdl/tasks/whatshap_phase.wdl",
+      "name": "",
+      "description": "",
+      "tasks": {
+        "whatshap_phase": {
+          "key": "whatshap_phase",
+          "digest": "",
+          "tests": []
+        }
+      }
+    },
+    "workflows/wdl-common/wdl/tasks/glnexus.wdl": {
+      "key": "workflows/wdl-common/wdl/tasks/glnexus.wdl",
+      "name": "",
+      "description": "",
+      "tasks": {
+        "glnexus": {
+          "key": "glnexus",
+          "digest": "",
+          "tests": []
+        }
+      }
+    },
+    "workflows/wdl-common/wdl/tasks/pbsv_call.wdl": {
+      "key": "workflows/wdl-common/wdl/tasks/pbsv_call.wdl",
+      "name": "",
+      "description": "",
+      "tasks": {
+        "pbsv_call": {
+          "key": "pbsv_call",
+          "digest": "",
+          "tests": []
+        }
+      }
+    },
+    "workflows/wdl-common/wdl/tasks/samtools_fasta.wdl": {
+      "key": "workflows/wdl-common/wdl/tasks/samtools_fasta.wdl",
+      "name": "",
+      "description": "",
+      "tasks": {
+        "samtools_fasta": {
+          "key": "samtools_fasta",
+          "digest": "",
+          "tests": []
+        }
+      }
+    },
+    "workflows/wdl-common/wdl/tasks/mosdepth.wdl": {
+      "key": "workflows/wdl-common/wdl/tasks/mosdepth.wdl",
+      "name": "",
+      "description": "",
+      "tasks": {
+        "mosdepth": {
+          "key": "mosdepth",
+          "digest": "",
+          "tests": []
+        }
+      }
+    },
+    "workflows/wdl-common/wdl/workflows/backend_configuration/backend_configuration.wdl": {
+      "key": "workflows/wdl-common/wdl/workflows/backend_configuration/backend_configuration.wdl",
+      "name": "",
+      "description": "",
+      "tasks": {}
+    },
+    "workflows/wdl-common/wdl/workflows/phase_vcf/phase_vcf.wdl": {
+      "key": "workflows/wdl-common/wdl/workflows/phase_vcf/phase_vcf.wdl",
+      "name": "",
+      "description": "",
+      "tasks": {
+        "split_vcf": {
+          "key": "split_vcf",
+          "digest": "",
+          "tests": []
+        },
+        "bcftools_concat": {
+          "key": "bcftools_concat",
+          "digest": "",
+          "tests": []
+        }
+      }
+    },
+    "workflows/wdl-common/wdl/workflows/deepvariant/deepvariant.wdl": {
+      "key": "workflows/wdl-common/wdl/workflows/deepvariant/deepvariant.wdl",
+      "name": "",
+      "description": "",
+      "tasks": {
+        "deepvariant_make_examples": {
+          "key": "deepvariant_make_examples",
+          "digest": "",
+          "tests": []
+        },
+        "deepvariant_call_variants": {
+          "key": "deepvariant_call_variants",
+          "digest": "",
+          "tests": []
+        },
+        "deepvariant_postprocess_variants": {
+          "key": "deepvariant_postprocess_variants",
+          "digest": "",
+          "tests": []
+        }
+      }
+    },
+    "workflows/assemble_metagenomes/assemble_metagenomes.wdl": {
+      "key": "workflows/assemble_metagenomes/assemble_metagenomes.wdl",
+      "name": "",
+      "description": "",
+      "tasks": {
+        "bam_to_fastq": {
+          "key": "bam_to_fastq",
+          "digest": "sxhvgpnhcqwinatyjryudiqv6vdmvi22",
+          "tests": [
+            {
+              "inputs": {
+                "hifi_reads_bam": "${input_file_path}/zymo/ZymoTru4plex.bam",
+                "runtime_attributes": "${default_runtime_attributes}"
+              },
+              "output_tests": {
+                "converted_fastq": {
+                  "value": "${input_file_path}/zymo/ZymoTru4plex.fastq.gz",
+                  "test_tasks": [
+                    "compare_file_basename",
+                    "check_gzip"
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "assemble_reads": {
+          "key": "assemble_reads",
+          "digest": "zhz6ixo67b5l5xrvowjico6ncdqhiccv",
+          "tests": [
+            {
+              "inputs": {
+                "sample_id": "${sample_id}",
+                "fastq": "${input_file_path}/zymo/ZymoTru4plex.fastq.gz",
+                "runtime_attributes": "${default_runtime_attributes}"
+              },
+              "output_tests": {
+                "assembled_contigs_gfa": {
+                  "value": "${input_resources_file_path}/ZymoTru4plex.asm.p_ctg.gfa",
+                  "test_tasks": [
+                    "compare_file_basename",
+                    "check_empty_lines",
+                    "check_tab_delimited"
+                  ]
+                },
+                "assembled_contigs_fa": {
+                  "value": "${input_resources_file_path}/ZymoTru4plex.asm.p_ctg.fa",
+                  "test_tasks": [
+                    "compare_file_basename",
+                    "check_empty_lines",
+                    "fasta_validator"
+                  ]
+                },
+                "assembled_contigs_fa_gz": {
+                  "value": "${input_resources_file_path}/ZymoTru4plex.asm.p_ctg.fa.gz",
+                  "test_tasks": [
+                    "compare_file_basename",
+                    "check_gzip",
+                    "check_empty_lines",
+                    "fasta_validator"
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "metagenomics-wdl-ci-custom-test-dir/pdf_validator.wdl": {
+      "key": "metagenomics-wdl-ci-custom-test-dir/pdf_validator.wdl",
+      "name": "",
+      "description": "",
+      "tasks": {
+        "pdf_validator": {
+          "key": "pdf_validator",
+          "digest": "",
+          "tests": []
+        }
+      }
+    },
+    "metagenomics-wdl-ci-custom-test-dir/check_tar.wdl": {
+      "key": "metagenomics-wdl-ci-custom-test-dir/check_tar.wdl",
+      "name": "",
+      "description": "",
+      "tasks": {
+        "check_tar": {
+          "key": "check_tar",
+          "digest": "",
+          "tests": []
+        }
+      }
+    },
+    "metagenomics-wdl-ci-custom-test-dir/fasta_validator_tar.wdl": {
+      "key": "metagenomics-wdl-ci-custom-test-dir/fasta_validator_tar.wdl",
+      "name": "",
+      "description": "",
+      "tasks": {
+        "fasta_validator_tar": {
+          "key": "fasta_validator_tar",
+          "digest": "",
+          "tests": []
+        }
+      }
+    }
+  },
+  "engines": {
+    "f1ed5b40-6a26-4eac-a2b8-9960516e4164": {
+      "key": "f1ed5b40-6a26-4eac-a2b8-9960516e4164",
+      "enabled": true,
+      "name": "PacBio CoA installation"
+    }
+  },
+  "test_params": {
+    "global_params": {
+      "sample_id": "ZymoTru4plex",
+      "default_runtime_attributes": {
+        "preemptible_tries": 3,
+        "max_retries": 3,
+        "zones": "",
+        "queue_arn": "",
+        "container_registry": "quay.io/pacbio"
+      }
+    },
+    "engine_params": {
+      "f1ed5b40-6a26-4eac-a2b8-9960516e4164": {
+        "input_file_path": "/coac74908838b5dd7/inputs/metagenomics",
+        "input_resources_file_path": "/coac74908838b5dd7/inputs/wdl-ci/metagenomics"
+      }
+    }
+  }
+}
