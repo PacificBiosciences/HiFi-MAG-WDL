@@ -123,7 +123,7 @@ task assign_taxonomy_gtdbtk {
 	}
 
 	runtime {
-		docker: "~{runtime_attributes.container_registry}/gtdbtk:2.1.1"
+		docker: "~{runtime_attributes.container_registry}/gtdbtk@sha256:c2b2129af53057fdfc03a0837750e4c5b0562708dde3091747e099f9d30640b7"
 		cpu: threads
 		memory: mem_gb + " GB"
 		disk: disk_size + " GB"
@@ -162,7 +162,7 @@ task mag_summary {
 	}
 
 	runtime {
-		docker: "~{runtime_attributes.container_registry}/python:5e8307c"
+		docker: "~{runtime_attributes.container_registry}/python@sha256:c7e594d86c35d2c3b2cd8fabf51d9274d74347464433c4f3e55e5306be7bd1ea"
 		cpu: 2
 		memory: "4 GB"
 		disk: disk_size + " GB"
@@ -208,7 +208,7 @@ task mag_copy {
 	}
 
 	runtime {
-		docker: "~{runtime_attributes.container_registry}/python:5e8307c"
+		docker: "~{runtime_attributes.container_registry}/python@sha256:c7e594d86c35d2c3b2cd8fabf51d9274d74347464433c4f3e55e5306be7bd1ea"
 		cpu: 2
 		memory: "4 GB"
 		disk: disk_size + " GB"
@@ -257,7 +257,7 @@ task mag_plots {
 	}
 
 	runtime {
-		docker: "~{runtime_attributes.container_registry}/python:5e8307c"
+		docker: "~{runtime_attributes.container_registry}/python@sha256:c7e594d86c35d2c3b2cd8fabf51d9274d74347464433c4f3e55e5306be7bd1ea"
 		cpu: 2
 		memory: "4 GB"
 		disk: disk_size + " GB"

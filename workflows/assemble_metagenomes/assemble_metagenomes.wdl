@@ -64,7 +64,7 @@ task bam_to_fastq {
 	}
 
 	runtime {
-		docker: "~{runtime_attributes.container_registry}/samtools:5e8307c"
+		docker: "~{runtime_attributes.container_registry}/samtools@sha256:d3f5cfb7be7a175fe0471152528e8175ad2b57c348bacc8b97be818f31241837"
 		cpu: threads
 		memory: "4 GB"
 		disk: disk_size + " GB"
@@ -118,7 +118,7 @@ task assemble_reads {
 	}
 
 	runtime {
-		docker: "~{runtime_attributes.container_registry}/hifiasm-meta:0.3.1"
+		docker: "~{runtime_attributes.container_registry}/hifiasm-meta@sha256:13d4378116d137f7b3bfe2af4555866bfe2a52085e48a4c006d804757b7a5cd7"
 		cpu: threads
 		memory: mem_gb + " GB"
 		disk: disk_size + " GB"

@@ -46,7 +46,7 @@ task predict_bin_quality {
 	}
 
 	runtime {
-		docker: "~{runtime_attributes.container_registry}/checkm2:5e8307c"
+		docker: "~{runtime_attributes.container_registry}/checkm2@sha256:ea6060390b1358c9763511c0adfeb83ae0db951b7a8eb57d4ca3923aa84e3b5a"
 		cpu: threads
 		memory: mem_gb + " GB"
 		disk: disk_size + " GB"
