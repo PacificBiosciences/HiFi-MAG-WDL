@@ -164,7 +164,7 @@ task align_reads_to_assembled_contigs {
 	}
 
 	runtime {
-		docker: "~{runtime_attributes.container_registry}/samtools:5e8307c"
+		docker: "~{runtime_attributes.container_registry}/samtools@sha256:d3f5cfb7be7a175fe0471152528e8175ad2b57c348bacc8b97be818f31241837"
 		cpu: threads
 		memory: mem_gb + " GB"
 		disk: disk_size + " GB"
@@ -204,7 +204,7 @@ task summarize_contig_depth {
 	}
 
 	runtime {
-		docker: "~{runtime_attributes.container_registry}/metabat:5e8307c"
+		docker: "~{runtime_attributes.container_registry}/metabat@sha256:d68d401803c4e99d85a4c93e48eb223275171f08b49d3314ff245a2d68264651"
 		cpu: 2
 		memory: "4 GB"
 		disk: disk_size + " GB"
@@ -243,7 +243,7 @@ task filter_contig_depth {
 	}
 
 	runtime {
-		docker: "~{runtime_attributes.container_registry}/python:5e8307c"
+		docker: "~{runtime_attributes.container_registry}/python@sha256:c7e594d86c35d2c3b2cd8fabf51d9274d74347464433c4f3e55e5306be7bd1ea"
 		cpu: 2
 		memory: "4 GB"
 		disk: disk_size + " GB"
@@ -294,7 +294,7 @@ task bin_incomplete_contigs_metabat2 {
 	}
 
 	runtime {
-		docker: "~{runtime_attributes.container_registry}/metabat:5e8307c"
+		docker: "~{runtime_attributes.container_registry}/metabat@sha256:d68d401803c4e99d85a4c93e48eb223275171f08b49d3314ff245a2d68264651"
 		cpu: threads
 		memory: mem_gb + " GB"
 		disk: disk_size + " GB"
@@ -352,7 +352,7 @@ task bin_incomplete_contigs_semibin2 {
 	}
 
 	runtime {
-		docker: "~{runtime_attributes.container_registry}/semibin:5e8307c"
+		docker: "~{runtime_attributes.container_registry}/semibin@sha256:ddea641ec796eb6259aa6e1298c64e49f70e49b2057c2d00a626aa525c9d8cb4"
 		cpu: threads
 		memory: mem_gb + " GB"
 		disk: disk_size + " GB"
@@ -398,7 +398,7 @@ task map_contig_to_bin {
 	}
 
 	runtime {
-		docker: "~{runtime_attributes.container_registry}/dastool:5e8307c"
+		docker: "~{runtime_attributes.container_registry}/dastool@sha256:ff71f31b7603be06c738e12ed1a91d1e448d0b96a53e073188b1ef870dd8da1c"
 		cpu: 2
 		memory: "4 GB"
 		disk: disk_size + " GB"
@@ -453,7 +453,7 @@ task merge_incomplete_bins {
 	}
 
 	runtime {
-		docker: "~{runtime_attributes.container_registry}/dastool:5e8307c"
+		docker: "~{runtime_attributes.container_registry}/dastool@sha256:ff71f31b7603be06c738e12ed1a91d1e448d0b96a53e073188b1ef870dd8da1c"
 		cpu: threads
 		memory: mem_gb + " GB"
 		disk: disk_size + " GB"
