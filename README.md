@@ -195,10 +195,10 @@ This section describes the inputs required for a run of the workflow. An input t
 
 | Type | Name | Description | Notes |
 | :- | :- | :- | :- |
-| String | backend | Backend where the workflow will be executed | \["Azure", "AWS", "GCP", "HPC"\] |
+| String | backend | Backend where the workflow will be executed. | \["Azure", "AWS", "GCP", "HPC"\] |
 | String? | zones | Zones where compute will take place; required if backend is set to 'AWS' or 'GCP'. | <ul><li>[Determining available zones in AWS](backends/aws/README.md#determining-available-zones)</li><li>[Determining available zones in GCP](backends/gcp/README.md#determining-available-zones)</li></ul> |
-| String? | aws_spot_queue_arn | Queue ARN for the spot batch queue; required if backend is set to 'AWS' and `preemptible` is set to `true` | [Determining the AWS queue ARN](backends/aws/README.md#determining-the-aws-batch-queue-arn) |
-| String? | aws_on_demand_queue_arn | Queue ARN for the on demand batch queue; required if backend is set to 'AWS' and `preemptible` is set to `false` | [Determining the AWS queue ARN](backends/aws/README.md#determining-the-aws-batch-queue-arn) |
+| String? | aws_spot_queue_arn | Queue ARN for the spot batch queue; required if backend is set to 'AWS' and `preemptible` is set to `true`. | [Determining the AWS queue ARN](backends/aws/README.md#determining-the-aws-batch-queue-arn) |
+| String? | aws_on_demand_queue_arn | Queue ARN for the on demand batch queue; required if backend is set to 'AWS' and `preemptible` is set to `false`. | [Determining the AWS queue ARN](backends/aws/README.md#determining-the-aws-batch-queue-arn) |
 | String? | container_registry | Container registry where workflow images are hosted. If left blank, [PacBio's public Quay.io registry](https://quay.io/organization/pacbio) will be used. | |
 | Boolean | preemptible | If set to `true`, run tasks preemptibly where possible. On-demand VMs will be used only for tasks that run for >24 hours if the backend is set to GCP. If set to `false`, on-demand VMs will be used for every task. Ignored if backend is set to HPC. | \[true, false\] |
 
@@ -208,45 +208,45 @@ This section describes the inputs required for a run of the workflow. An input t
 
 | Type | Name | Description | Notes |
 | :- | :- | :- | :- |
-| File? | converted_fastq | If a BAM file was provided, the converted FASTQ version of that file | |
-| File | assembled_contigs_gfa | Assembled contigs in gfa format | |
-| File | assembled_contigs_fa_gz | Assembled contigs in gzipped-fasta format | |
+| File? | converted_fastq | If a BAM file was provided, the converted FASTQ version of that file. | |
+| File | assembled_contigs_gfa | Assembled contigs in gfa format. | |
+| File | assembled_contigs_fa_gz | Assembled contigs in gzipped-fasta format. | |
 
 ## Bin contigs
 
 | Type | Name | Description | Notes |
 | :- | :- | :- | :- |
-| Array[File] | dereplicated_bin_fas | Set of passing long contig and non-redundant incomplete contig bins | |
-| File | bin_quality_report_tsv | CheckM2 completeness/contamination report for long and non-redundant incomplete contig bins | |
-| File | gtdb_batch_txt | GTDB-Tk batch file; used during taxonomy assignment | |
-| File | passed_bin_count_txt | Txt file containing an integer specifying the number of bins that passed quality control | |
-| File | filtered_quality_report_tsv | Filtered `bin_quality_report_tsv` containing quality information about passing bins | |
+| Array[File] | dereplicated_bin_fas | Set of passing long contig and non-redundant incomplete contig bins. | |
+| File | bin_quality_report_tsv | CheckM2 completeness/contamination report for long and non-redundant incomplete contig bins. | |
+| File | gtdb_batch_txt | GTDB-Tk batch file; used during taxonomy assignment. | |
+| File | passed_bin_count_txt | Txt file containing an integer specifying the number of bins that passed quality control. | |
+| File | filtered_quality_report_tsv | Filtered `bin_quality_report_tsv` containing quality information about passing bins. | |
 
 ### Bin long contigs
 
 | Type | Name | Description | Notes |
 | :- | :- | :- | :- |
-| File | long_contig_bin_map | Map between passing long contigs and bins in TSV format | |
-| File? | long_contig_bin_quality_report_tsv | CheckM2 completeness/conamination report for long contigs | |
-| File? | filtered_long_contig_bin_map | Map between passing long contigs and bins that also pass the completeness threshold in TSV format | |
-| File? | long_contig_scatterplot_pdf | Completeness vs. size scatterplot | |
-| File? | long_contig_histogram_pdf | Completeness histogram | |
-| File | passing_long_contig_bin_map | If any contigs pass the length filter, this will be the `filtered_long_contig_bin_map`; otherwise, this is the `long_contig_bin_map` | |
-| Array[File] | filtered_long_bin_fas | Set of long bin fastas that pass the length and completeness thresholds | |
-| File | incomplete_contigs_fa | Fasta file containing contigs that do not pass either length or completeness thresholds | |
+| File | long_contig_bin_map | Map between passing long contigs and bins in TSV format. | |
+| File? | long_contig_bin_quality_report_tsv | CheckM2 completeness/conamination report for long contigs. | |
+| File? | filtered_long_contig_bin_map | Map between passing long contigs and bins that also pass the completeness threshold in TSV format. | |
+| File? | long_contig_scatterplot_pdf | Completeness vs. size scatterplot. | |
+| File? | long_contig_histogram_pdf | Completeness histogram. | |
+| File | passing_long_contig_bin_map | If any contigs pass the length filter, this will be the `filtered_long_contig_bin_map`; otherwise, this is the `long_contig_bin_map`. | |
+| Array[File] | filtered_long_bin_fas | Set of long bin fastas that pass the length and completeness thresholds. | |
+| File | incomplete_contigs_fa | Fasta file containing contigs that do not pass either length or completeness thresholds. | |
 
 ### Bin incomplete contigs
 
 | Type | Name | Description | Notes |
 | :- | :- | :- | :- |
-| IndexData | aligned_sorted_bam | HiFi reads aligned to the assembled contigs | |
-| File | contig_depth_txt | Summary of aligned BAM contig depths | |
-| Array[File] | metabat2_bin_fas | Bins output by `metabat2` in fasta format | |
-| File | metabat2_contig_bin_map | Map between contigs and `metabat2` bins | |
-| File | semibin2_bins_tsv | Bin info TSV output by `semibin2` | |
-| Array[File] | semibin2_bin_fas | Bins output by `semibin2` in fasta format | |
-| File | semibin2_contig_bin_map | Map between contigs and `semibin2` bins | |
-| Array[File] | merged_incomplete_bin_fas | Non-redundant incomplete contig bin set from `metabat2` and `semibin2` | |
+| IndexData | aligned_sorted_bam | HiFi reads aligned to the assembled contigs. | |
+| File | contig_depth_txt | Summary of aligned BAM contig depths. | |
+| Array[File] | metabat2_bin_fas | Bins output by `metabat2` in fasta format. | |
+| File | metabat2_contig_bin_map | Map between contigs and `metabat2` bins. | |
+| File | semibin2_bins_tsv | Bin info TSV output by `semibin2`. | |
+| Array[File] | semibin2_bin_fas | Bins output by `semibin2` in fasta format. | |
+| File | semibin2_contig_bin_map | Map between contigs and `semibin2` bins. | |
+| Array[File] | merged_incomplete_bin_fas | Non-redundant incomplete contig bin set from `metabat2` and `semibin2`. | |
 
 ## Assign taxonomy
 
@@ -254,11 +254,11 @@ These outputs will be generated if at least one contig passes filters.
 
 | Type | Name | Description | Notes |
 | :- | :- | :- | :- |
-| File? | gtdbtk_summary_txt | GTDB-Tk summary file in txt format | |
-| File? | gtdbk_output_tar_gz | GTDB-Tk results for dereplicated bins that passed filtering with CheckM2 | |
+| File? | gtdbtk_summary_txt | GTDB-Tk summary file in txt format. | |
+| File? | gtdbk_output_tar_gz | GTDB-Tk results for dereplicated bins that passed filtering with CheckM2. | |
 | File? | mag_summary_txt | A main summary file that brings together information from CheckM2 and GTDB-Tk for all MAGs that pass the filtering step. | |
-| Array[File]? | filtered_mags_fas | The fasta files for all high-quality MAGs/bins | |
-| File? | dastool_bins_plot_pdf |  Figure that shows the dereplicated bins that were created from the set of incomplete contigs (using MetaBat2 and SemiBin2) as well as the long complete contigs | |
+| Array[File]? | filtered_mags_fas | The fasta files for all high-quality MAGs/bins. | |
+| File? | dastool_bins_plot_pdf |  Figure that shows the dereplicated bins that were created from the set of incomplete contigs (using MetaBat2 and SemiBin2) as well as the long complete contigs. | |
 | File? | contigs_quality_plot_pdf | A plot showing the relationship between completeness and contamination for each high-quality MAG recovered, colored by the number of contigs per MAG. | |
 | File? | genome_size_depths_plot_df | A plot showing the relationship between genome size and depth of coverage for each high-quality MAG recovered, colored by % GC content per MAG. | |
 
@@ -273,7 +273,7 @@ The Docker image used by a particular step of the workflow can be identified by 
 | :- | :- | :- |
 | python | <ul><li>python 3.7; custom scripts</li></ul> | [Dockerfile](https://github.com/PacificBiosciences/wdl-dockerfiles/tree/343bb7f1ce6954c49e2ca1ca029f2878015a7940/docker/python/metagenomics) |
 | samtools | <ul><li>[samtools 1.10](https://github.com/samtools/samtools/releases/tag/1.10)</li><li>[minimap2 2.17](https://github.com/lh3/minimap2/releases/tag/v2.17)</li></ul> | [Dockerfile](https://github.com/PacificBiosciences/wdl-dockerfiles/tree/343bb7f1ce6954c49e2ca1ca029f2878015a7940/docker/samtools/metagenomics) |
-| hifiasm-meta | <ul><li>[hifiasm-meta 0.3.1](https://github.com/xfengnefx/hifiasm-meta/releases/tag/hamtv0.3.1)</li><li>[gfatools 0.4](https://github.com/lh3/gfatools/releases/tag/v0.4)</li></ul> | [Dockerfile](https://github.com/PacificBiosciences/wdl-dockerfiles/tree/343bb7f1ce6954c49e2ca1ca029f2878015a7940/docker/hifiasm-meta/metagenomics) |
+| hifiasm-meta | <ul><li>[hifiasm-meta 0.3.1](https://github.com/xfengnefx/hifiasm-meta/releases/tag/hamtv0.3.1)</li><li>[gfatools 0.4](https://github.com/lh3/gfatools/releases/tag/v0.4)</li></ul> | [Dockerfile](https://github.com/PacificBiosciences/wdl-dockerfiles/tree/343bb7f1ce6954c49e2ca1ca029f2878015a7940/docker/hifiasm-meta) |
 | checkm2 | <ul><li>[checkm2 1.0.1](https://github.com/chklovski/CheckM2/releases/tag/1.0.1)</li></ul> | [Dockerfile](https://github.com/PacificBiosciences/wdl-dockerfiles/tree/343bb7f1ce6954c49e2ca1ca029f2878015a7940/docker/checkm2) |
 | metabat | <ul><li>[metabat2 2.15](https://bitbucket.org/berkeleylab/metabat/downloads/?tab=tags)</li></ul> | [Dockerfile](https://github.com/PacificBiosciences/wdl-dockerfiles/tree/343bb7f1ce6954c49e2ca1ca029f2878015a7940/docker/metabat) |
 | semibin | <ul><li>[semibin 1.5](https://github.com/BigDataBiology/SemiBin/releases/tag/v1.5.0)</li></ul> | [Dockerfile](https://github.com/PacificBiosciences/wdl-dockerfiles/tree/343bb7f1ce6954c49e2ca1ca029f2878015a7940/docker/semibin) |
