@@ -86,7 +86,7 @@ task assemble_reads {
 	}
 
 	Int threads = 48
-	Int mem_gb = threads * 8
+	Int mem_gb = ceil(size(fastq, "GB") / 0.07 + 20)
 	Int disk_size = ceil(size(fastq, "GB") * 8 + 20)
 
 	command <<<
@@ -123,7 +123,7 @@ task assemble_reads {
 		memory: mem_gb + " GB"
 		disk: disk_size + " GB"
 		disks: "local-disk " + disk_size + " HDD"
-		preemptible: runtime_attributes.preemptible_tries
+		preemptible: if (size(fastq, "GB") > 20) then 0 else runtime_attributes.preemptible_tries
 		maxRetries: runtime_attributes.max_retries
 		awsBatchRetryAttempts: runtime_attributes.max_retries
 		queueArn: runtime_attributes.queue_arn
