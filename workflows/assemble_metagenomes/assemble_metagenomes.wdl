@@ -123,7 +123,7 @@ task assemble_reads {
 		memory: mem_gb + " GB"
 		disk: disk_size + " GB"
 		disks: "local-disk " + disk_size + " HDD"
-		preemptible: runtime_attributes.preemptible_tries
+		preemptible: if (size(fastq, "GB") < 10) then 0 else runtime_attributes.preemptible_tries
 		maxRetries: runtime_attributes.max_retries
 		awsBatchRetryAttempts: runtime_attributes.max_retries
 		queueArn: runtime_attributes.queue_arn
