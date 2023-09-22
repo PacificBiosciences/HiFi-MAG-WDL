@@ -86,7 +86,7 @@ task assemble_reads {
 	}
 
 	Int threads = 48
-	Int mem_gb = threads * 8
+	Int mem_gb = ceil(size(fastq, "GB") / 0.07 + 20)
 	Int disk_size = ceil(size(fastq, "GB") * 8 + 20)
 
 	command <<<
