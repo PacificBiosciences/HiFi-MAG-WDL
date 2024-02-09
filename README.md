@@ -2,7 +2,6 @@
 
 <h1 align="center">PacBio Metagenomics Pipeline</h1>
 
-# wdl-metagenomics
 Workflow for identifying high-quality MAGs (Metagenome-Assembled Genomes) from PacBio HiFi metagenomic assemblies written in [Workflow Description Language (WDL)](https://openwdl.org/).
 
 - For the snakemake version of these workflows, see [here](https://github.com/PacificBiosciences/pb-metagenomics-tools).
