@@ -18,7 +18,14 @@ The metagenomics workflow combines contig assembly and PacBio's [HiFi-MAG-Pipeli
 
 ## Setup
 
-Some tasks and workflows are pulled in from other repositories. Ensure you have initialized submodules following cloning by running `git submodule update --init --recursive`.
+Clone a tagged version of the git repository.  Use the `--branch` flag to pull the desired version, and the `--recursive` flag to pull code from any submodules.
+ 
+```
+git clone \
+  --depth 1 --branch v1.0.0 \  # for reproducibility
+  --recursive \                # to clone submodule
+  https://github.com/PacificBiosciences/HiFi-MAG-WDL.git
+```
 
 ## Resource requirements
 

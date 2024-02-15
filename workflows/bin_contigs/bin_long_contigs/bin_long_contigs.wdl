@@ -104,7 +104,7 @@ task long_contigs_to_bins {
 	}
 
 	runtime {
-		docker: "~{runtime_attributes.container_registry}/python@sha256:23d8a139685afad5b0c763ded6db6f02dd3884ad150a142bc1cd17a5d21910d5"
+		docker: "~{runtime_attributes.container_registry}/python@sha256:e76da216b7adcc498c35e64220a838a3a17d4e51420e59cfc18aa2064e2ef1f7"
 		cpu: 2
 		memory: "4 GB"
 		disk: disk_size + " GB"
@@ -153,7 +153,7 @@ task filter_complete_contigs {
 	}
 
 	runtime {
-		docker: "~{runtime_attributes.container_registry}/python@sha256:23d8a139685afad5b0c763ded6db6f02dd3884ad150a142bc1cd17a5d21910d5"
+		docker: "~{runtime_attributes.container_registry}/python@sha256:e76da216b7adcc498c35e64220a838a3a17d4e51420e59cfc18aa2064e2ef1f7"
 		cpu: 2
 		memory: "4 GB"
 		disk: disk_size + " GB"
@@ -203,7 +203,7 @@ task make_incomplete_contigs {
 	}
 
 	runtime {
-		docker: "~{runtime_attributes.container_registry}/python@sha256:23d8a139685afad5b0c763ded6db6f02dd3884ad150a142bc1cd17a5d21910d5"
+		docker: "~{runtime_attributes.container_registry}/python@sha256:e76da216b7adcc498c35e64220a838a3a17d4e51420e59cfc18aa2064e2ef1f7"
 		cpu: 2
 		memory: "4 GB"
 		disk: disk_size + " GB"
