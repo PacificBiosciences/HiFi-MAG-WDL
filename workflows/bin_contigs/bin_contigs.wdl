@@ -162,7 +162,7 @@ task filter_dereplicated_bins {
 	}
 
 	runtime {
-		docker: "~{runtime_attributes.container_registry}/python@sha256:c7e594d86c35d2c3b2cd8fabf51d9274d74347464433c4f3e55e5306be7bd1ea"
+		docker: "~{runtime_attributes.container_registry}/python@sha256:0441600aaa049279db30d539498a194cfc3a44028ec30c0abeb165507c0f029c"
 		cpu: 2
 		memory: "4 GB"
 		disk: disk_size + " GB"
