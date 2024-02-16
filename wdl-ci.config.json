@@ -889,6 +889,11 @@
       "key": "c3213beb-97bc-4adc-9bd8-cdb3ac83b398",
       "enabled": true,
       "name": "PacBio CoA"
+    },
+    "abc123": {
+      "key": "abc123",
+      "enabled": true,
+      "name": "pacbio-hpc"
     }
   },
   "test_params": {
@@ -906,6 +911,10 @@
       "c3213beb-97bc-4adc-9bd8-cdb3ac83b398": {
         "input_file_path": "/coac74908838b5dd7/inputs/metagenomics",
         "input_resources_file_path": "/coac74908838b5dd7/inputs/wdl-ci/metagenomics"
+      },
+      "abc123": {
+        "input_file_path": "/pbi/collections/appslabht/cromwell_output/testdata/inputs/metagenomics",
+        "input_resources_file_path": "/pbi/collections/appslabht/cromwell_output/testdata/wdl-ci/metagenomics"
       }
     }
   }
