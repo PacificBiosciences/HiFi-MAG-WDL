@@ -1,6 +1,6 @@
 <h1 align="center"><img width="300px" src="images/logo_wdl_workflows.svg"/></h1>
 
-<h1 align="center">PacBio Metagenomics Pipeline</h1>
+<h1 align="center">PacBio MAG Pipeline</h1>
 
 Workflow for identifying high-quality MAGs (Metagenome-Assembled Genomes) from PacBio HiFi metagenomic assemblies written in [Workflow Description Language (WDL)](https://openwdl.org/).
 
