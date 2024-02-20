@@ -126,8 +126,8 @@ This section describes the inputs required for a run of the workflow. An input t
 | Int | min_contig_length | Minimum size of a contig to consider a long contig. [500000] | |
 | Int | min_contig_completeness | Minimum completeness percentage (from CheckM2) to mark a contig as complete and place it in a distinct bin; this value should not be lower than 90%. [93] | |
 | Int | metabat2_min_contig_size | The minimum size of contig to be included in binning for MetaBAT2. [30000] | |
-| String | semibin2_model | The trained model to be used in SemiBin2. If set to 'TRAIN', a new model will be trained from your data. ('TRAIN', 'human_gut', 'human_oral', 'dog_gut', 'cat_gut', 'mouse_gut', 'pig_gut', 'chicken_caecum', 'ocean', 'soil', 'built_environment', 'wastewater',  'global') ['global'] | |
-| String | dastool_search_engine | The engine for single copy gene searching used in DAS Tool. ('blast', 'diamond', 'usearch') ['diamond'] | |
+| String | semibin2_model | The trained model to be used in SemiBin2. If set to "TRAIN", a new model will be trained from your data. One of ["TRAIN", "human_gut", "human_oral", "dog_gut", "cat_gut", "mouse_gut", "pig_gut", "chicken_caecum", "ocean", "soil", "built_environment", "wastewater",  "global"] ["global"] | |
+| String | dastool_search_engine | The engine for single copy gene searching used in DAS Tool. One of ["blast", "diamond", "usearch"] ["diamond"] | |
 | Float | dastool_score_threshold | Score threshold until selection algorithm will keep selecting bins (0..1); used by DAS Tool. [0.2] | |
 | Int | min_mag_completeness | Minimum completeness percent for a genome bin. [70] | |
 | Int | max_mag_contamination | Maximum contamination threshold for a genome bin. [10] | |
@@ -143,7 +143,7 @@ This section describes the inputs required for a run of the workflow. An input t
 | String? | aws_spot_queue_arn | Queue ARN for the spot batch queue; required if backend is set to 'AWS' and `preemptible` is set to `true`. | [Determining the AWS queue ARN](backends/aws/README.md#determining-the-aws-batch-queue-arn) |
 | String? | aws_on_demand_queue_arn | Queue ARN for the on demand batch queue; required if backend is set to 'AWS' and `preemptible` is set to `false`. | [Determining the AWS queue ARN](backends/aws/README.md#determining-the-aws-batch-queue-arn) |
 | String? | container_registry | Container registry where workflow images are hosted. If left blank, [PacBio's public Quay.io registry](https://quay.io/organization/pacbio) will be used. | |
-| Boolean | preemptible | If set to `true`, run tasks preemptibly where possible. On-demand VMs will be used only for tasks that run for >24 hours if the backend is set to GCP. If set to `false`, on-demand VMs will be used for every task. Ignored if backend is set to HPC. | \[true, false\] |
+| Boolean | preemptible | If set to `true`, run tasks preemptibly where possible. On-demand VMs will be used only for tasks that run for >24 hours if the backend is set to GCP. If set to `false`, on-demand VMs will be used for every task. Ignored if backend is set to HPC. | \[`true`, `false`\] |
 
 # Workflow outputs
 
