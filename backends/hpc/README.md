@@ -40,5 +40,15 @@ See [the inputs section of the main README](../../README.md#workflow-inputs) for
 
 # Reference data bundle
 
-# TODO replace
-_location of reference data bundle_
+10.5281/zenodo.10685376
+![https://doi.org/10.5281/zenodo.10685376](https://zenodo.org/badge/DOI/10.5281/zenodo.10685376.svg)
+
+Reference data is hosted on Zenodo at [10.5281/zenodo.10685376](https://zenodo.org/record/10685376).  Download the reference data bundle and extract it to a location on your HPC, then update the input template file with the path to the reference data.
+
+```bash
+# download the reference data bundle
+wget https://zenodo.org/record/10685376/files/wdl-metagenomics.v1.0.0.resource.tg
+
+# extract the reference data bundle and rename as dataset
+tar -xzf wdl-metagenomics.v1.0.0.resource.tg && mv static_resources dataset
+```
