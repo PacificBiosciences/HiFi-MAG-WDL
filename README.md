@@ -126,8 +126,8 @@ This section describes the inputs required for a run of the workflow. An input t
 | Int | min_contig_length | Minimum size of a contig to consider a long contig. [500000] | |
 | Int | min_contig_completeness | Minimum completeness percentage (from CheckM2) to mark a contig as complete and place it in a distinct bin; this value should not be lower than 90%. [93] | |
 | Int | metabat2_min_contig_size | The minimum size of contig to be included in binning for MetaBAT2. [30000] | |
-| String | semibin2_model | The trained model to be used in SemiBin2. If set to 'TRAIN', a new model will be trained from your data. ('TRAIN', 'human_gut', 'human_oral', 'dog_gut', 'cat_gut', 'mouse_gut', 'pig_gut', 'chicken_caecum', 'ocean', 'soil', 'built_environment', 'wastewater',  'global') ['global'] | |
-| String | dastool_search_engine | The engine for single copy gene searching used in DAS Tool. ('blast', 'diamond', 'usearch') ['diamond'] | |
+| String | semibin2_model | The trained model to be used in SemiBin2. If set to "TRAIN", a new model will be trained from your data. One of ["TRAIN", "human_gut", "human_oral", "dog_gut", "cat_gut", "mouse_gut", "pig_gut", "chicken_caecum", "ocean", "soil", "built_environment", "wastewater",  "global"] ["global"] | |
+| String | dastool_search_engine | The engine for single copy gene searching used in DAS Tool. One of ["blast", "diamond", "usearch"] ["diamond"] | |
 | Float | dastool_score_threshold | Score threshold until selection algorithm will keep selecting bins (0..1); used by DAS Tool. [0.2] | |
 | Int | min_mag_completeness | Minimum completeness percent for a genome bin. [70] | |
 | Int | max_mag_contamination | Maximum contamination threshold for a genome bin. [10] | |
