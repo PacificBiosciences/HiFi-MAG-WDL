@@ -132,7 +132,7 @@ This section describes the inputs required for a run of the workflow. An input t
 | Int | min_mag_completeness | Minimum completeness percent for a genome bin. [70] | |
 | Int | max_mag_contamination | Maximum contamination threshold for a genome bin. [10] | |
 | Int | max_contigs | The maximum number of contigs allowed in a genome bin. [20] | |
-| File | gtdbtk_data_tar_gz | A .tar.gz file of GTDB-Tk (Genome Database Taxonomy toolkit) reference data, release207_v2 used for assigning taxonomic classifications to bacterial and archaeal genomes. | |
+| File | gtdbtk_data_tar_gz | A `.tar.gz` file of GTDB-Tk (Genome Database Taxonomy toolkit) reference data, release207_v2 used for assigning taxonomic classifications to bacterial and archaeal genomes. | |
 
 ## Other inputs
 

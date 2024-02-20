@@ -281,7 +281,7 @@
         },
         "bin_incomplete_contigs_metabat2": {
           "key": "bin_incomplete_contigs_metabat2",
-          "digest": "gfwljsoh4vqkba67joirimeop3yu375z",
+          "digest": "mvbdtmtcn5pyed7wshx5asuckolystki",
           "tests": [
             {
               "inputs": {
@@ -606,33 +606,6 @@
       "tasks": {
         "whatshap_stats": {
           "key": "whatshap_stats",
-          "digest": "",
-          "tests": []
-        }
-      }
-    },
-    "workflows/wdl-common/wdl/tasks/pharmcat.wdl": {
-      "key": "workflows/wdl-common/wdl/tasks/pharmcat.wdl",
-      "name": "",
-      "description": "",
-      "tasks": {
-        "pangu_cyp2d6": {
-          "key": "pangu_cyp2d6",
-          "digest": "",
-          "tests": []
-        },
-        "pharmcat_preprocess": {
-          "key": "pharmcat_preprocess",
-          "digest": "",
-          "tests": []
-        },
-        "filter_preprocessed_vcf": {
-          "key": "filter_preprocessed_vcf",
-          "digest": "",
-          "tests": []
-        },
-        "run_pharmcat": {
-          "key": "run_pharmcat",
           "digest": "",
           "tests": []
         }
