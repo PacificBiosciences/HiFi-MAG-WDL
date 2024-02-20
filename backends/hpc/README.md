@@ -35,7 +35,6 @@ See [the inputs section of the main README](../../README.md#workflow-inputs) for
 
 # Reference data bundle
 
-10.5281/zenodo.10685376
 ![https://doi.org/10.5281/zenodo.10685376](https://zenodo.org/badge/DOI/10.5281/zenodo.10685376.svg)
 
 Reference data is hosted on Zenodo at [10.5281/zenodo.10685376](https://zenodo.org/record/10685376).  Download the reference data bundle and extract it to a location on your HPC, then update the input template file with the path to the reference data.
