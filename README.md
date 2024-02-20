@@ -1,4 +1,4 @@
-<h1 align="center"><img width="300px" src="images/logo_wdl_workflows.svg"/></h1>
+<h1 align="center"><img width="300px" src="https://github.com/PacificBiosciences/HiFi-MAG-WDL/blob/develop/images/logo_wdl_workflows.svg"/></h1>
 
 <h1 align="center">PacBio MAG Pipeline</h1>
 
@@ -14,7 +14,7 @@ Workflow for identifying high-quality MAGs (Metagenome-Assembled Genomes) from P
 
 The metagenomics workflow combines contig assembly and PacBio's [HiFi-MAG-Pipeline](https://github.com/PacificBiosciences/pb-metagenomics-tools/tree/master/HiFi-MAG-Pipeline). This includes a completeness-aware binning step to identify complete contigs (>500kb and >93% complete) and incomplete contigs (<500kb and/or <93% complete). Completeness is assessed using [CheckM2](https://github.com/chklovski/CheckM2)). Coverage is calculated for binning steps. The long contigs that are <93% complete are pooled with incomplete contigs and this set goes through binning with [MetaBAT2](https://bitbucket.org/berkeleylab/metabat) and [SemiBin2](https://github.com/BigDataBiology/SemiBin). The two bin sets are compared and merged using [DAS Tool](https://github.com/cmks/DAS_Tool). The complete contigs and merged bin set are pooled together to assess bin quality. All bins/MAGs that passed filtering undergo taxonomic assignment and data summaries are produced.
 
-![Metagenomics workflow diagram](images/main.graphviz.svg "Metagenomics workflow diagram")
+![Metagenomics workflow diagram](https://github.com/PacificBiosciences/HiFi-MAG-WDL/blob/develop/images/main.graphviz.svg "Metagenomics workflow diagram")
 
 ## Setup
 
