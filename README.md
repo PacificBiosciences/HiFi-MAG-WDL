@@ -214,14 +214,14 @@ The Docker image used by a particular step of the workflow can be identified by 
 
 | Image | Major tool versions | Links |
 | :- | :- | :- |
-| python | <ul><li>python 3.7; custom scripts</li></ul> | [Dockerfile](https://github.com/PacificBiosciences/wdl-dockerfiles/tree/343bb7f1ce6954c49e2ca1ca029f2878015a7940/docker/python/metagenomics) |
-| samtools | <ul><li>[samtools 1.10](https://github.com/samtools/samtools/releases/tag/1.10)</li><li>[minimap2 2.17](https://github.com/lh3/minimap2/releases/tag/v2.17)</li></ul> | [Dockerfile](https://github.com/PacificBiosciences/wdl-dockerfiles/tree/343bb7f1ce6954c49e2ca1ca029f2878015a7940/docker/samtools/metagenomics) |
-| hifiasm-meta | <ul><li>[hifiasm-meta 0.3.1](https://github.com/xfengnefx/hifiasm-meta/releases/tag/hamtv0.3.1)</li><li>[gfatools 0.4](https://github.com/lh3/gfatools/releases/tag/v0.4)</li></ul> | [Dockerfile](https://github.com/PacificBiosciences/wdl-dockerfiles/tree/343bb7f1ce6954c49e2ca1ca029f2878015a7940/docker/hifiasm-meta) |
-| checkm2 | <ul><li>[checkm2 1.0.1](https://github.com/chklovski/CheckM2/releases/tag/1.0.1)</li></ul> | [Dockerfile](https://github.com/PacificBiosciences/wdl-dockerfiles/tree/343bb7f1ce6954c49e2ca1ca029f2878015a7940/docker/checkm2) |
-| metabat | <ul><li>[metabat2 2.15](https://bitbucket.org/berkeleylab/metabat/downloads/?tab=tags)</li></ul> | [Dockerfile](https://github.com/PacificBiosciences/wdl-dockerfiles/tree/343bb7f1ce6954c49e2ca1ca029f2878015a7940/docker/metabat) |
-| semibin | <ul><li>[semibin 1.5](https://github.com/BigDataBiology/SemiBin/releases/tag/v1.5.0)</li></ul> | [Dockerfile](https://github.com/PacificBiosciences/wdl-dockerfiles/tree/343bb7f1ce6954c49e2ca1ca029f2878015a7940/docker/semibin) |
-| dastool | <ul><li>[dastool 1.1.6](https://github.com/cmks/DAS_Tool/releases/tag/1.1.6)</li></ul> | [Dockerfile](https://github.com/PacificBiosciences/wdl-dockerfiles/tree/343bb7f1ce6954c49e2ca1ca029f2878015a7940/docker/dastool) |
-| gtdbtk | <ul><li>[gtdbtk 2.1.1](https://github.com/Ecogenomics/GTDBTk/releases/tag/2.1.1)</li><li>python 3.7; custom scripts</li></ul> | [Dockerfile](https://github.com/PacificBiosciences/wdl-dockerfiles/tree/343bb7f1ce6954c49e2ca1ca029f2878015a7940/docker/gtdbtk) |
+| python | <ul><li>python 3.7; custom scripts</li></ul> | [Dockerfile](https://github.com/PacificBiosciences/wdl-dockerfiles/tree/d3b8a010428ab69236f0959335af94932b901e76/docker/python/metagenomics) |
+| samtools | <ul><li>[samtools 1.10](https://github.com/samtools/samtools/releases/tag/1.10)</li><li>[minimap2 2.17](https://github.com/lh3/minimap2/releases/tag/v2.17)</li></ul> | [Dockerfile](https://github.com/PacificBiosciences/wdl-dockerfiles/tree/d3b8a010428ab69236f0959335af94932b901e76/docker/samtools/metagenomics) |
+| hifiasm-meta | <ul><li>[hifiasm-meta 0.3.1](https://github.com/xfengnefx/hifiasm-meta/releases/tag/hamtv0.3.1)</li><li>[gfatools 0.4](https://github.com/lh3/gfatools/releases/tag/v0.4)</li></ul> | [Dockerfile](https://github.com/PacificBiosciences/wdl-dockerfiles/tree/d3b8a010428ab69236f0959335af94932b901e76/docker/hifiasm-meta) |
+| checkm2 | <ul><li>[checkm2 1.0.1](https://github.com/chklovski/CheckM2/releases/tag/1.0.1)</li></ul> | [Dockerfile](https://github.com/PacificBiosciences/wdl-dockerfiles/tree/d3b8a010428ab69236f0959335af94932b901e76/docker/checkm2) |
+| metabat | <ul><li>[metabat2 2.15](https://bitbucket.org/berkeleylab/metabat/downloads/?tab=tags)</li></ul> | [Dockerfile](https://github.com/PacificBiosciences/wdl-dockerfiles/tree/d3b8a010428ab69236f0959335af94932b901e76/docker/metabat) |
+| semibin | <ul><li>[semibin 1.5](https://github.com/BigDataBiology/SemiBin/releases/tag/v1.5.0)</li></ul> | [Dockerfile](https://github.com/PacificBiosciences/wdl-dockerfiles/tree/d3b8a010428ab69236f0959335af94932b901e76/docker/semibin) |
+| dastool | <ul><li>[dastool 1.1.6](https://github.com/cmks/DAS_Tool/releases/tag/1.1.6)</li></ul> | [Dockerfile](https://github.com/PacificBiosciences/wdl-dockerfiles/tree/d3b8a010428ab69236f0959335af94932b901e76/docker/dastool) |
+| gtdbtk | <ul><li>[gtdbtk 2.1.1](https://github.com/Ecogenomics/GTDBTk/releases/tag/2.1.1)</li><li>python 3.7; custom scripts</li></ul> | [Dockerfile](https://github.com/PacificBiosciences/wdl-dockerfiles/tree/d3b8a010428ab69236f0959335af94932b901e76/docker/gtdbtk) |
 
 ---
 
