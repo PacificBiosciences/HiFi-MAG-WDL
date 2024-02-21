@@ -35,7 +35,6 @@ See [the inputs section of the main README](../../README.md#workflow-inputs) for
 
 # Reference data bundle
 
-10.5281/zenodo.10685376
 ![https://doi.org/10.5281/zenodo.10685376](https://zenodo.org/badge/DOI/10.5281/zenodo.10685376.svg)
 
 Reference data is hosted on Zenodo at [10.5281/zenodo.10685376](https://zenodo.org/record/10685376). Due to file size limits on Zenodo and the large size of the resources required for this pipeline, the resource bundle has been split into two files with the linux `split` command. Simply download each part and `cat` the two files together to generate the full reference bundle. Extract it to a location on your HPC, then update the input template file with the path to the reference data.
