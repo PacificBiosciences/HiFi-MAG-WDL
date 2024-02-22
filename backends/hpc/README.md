@@ -33,18 +33,16 @@ See [the inputs section of the main README](../../README.md#workflow-inputs) for
 
 `cromwell run workflows/main.wdl -i <inputs_json_file>`
 
-# Reference data bundle
+# Reference data
 
-![https://doi.org/10.5281/zenodo.10685376](https://zenodo.org/badge/DOI/10.5281/zenodo.10685376.svg)
-
-Reference data is hosted on Zenodo at [10.5281/zenodo.10685376](https://zenodo.org/record/10685376). Due to file size limits on Zenodo and the large size of the resources required for this pipeline, the resource bundle has been split into two files with the linux `split` command. Simply download each part and `cat` the two files together to generate the full reference bundle. Extract it to a location on your HPC, then update the input template file with the path to the reference data.
+The pipeline requires two publicly licensed reference databases, [UniRef100](https://www.uniprot.org/help/uniref) and the [Genome Taxonomy Database Toolkit (GTDB-Tk)](https://ecogenomics.github.io/GTDBTk/). For convenience we've provided the links below. The GTDB-tk DB can stay bundled as a `*.tar.gz` file, but UniRef100 needs to be unzipped.
 
 ```bash
-# download the reference data bundle
-wget https://zenodo.org/record/10685376/files/wdl-metagenomics.v1.0.0.resource.part_a
-wget https://zenodo.org/record/10685376/files/wdl-metagenomics.v1.0.0.resource.part_b
 
-# extract the reference data bundle and rename as dataset
-cat wdl-metagenomics*v1.0.0*part* >wdl-metagenomics.v1.0.0.resource.tgz
-tar -xzf wdl-metagenomics.v1.0.0.resource.tgz && mv static_resources dataset
+# make a directory for and download the reference databases
+mkdir dataset; cd dataset
+wget https://data.gtdb.ecogenomic.org/releases/release207/207.0/auxillary_files/gtdbtk_r207_v2_data.tar.gz
+wget https://zenodo.org/records/4626519/files/uniref100.KO.v1.dmnd.gz
+gunzip uniref100.KO.v1.dmnd.gz
+
 ```
