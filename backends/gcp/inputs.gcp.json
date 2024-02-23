@@ -1,0 +1,20 @@
+{
+  "metagenomics.sample_id": "String",
+  "metagenomics.hifi_reads_bam": "File? (optional); this or hifi_reads_fastq is required",
+  "metagenomics.hifi_reads_fastq": "File? (optional); this or hifi_reads_bam is required",
+  "metagenomics.checkm2_ref_db": "gs://pacbio-wdl/dataset/metagenomics/uniref100.KO.1.dmnd",
+  "metagenomics.min_contig_length": "Int (optional, default = 500000)",
+  "metagenomics.min_contig_completeness": "Int (optional, default = 93)",
+  "metagenomics.metabat2_min_contig_size": "Int (optional, default = 30000)",
+  "metagenomics.semibin2_model": "String (optional, default = \"global\")",
+  "metagenomics.dastool_search_engine": "String (optional, default = \"diamond\")",
+  "metagenomics.dastool_score_threshold": "Float (optional, default = 0.2)",
+  "metagenomics.min_mag_completeness": "Int (optional, default = 70)",
+  "metagenomics.max_mag_contamination": "Int (optional, default = 10)",
+  "metagenomics.max_contigs": "Int (optional, default = 20)",
+  "metagenomics.gtdbtk_data_tar_gz": "gs://pacbio-wdl/dataset/metagenomics/gtdbtk_r207_v2_data.tar.gz",
+  "metagenomics.backend": "GCP",
+  "metagenomics.zones": "String? (optional); required if backend is set to 'GCP' or 'AWS'",
+  "metagenomics.container_registry": "String? (optional)",
+  "metagenomics.preemptible": true
+}
