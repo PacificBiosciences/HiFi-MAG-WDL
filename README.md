@@ -1,4 +1,4 @@
-<h1 align="center"><img width="300px" src="https://github.com/PacificBiosciences/HiFi-MAG-WDL/blob/develop/images/logo_wdl_workflows.svg"/></h1>
+<h1 align="center"><img width="300px" src="https://github.com/PacificBiosciences/HiFi-MAG-WDL/blob/develop/images/icn_MAG_pipeline.svg"/></h1>
 
 <h1 align="center">PacBio MAG Pipeline</h1>
 
