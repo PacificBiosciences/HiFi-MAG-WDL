@@ -1,4 +1,4 @@
-<h1 align="center"><img width="300px" src="https://github.com/PacificBiosciences/HiFi-MAG-WDL/blob/develop/images/logo_wdl_workflows.svg"/></h1>
+<h1 align="center"><img width="300px" src="https://github.com/PacificBiosciences/HiFi-MAG-WDL/raw/main/images/icn_MAG_pipeline.svg"/></h1>
 
 <h1 align="center">PacBio MAG Pipeline</h1>
 
@@ -19,10 +19,10 @@ The metagenomics workflow combines contig assembly and PacBio's [HiFi-MAG-Pipeli
 ## Setup
 
 Clone a tagged version of the git repository.  Use the `--branch` flag to pull the desired version, and the `--recursive` flag to pull code from any submodules.
- 
+
 ```
 git clone \
-  --depth 1 --branch v1.0.0 \  # for reproducibility
+  --depth 1 --branch v1.0.1 \  # for reproducibility
   --recursive \                # to clone submodule
   https://github.com/PacificBiosciences/HiFi-MAG-WDL.git
 ```
