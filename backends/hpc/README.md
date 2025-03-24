@@ -41,7 +41,7 @@ The pipeline requires two publicly licensed reference databases, [UniRef100](htt
 
 # make a directory for and download the reference databases
 mkdir dataset; cd dataset
-wget https://data.gtdb.ecogenomic.org/releases/release207/207.0/auxillary_files/gtdbtk_r207_v2_data.tar.gz
+wget https://data.ace.uq.edu.au/public/gtdb/data/releases/release207/207.0/auxillary_files/gtdbtk_r207_v2_data.tar.gz
 wget https://zenodo.org/records/4626519/files/uniref100.KO.v1.dmnd.gz
 gunzip uniref100.KO.v1.dmnd.gz
 
